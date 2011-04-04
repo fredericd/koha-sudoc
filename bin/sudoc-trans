@@ -1,0 +1,186 @@
+#!/usr/bin/perl 
+
+package Sudoc::TransferDaemon;
+use Moose;
+
+use FindBin qw( $Bin );
+use lib "$Bin/../lib";
+
+use feature ":5.10";
+use POE;
+use Mail::Box::Manager;
+use Sudoc;
+
+
+has sudoc => ( is => 'rw', isa => 'Sudoc', default => sub { Sudoc->new } );
+
+has mgr => (
+    is => 'rw',
+    isa => 'Mail::Box::Manager',
+    default => sub { Mail::Box::Manager->new },
+);
+
+has verbose => ( is => 'rw', isa => 'Bool', default => 0 );
+
+
+# Global
+my $daemon_id = 'sudoc-trans';
+
+
+sub BUILD {
+    my $self = shift;
+
+    print "Démarrage du daemon de transfert ABES\n";
+
+    my $timeout = $self->sudoc->c->{trans}->{timeout};
+    POE::Session->create(
+        inline_states => {
+            _start => sub { 
+                $_[HEAP]{$daemon_id} 
+                  = $_[KERNEL]->alarm_set( tick => time() + $timeout );
+            },  
+            tick => sub {
+                $self->transfert_abes();
+                $_[HEAP]{$daemon_id} 
+                  = $_[KERNEL]->alarm_set( tick => time() + $timeout );
+            },  
+        }
+    );
+}
+
+
+sub send_gtd {
+    my ($self, $msg_abes) = @_;
+
+    # Récupération dans le courriel de l'ABES des info dont a besoin
+    # pour construire la réponse
+    my $body = $msg_abes->body;
+    my ($jobid) = $body =~ /JobId\s*:\s*(\d*)/;
+    my ($iln)   = $body =~ /\/iln(\d*)\//;
+    my ($year)  = $body =~ /DAT (\d{4})/;
+
+    print "Envoi GTD : ILN $iln, job $jobid, year $year\n";
+
+    my $conf = $self->sudoc->c->{trans};
+
+    my $head = Mail::Message::Head->new;
+    $head->add( From => $conf->{email}->{koha} );
+    $head->add( To => $conf->{email}->{abes} );
+    $head->add( Subject => 'GET TITLE DATA' );
+
+    $body = Mail::Message::Body::Lines->new(
+        data =>
+            "GTD_ILN=$iln\n" .
+            "GTD_YEAR=$year\n" .
+            "GTD_FILE_TO=" . $conf->{ftp_host} . "\n" .
+            "GTD_ORDER=TR$jobid\n" .
+            "GTD_REMOTE_DIR=spool/$iln/staged\n",
+    );
+
+    my $message = Mail::Message->new(
+        head => $head,
+        body => $body );
+    $message->send;
+}
+
+
+sub move_to_waiting {
+    my ($self, $msg) = @_;
+
+    my $body = $msg->body;
+    my ($iln) = $body =~ /GTD_ILN\s*=\s*(\d*)/i;
+ 
+    print "Fin transfert par l'ABES des fichiers de l'ILN $iln\n";
+
+    my $sudoc = $self->sudoc;
+    $sudoc->iln($iln);
+    $sudoc->spool->staged_to_waiting();
+}
+
+
+sub transfert_abes {
+    my $self = shift;
+
+    # Ne rien faire si la MBOX est vide
+    my $mbox = $self->sudoc->c->{trans}->{mbox};
+    return unless -f $mbox;
+
+    my $folder = $self->mgr->open( folder => $mbox, access => 'rw' );
+    for my $message ($folder->messages) {
+        given ($message->subject()) {
+            when ( /status is 9/ ) { $self->send_gtd( $message ); }
+            when ( /status: 0/ ) { $self->move_to_waiting( $message ); }
+        }
+        $message->delete;
+    }
+    $folder->close;
+}
+
+
+package Main;
+
+use strict;
+use warnings;
+
+use FindBin qw( $Bin );
+use lib "$Bin/../lib";
+
+use Getopt::Long;
+use Pod::Usage;
+use YAML;
+
+
+my ($help, $doit);
+GetOptions(
+    'help|h'   => \$help,
+);
+
+if ( $help ) {
+    pod2usage( -verbose => 2 );
+    exit;
+}
+
+Sudoc::TransferDaemon->new( );
+POE::Kernel->run();
+
+
+=encoding utf-8
+
+=head1 NOM
+
+sudoc-trans - Transfert des fichiers Sudoc
+
+=head1 SYNOPSYS
+
+ sudoc-trans
+
+=head1 DESCRIPTION
+
+
+=head1 PARAMETRES
+
+=over
+
+=item --help, -h
+
+Affiche cette page d'aide
+
+=back
+
+=head1 COPYRIGHT AND LICENSE
+
+Copyright (C) 2011 Tamil s.a.r.l.
+L<http://www.tamil.fr>
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.

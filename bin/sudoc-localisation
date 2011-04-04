@@ -1,0 +1,128 @@
+#!/usr/bin/perl 
+
+package Main;
+
+use strict;
+use warnings;
+
+
+use FindBin qw( $Bin );
+use lib "$Bin/../lib";
+use lib "$Bin/../../tkoha/lib";
+
+use Getopt::Long;
+use Pod::Usage;
+use Koha;
+use Koha::BiblioReader;
+use Sudoc;
+use Sudoc::Localisation;
+use Conversion;
+
+my ($help, $select, $lignes, $test, $dat);
+$select = "SELECT biblionumber FROM biblio";
+$lignes = 1000;
+GetOptions(
+    'help|h'   => \$help,
+    'select=s' => \$select,
+    'lignes=i' => \$lignes,
+    'test'     => \$test,
+    'dat'      => \$dat,
+);
+
+if ( $help ) {
+    pod2usage( -verbose => 2 );
+    exit;
+}
+
+my $koha   = Koha->new();
+my $sudoc  = Sudoc->new( koha => $koha );
+my $reader = Koha::BiblioReader->new( koha => $koha );
+$reader->select($select) if $select;
+my $converter = Conversion->new(
+   reader  => $reader,
+   writer  => Sudoc::Localisation->new(
+        sudoc => $sudoc,
+        test  => $test,
+        lines => $lignes,
+        dat   => $dat ),
+   verbose => 1 
+);
+$converter->run();       
+
+
+=encoding utf-8
+
+=head1 NOM
+
+sudoc-localisation - Génère des fichiers de localisation SUDOC
+
+=head1 SYNOPSYS
+
+ sudoc-localisation
+ sudoc-localisation --dat
+ sudoc-localisation --lignes 5000
+ sudoc-localisation --select "SELECT biblionumber FROM biblioitems WHERE itemtype='OUV'"
+ sudoc-localisation --test
+
+=head1 DESCRIPTION
+
+A partir d'un Catalogue Koha, ce script génère des fichiers d'ISBN ou de
+Date-Auteur-Titre. Ces fichiers sont demandés par l'ABES afin de réaliser soit
+un test de recouvrement soit une localisation automatique. Ces fichiers suivent
+la convention de nommage demandée par l'ABES : commence par la lettre i ou r (pour
+ISBN ou Date-Auteur-Titre), suivi du RCR de la bibliothèque, puis le code de
+PEB (toujours u). Ces noms de fichiers sont suffixés d'un index. Par exemple :
+
+ i3641767u.0001
+ i3641767u.0002
+
+=head1 PARAMETRES
+
+=over
+
+=item --help, -h
+
+Affiche cette page d'aide
+
+=item --dat
+
+Produit un fichier de type Auteur-Date-Titre. Sans ce paramètre, c'est un
+fichier d'ISBN qui est généré.
+
+=item --select <CLAUSE SELECT SUR BASE KOHA>
+
+Sélection des biblionumber des notices pour lesquelles générer les fichiers de
+localisation. Par défaut, on prend toutes les notices. Exemple :
+
+  --select "SELECT biblionumber FROM biblioitems WHERE itemtype='OUV'"
+  --select "SELECT biblionumber FROM biblioitems WHERE isbn IS NULL"
+
+=item --lignes <lignes>
+
+Les fichiers d'ISBN contiennent au plus <lignes> lignes. Par défaut 1000
+lignes.
+
+=item --test
+
+Fichiers d'ISBN uniquement pour un test de recouvrement.
+
+=back
+
+
+=head1 COPYRIGHT AND LICENSE
+
+Copyright (C) 2011 Tamil s.a.r.l.
+L<http://www.tamil.fr>
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.

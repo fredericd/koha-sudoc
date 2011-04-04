@@ -1,0 +1,149 @@
+#!/usr/bin/perl 
+
+package Main;
+
+use strict;
+use warnings;
+
+
+use FindBin qw( $Bin );
+use lib "$Bin/../lib";
+
+use Getopt::Long;
+use Pod::Usage;
+use Koha;
+use Sudoc;
+use Sudoc::AuthoritiesLoader;
+use YAML;
+
+my ($help, $init);
+GetOptions(
+    'help|h'   => \$help,
+    'init'     => \$init,
+);
+
+my $iln = shift @ARGV;
+
+if ( $help || !$iln ) {
+    pod2usage( -verbose => 2 );
+    exit;
+}
+
+my $sudoc  = Sudoc->new;
+
+if ( $init ) {
+    print "Initialisation du spool de l'ILN $iln\n";
+    $sudoc->spool->init_iln($iln);
+    exit;
+}
+
+$sudoc->iln( $iln );
+
+
+if ( @ARGV ) {
+    for my $file (@ARGV) {
+        my $path = $sudoc->spool->file_path($file );
+        unless ( $path ) {
+            print "Le fichier $file n'existe pas\n";
+            next;
+        }
+        print "Fichier $path :\n";
+        system( "yaz-marcdump $path | less" );
+    }
+}
+else {
+    my $handle_files = [
+        {
+            msg     => "Fichiers des autorités chargées",
+            where   => 'done',
+            type    => 'c',
+        }, 
+        {
+            msg     => "Fichiers des notices biblio chargées",
+            where   => 'done',
+            type    => '[a|b]',
+        }, 
+        {
+            msg     => "Fichiers des autorités en attente de chargement",
+            where   => 'waiting',
+            type    => 'c',
+        }, 
+        {
+            msg     => "Fichiers des notices biblio en attente de chargement",
+            where   => 'waiting',
+            type    => '[a|b]',
+        }, 
+        {
+            msg     => "Fichiers des autorités en cours de transfert",
+            where   => 'staged',
+            type    => 'c',
+        }, 
+        {
+            msg     => "Fichiers des notices biblio en cours de transfert",
+            where   => 'staging',
+            type    => '[a|b]',
+        }, 
+    ];
+    for my $h ( @$handle_files ) {
+        my $files = $sudoc->spool->files( $h->{where}, $h->{type} );
+        next unless @$files;
+        print $h->{msg}, " : \n";
+        my $count = 0;
+        for my $file (@$files) {
+            $count++;
+            print sprintf("  %3d. ", $count), $file, "\n";
+        }
+    }
+}
+
+
+
+=encoding utf-8
+
+=head1 NOM
+
+sudoc-spool - Examine le spool des fichiers ABES en attente pour un ILN donné
+
+=head1 SYNOPSYS
+
+ sudoc-spool 80
+ sudoc-spool 80 fichier1 fichier2 ...
+
+=head1 DESCRIPTION
+
+Examine le répertoire spool des fichiers ABES, les fichiers chargés et
+les fichiers en attente de chargement.
+
+Visualise également les fichiers en question.
+
+=head1 PARAMETRES
+
+=over
+
+=item --init
+
+Initialisation des sous-répertoires d'un spool pour un ILN donné.
+
+=item --help, -h
+
+Affiche cette page d'aide
+
+=back
+
+=head1 COPYRIGHT AND LICENSE
+
+Copyright (C) 2011 Tamil s.a.r.l.
+L<http://www.tamil.fr>
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
