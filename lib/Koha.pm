@@ -134,21 +134,25 @@ sub zauth {
 }
 
 
-sub get_biblionumber_framework {
-    my $record = shift;
-
+sub get_biblionumber {
+    my ($self, $record) = @_;
     my ($tag, $letter) = GetMarcFromKohaField("biblio.biblionumber", '');
-    my $biblionumber = $tag < 10
+    $tag < 10
         ? $record->field($tag)->value
         : $record->field($tag)->subfield($letter);
+}
 
+
+sub get_biblionumber_framework {
+    my ($self, $record) = @_;
+    my $biblionumber = $self->get_biblionumber($record);
     ( $biblionumber,  GetFrameworkCode($biblionumber) );
 }
 
 
 # Return a MARC::Moose::Record from its biblionumber
 sub get_biblio {
-    my ( $self, $biblionumber ) = @_; 
+    my ($self, $biblionumber) = @_; 
     my $sth = $self->dbh->prepare(
         "SELECT marcxml FROM biblioitems WHERE biblionumber=? ");
     $sth->execute( $biblionumber );
@@ -170,7 +174,7 @@ sub get_biblio_by_ppn {
         $record = $rs->record(0);
         $record = MARC::Moose::Record::new_from( $record->raw(), 'Iso2709' );
         return (undef, undef, undef) unless $record;
-        ($biblionumber, $framework) = get_biblionumber_framework($record);
+        ($biblionumber, $framework) = $self->get_biblionumber_framework($record);
     } 
     return ($biblionumber, $framework, $record);
 }

@@ -8,7 +8,6 @@ use warnings;
 
 use FindBin qw( $Bin );
 use lib "$Bin/../lib";
-use lib "$Bin/../../tkoha/lib";
 
 use Getopt::Long;
 use Pod::Usage;
@@ -29,14 +28,15 @@ GetOptions(
     'dat'      => \$dat,
 );
 
-if ( $help ) {
+my $iln = shift @ARGV;
+if ( $help || !$iln ) {
     pod2usage( -verbose => 2 );
     exit;
 }
 
-my $koha   = Koha->new();
-my $sudoc  = Sudoc->new( koha => $koha );
-my $reader = Koha::BiblioReader->new( koha => $koha );
+my $sudoc  = Sudoc->new;
+$sudoc->iln($iln);
+my $reader = Koha::BiblioReader->new( koha => $sudoc->koha );
 $reader->select($select) if $select;
 my $converter = Conversion->new(
    reader  => $reader,
@@ -58,11 +58,11 @@ sudoc-localisation - Génère des fichiers de localisation SUDOC
 
 =head1 SYNOPSYS
 
- sudoc-localisation
- sudoc-localisation --dat
- sudoc-localisation --lignes 5000
- sudoc-localisation --select "SELECT biblionumber FROM biblioitems WHERE itemtype='OUV'"
- sudoc-localisation --test
+ sudoc-localisation 80
+ sudoc-localisation 80 --dat
+ sudoc-localisation 80 --lignes 5000
+ sudoc-localisation 80 --select "SELECT biblionumber FROM biblioitems WHERE itemtype='OUV'"
+ sudoc-localisation 80 --test
 
 =head1 DESCRIPTION
 

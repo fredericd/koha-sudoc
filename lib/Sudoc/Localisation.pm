@@ -56,7 +56,8 @@ has fichier_rcr => (
     default => sub {
         my $self = shift;
         my %fichier_rcr;
-        while ( my ($branch, $rcr) = each %{$self->sudoc->c->{branch}} ) {
+        my $hbranch = $self->sudoc->c->{$self->sudoc->iln}->{branch};
+        while ( my ($branch, $rcr) = each %$hbranch ) {
             $fichier_rcr{$branch} = {
                 branch => $branch,
                 rcr    => $rcr,
@@ -97,8 +98,8 @@ sub write_isbn {
     my @isbns = $record->field('010');
     return unless @isbns;
 
-    my $biblionumber = $record->field('090')->subfield('a');
-    for my $isbn ( $record->field('010') ) {
+    my $biblionumber = $self->sudoc->koha->get_biblionumber($record);
+    for my $isbn ( @isbns ) {
         $isbn = $isbn->subfield('a');
         next unless $isbn;
         $isbn =~ s/ //g;
@@ -185,7 +186,7 @@ sub write {
     $self->SUPER::write();
 
     # S'il la notice contient déjà un PPN, inutile de la traiter
-    return if $record->field('001');
+    #return if $record->field('001');
 
     $self->dat ? $self->write_dat($record) : $self->write_isbn($record);
 }
