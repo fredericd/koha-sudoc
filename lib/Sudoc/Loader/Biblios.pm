@@ -15,77 +15,13 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-package Sudoc::BibliosLoader;
+package Sudoc::Loader::Biblios;
 use Moose;
 
-use FindBin qw( $Bin );
-use lib "$Bin/../lib";
+extends 'Sudoc::Loader';
 
 use C4::Biblio;
 use C4::Items;
-use C4::AuthoritiesMarc;
-use MARC::Moose::Field::Control;
-use MARC::Moose::Reader::File::Iso2709;
-use Sudoc::Converter;
-use Log::Dispatch;
-use Log::Dispatch::Screen;
-use Log::Dispatch::File;
-use YAML;
-
-
-# Moulinette SUDOC
-has sudoc => ( is => 'rw', isa => 'Sudoc', required => 1 );
-
-# Fichier des notices biblio
-has file => ( is => 'rw', isa => 'Str', required => 1 );
-
-# Chargement effectif ?
-has doit => ( is => 'rw', isa => 'Bool', default => 0 );
-
-# Compteur d'enregistrements traités
-has count => (  is => 'rw', isa => 'Int', default => 0 );
-
-# Compteur d'enregistrements remplacés
-has count_replaced => (  is => 'rw', isa => 'Int', default => 0 );
-
-# Converter
-has converter => (
-    is      => 'rw',
-    isa     => 'Sudoc::Converter',
-);
-
-
-my $log = Log::Dispatch->new();
-
-
-sub BUILD {
-    my $self = shift;
-
-    $log->add( Log::Dispatch::Screen->new(
-        name      => 'screen',
-        min_level => 'notice',
-    ) );
-    $log->add( Log::Dispatch::File->new(
-        name      => 'file1',
-        min_level => 'debug',
-        filename  => $self->sudoc->sudoc_root . '/var/log/' .
-                     $self->sudoc->iln . '-biblios.log',
-        mode      => '>>',
-    ) );
-
-    # Instanciation du converter
-    my $converter = $self->sudoc->c->{$self->sudoc->iln}->{biblio}->{converter};
-    my $class = 'Sudoc::Converter';
-    $class .= "::$converter" if $converter;
-    unless ( eval "use $class" ) {
-        $log->warning(
-            "Attention : le converter $converter n'est pas défini. " .
-            "On utilise le converter par défaut\n" );
-        $class = 'Sudoc::Converter';
-    }
-    $converter = $class->new( sudoc => $self->sudoc );
-    $self->converter( $converter );
-}
 
 
 sub handle_record {
@@ -96,8 +32,8 @@ sub handle_record {
 
     my $ppn = $record->field('001')->value;
     my $conf = $self->sudoc->c->{$self->sudoc->iln}->{biblio};
-    $log->notice( "Notice #" . $self->count . " PPN $ppn\n" );
-    $log->debug( $record->as('Text') );
+    $self->log->notice( "Notice #" . $self->count . " PPN $ppn\n" );
+    $self->log->debug( $record->as('Text') );
 
     # On déplace le PPN
     $self->sudoc->ppn_move($record, $conf->{ppn_move});
@@ -107,7 +43,7 @@ sub handle_record {
     ($biblionumber, $framework, $koha_record) =
         $self->sudoc->koha->get_biblio_by_ppn( $ppn );
     if ($koha_record) {
-        $log->debug("  PPN trouvé dans la notice Koha $biblionumber\n" );
+        $self->log->debug("  PPN trouvé dans la notice Koha $biblionumber\n" );
     }
     else {
         # On cherche un 035 avec $9 sudoc qui indique une fusion de notices Sudoc 035$a
@@ -120,7 +56,7 @@ sub handle_record {
             ($biblionumber, $framework, $koha_record) =
                 $self->sudoc->koha->get_biblio_by_ppn( $ppn_doublon );
             if ($koha_record) {
-                $log->notice(
+                $self->log->notice(
                   "  Fusion Sudoc du PPN $ppn_doublon de la notice Koha " .
                   "$biblionumber\n" );
                 last;
@@ -138,7 +74,7 @@ sub handle_record {
             ($framework, $koha_record) =
                 $self->sudoc->koha->get_biblio( $biblionumber );
             if ($koha_record) {
-                $log->notice(
+                $self->log->notice(
                   "  Fusion avec la notice Koha $biblionumber trouvée en 035\$a " .
                   "pour le RCR $rcr\n");
                 last;
@@ -150,8 +86,8 @@ sub handle_record {
 
     if ( $koha_record ) {
         # Modification d'une notice
-        $log->debug("  Notice après traitements :\n" . $record->as('Text') );
-        $log->notice("  * Remplace $biblionumber\n" );
+        $self->log->debug("  Notice après traitements :\n" . $record->as('Text') );
+        $self->log->notice("  * Remplace $biblionumber\n" );
         $self->converter->merge($record, $koha_record);
         ModBiblio($record->as('Legacy'), $biblionumber, $framework)
             if $self->doit;
@@ -160,8 +96,8 @@ sub handle_record {
         # Nouvelle notice
         $self->converter->itemize($record);
         $self->converter->clear($record);
-        $log->debug("  Notice après traitements :\n" . $record->as('Text') );
-        $log->notice("  * Ajout\n" );
+        $self->log->debug("  Notice après traitements :\n" . $record->as('Text') );
+        $self->log->notice("  * Ajout\n" );
         $framework = $self->sudoc->c->{$self->sudoc->iln}->{biblio}->{framework};
         if ( $self->doit ) {
             my $marc = $record->as('Legacy');
@@ -171,30 +107,7 @@ sub handle_record {
                 AddItemBatchFromMarc($marc, $biblionumber, $biblioitemnumber, '' );
         }
     }
-    $log->debug("\n");
-}
-
-
-sub run {
-    my $self = shift;
-
-    $log->notice("Chargement du fichier de notices biblio : " . $self->file . "\n");
-    $log->notice("** Test **\n") unless $self->doit;
-    my $reader = MARC::Moose::Reader::File::Iso2709->new(
-        file => $self->sudoc->spool->file_path( $self->file ) );
-    while ( my $record = $reader->read() ) {
-        $self->count( $self->count + 1 );
-        $self->handle_record($record);
-    }
-    if ( $self->doit ) {
-        $log->notice( "Notices chargées : " . $self->count . ", dont " .
-            $self->count_replaced . " remplacées\n" );
-        $self->sudoc->spool->move_done($self->file);
-    }
-    else {
-        $log->notice(
-            "** Test ** Le fichier " . $self->file . " n'a pas été chargé\n" );
-    }
+    $self->log->debug("\n");
 }
 
 

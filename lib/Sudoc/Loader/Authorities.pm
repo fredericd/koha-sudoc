@@ -15,57 +15,13 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-package Sudoc::AuthoritiesLoader;
+package Sudoc::Loader::Authorities;
 use Moose;
 
-use C4::Context;
+extends 'Sudoc::Loader';
+
 use C4::AuthoritiesMarc;
 use MARC::Moose::Record;
-use MARC::Moose::Reader::File::Iso2709;
-use Log::Dispatch;
-use Log::Dispatch::Screen;
-use Log::Dispatch::File;
-use YAML;
-
-
-# Moulinette SUDOC
-has sudoc => ( is => 'rw', isa => 'Sudoc', required => 1 );
-
-# Fichier d'autorités
-has file => ( is => 'rw', isa => 'Str', required => 1 );
-
-# Chargement effectif ?
-has doit => ( is => 'rw', isa => 'Bool', default => 0 );
-
-# Compteur d'enregistrements traités
-has count => (  is => 'rw', isa => 'Int', default => 0 );
-
-# Compteur d'enregistrements remplacés
-has count_replaced => (  is => 'rw', isa => 'Int', default => 0 );
-
-# Le logger
-has log => (
-    is => 'rw',
-    isa => 'Log::Dispatch',
-    default => sub { Log::Dispatch->new() },
-);
-
-
-
-sub BUILD {
-    my $self = shift;
-    $self->log->add( Log::Dispatch::Screen->new(
-        name      => 'screen',
-        min_level => 'notice',
-    ) );
-    $self->log->add( Log::Dispatch::File->new(
-        name      => 'file1',
-        min_level => 'debug',
-        filename  => $self->sudoc->sudoc_root . '/var/log/' .
-                     $self->sudoc->iln . '-authorities.log',
-        mode      => '>>',
-    ) );
-}
 
 
 sub handle_record {
@@ -132,30 +88,6 @@ sub handle_record {
     $self->log->notice(
         ($auth ? "  * Remplace" : "  * Ajout") .
         " authid $authid\n" );
-}
-
-
-sub run {
-    my $self = shift;
-
-    $self->log->notice("Chargement du fichier d'autorités : " . $self->file . "\n");
-    $self->log->notice("** Test **\n") unless $self->doit;
-    my $reader = MARC::Moose::Reader::File::Iso2709->new(
-        file => $self->sudoc->spool->file_path( $self->file ) );
-    while ( my $record = $reader->read() ) {
-        $self->count( $self->count + 1 );
-        $self->handle_record($record);
-    }
-    $self->log->notice( "Notices chargées : " . $self->count . ", dont " .
-                  $self->count_replaced . " remplacées\n" );
-
-    if ( $self->doit) {
-        $self->sudoc->spool->move_done($self->file);
-    }
-    else {
-        $self->log->notice(
-            "** Test ** Le fichier " . $self->file . " n'a pas été chargé\n" );
-    }
 }
 
 1;

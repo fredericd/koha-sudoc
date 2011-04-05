@@ -8,12 +8,11 @@ use warnings;
 
 use FindBin qw( $Bin );
 use lib "$Bin/../lib";
-use lib "$Bin/../../tkoha/lib";
 
 use Getopt::Long;
 use Pod::Usage;
 use Sudoc;
-use Sudoc::AuthoritiesLoader;
+use Sudoc::Loader::Authorities;
 use YAML;
 
 my ($help, $doit);
@@ -34,7 +33,7 @@ my $sudoc  = Sudoc->new( );
 $sudoc->iln($iln);
 my $files = $sudoc->spool->waiting_files('c');
 for my $file (@$files) {
-    my $loader = Sudoc::AuthoritiesLoader->new(
+    my $loader = Sudoc::Loader::Authorities->new(
         sudoc => $sudoc,
         file => $file,
         doit => $doit,

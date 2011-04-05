@@ -130,10 +130,12 @@ sudoc
             `-- waiting
 ----------------------------------------
    
-Installez la bibliothèque Perl +MARC::Moose::Record+ :
+Installez les bibliothèques Perl requises :
 
 ----------------------------------------
 cpan MARC::Moose::Record
+cpan POE
+cpan Log::Dispatch
 ----------------------------------------
 
 Pour exécuter les scripts du chargeur, faites pointer la variable

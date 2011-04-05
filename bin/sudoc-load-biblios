@@ -12,7 +12,7 @@ use lib "$Bin/../lib";
 use Getopt::Long;
 use Pod::Usage;
 use Sudoc;
-use Sudoc::BibliosLoader;
+use Sudoc::Loader::Biblios;
 use YAML;
 
 my ($help, $doit);
@@ -32,7 +32,7 @@ my $sudoc  = Sudoc->new;
 $sudoc->iln($iln);
 my $files = $sudoc->spool->waiting_files('[a|b]');
 for my $file (@$files) {
-    my $loader = Sudoc::BibliosLoader->new(
+    my $loader = Sudoc::Loader::Biblios->new(
         sudoc => $sudoc,
         file => $file,
         doit => $doit,
