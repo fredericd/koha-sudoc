@@ -90,7 +90,8 @@ arborescence de sous-répertoires et les fichiers du Chargeur. Quelque
 chose comme ceci :
 
 ----------------------------------------
-sudoc
+.
+|-- COPYING
 |-- README
 |-- bin
 |   |-- sudoc-load-authorities
@@ -100,34 +101,42 @@ sudoc
 |   `-- sudoc-trans
 |-- doc
 |   |-- README
-|   `-- sudoc.txt
+|   |-- sudoc.txt
+|   `-- sudoc.xml
 |-- etc
 |   `-- sudoc.conf
 |-- lib
+|   |-- Conversion.pm
+|   |-- Converter.pm
+|   |-- EchoWatcher.pm
+|   |-- FileProcess.pm
+|   |-- Koha
+|   |   `-- BiblioReader.pm
 |   |-- Koha.pm
+|   |-- RecordReader.pm
+|   |-- RecordWriter.pm
 |   |-- Sudoc
-|   |   |-- AuthoritiesLoader.pm
-|   |   |-- BibliosLoader.pm
 |   |   |-- Converter.pm
+|   |   |-- Loader
+|   |   |   |-- Authorities.pm
+|   |   |   `-- Biblios.pm
+|   |   |-- Loader.pm
 |   |   |-- Localisation.pm
 |   |   `-- Spool.pm
-|   `-- Sudoc.pm
+|   |-- Sudoc.pm
+|   `-- WatchableTask.pm
 `-- var
     |-- log
-    |   |-- 18-authorities.log
-    |   `-- 18-biblios.log
+    |   |-- 80-Authorities.log
+    |   `-- 80-Biblios.log
     `-- spool
-        |-- 18
-        |   |-- done
-        |   |-- staged
-        |   `-- waiting
-        |       |-- ILN186-TEST-933r374B001.raw
-        |       |-- ILN186-TEST-933r374C001.raw
-        |       `-- ILN186-TEST-933r376A001.raw
-        `-- 20
+        `-- 80
             |-- done
             |-- staged
             `-- waiting
+                |-- ILN186-TEST-933r374B001.raw
+                |-- ILN186-TEST-933r374C001.raw
+                `-- ILN186-TEST-933r376A001.raw
 ----------------------------------------
    
 Installez les bibliothèques Perl requises :

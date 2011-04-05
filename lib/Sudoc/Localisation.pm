@@ -70,6 +70,243 @@ has fichier_rcr => (
 );
 
 
+# Listes de mots vides supprimés des titres/auteurs
+my @stopwords = qw(
+per
+org
+mti
+rec
+isb
+isn
+ppn
+dew
+cla
+msu
+mee
+cti
+cot
+lai
+pai
+rbc
+res
+the
+prs
+aut
+num
+tou
+edi
+sou
+tir
+bro
+geo
+mch
+epn
+tab
+tco
+dpn
+sim
+dup
+vma
+lva
+pfm
+mfm
+pra
+mra
+kil
+sel
+col
+nos
+num
+msa
+cod
+inl
+cll
+ati
+nli
+slo
+rcr
+typ
+dep
+spe
+dom
+reg
+mno
+mor
+eta
+nom
+for
+vil
+dat
+dac
+dam
+nrs
+adr
+apu
+tdo
+lan
+pay
+fct
+
+a
+ad
+alla
+am
+at
+aus
+bei
+cette
+como
+dalla
+del
+dem
+des
+dr
+during
+einem
+es
+fuer
+i
+impr
+l
+leur
+mes
+nel
+o
+over
+por
+r
+ses
+so
+sur
+this
+under
+vom
+vous
+with
+ab
+against
+alle
+among
+atque
+aussi
+bis
+ceux
+cum
+dans
+dell
+den
+desde
+du
+e
+einer
+et
+g
+ihre
+in
+la
+leurs
+mit
+no
+oder
+p
+pour
+s
+sic
+some
+te
+to
+une
+von
+w
+y
+depuis
+di
+durant
+ed
+eines
+f
+gli
+ihrer
+into
+las
+lo
+n
+nos
+of
+par
+qu
+sans
+since
+sous
+that
+ueber
+unless
+vor
+was
+zu
+der
+die
+durante
+ein
+el
+for
+h
+il
+its
+le
+los
+nach
+notre
+on
+per
+quae
+se
+sive
+st
+the
+um
+unter
+vos
+we
+zur
+across
+all
+altre
+asi
+aupres
+b
+ce
+comme
+dall
+degli
+dello
+deren
+dont
+durch
+eine
+en
+from
+his
+im
+j
+les
+m
+ne
+nous
+ou
+plus
+que
+selon
+sn
+sul
+their
+und
+upon
+votre
+which
+);
+
+
 sub get_file {
     my ($self, $branch, $prefix) = @_;
     my $file = $self->fichier_rcr->{$branch};
@@ -150,12 +387,10 @@ sub write_dat {
     $titre =~ s/:/ /g;
     $titre =~ s/=/ /g;
     $titre =~ s/\./ /g;
-    $titre =~ s/ or / /gi;
-    $titre =~ s/ and / /gi;
-    $titre =~ s/ not / /gi;
-    $titre =~ s/ ou / /gi;
-    $titre =~ s/ et / /gi;
-    $titre =~ s/ sauf / /gi;
+
+    # Les mots vides
+    for my $word ( @stopwords ) { $titre =~ s/ $word / /gi; }
+
     while ( $titre =~ s/  / / ) { ; }
     $titre =~ s/^ *//;
     $titre =~ s/ *$//;
@@ -181,7 +416,7 @@ sub write_dat {
 
 
 sub write {
-    my ( $self, $record ) = @_;
+    my ($self, $record) = @_;
 
     $self->SUPER::write();
 
