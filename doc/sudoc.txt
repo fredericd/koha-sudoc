@@ -317,22 +317,27 @@ correspondantes.
 
 Il y a trois cas de figure où l'on a affaire à une mise à jour :
 
-. 'Fusion SUDOC' -- La zone 035 est d'abord examinée afin de déterminer
-  si l'autorité est marquée comme étant une fusion SUDOC de notices.
-  On cherche une zone 035 contenant un +$9 sudoc+. Le +$a+ contient le
-  PPN de l'ancienne notice qui a été fusionnée. Dans ce cas, on peut
-  savoir si une autorité Koha existe déjà ayant le PPN de l'autorité qui
-  a été fusionnée à l'autorité entrante.
+. 'Mise à jour dans le SUDOC' -- On interroge les notices Koha pour
+  savoir s'il en existe une ayant le PPN de la notice entrante.  Si
+  c'est le cas, il s'agit d'une autorité déjà présente dans Koha et qui
+  a été modifiée dans le SUDOC.
 . 'Localisation SUDOC' -- On peut marquer dans le SUDOC qu'une notice
   est déjà présente dans Koha, soit manuellement en saisissant une zone
   035 contenant un de ses RCR, soit automatiquement au moment du
   déploiement initial de l'ILN dans le SUDOC. On a alors une zone 035
   avec un sous-champ +$5+ contenant un des RCR de l'ILN et en +$a+ le
   numéro (biblionumber) de la notice Koha correspondante.
-. 'Mise à jour dans le SUDOC' -- On interroge les notices Koha pour
-  savoir s'il en existe une ayant le PPN de la notice entrante.  Si
-  c'est le cas, il s'agit d'une autorité déjà présente dans Koha et qui
-  a été modifiée dans le SUDOC.
+. 'Fusion SUDOC' -- La zone 035 est examinée afin de déterminer si l'autorité
+  est marquée comme étant une fusion SUDOC de notices.  On cherche une zone 035
+  contenant un +$9 sudoc+. Le +$a+ contient le PPN de l'ancienne notice qui a
+  été fusionnée. Dans ce cas, on peut savoir si une autorité Koha existe déjà
+  ayant le PPN de l'autorité qui a été fusionnée à l'autorité entrante. Le
+  Chargeur SUDOC ne peut effectuer la fusion de la notice entrante à une notice
+  existante dans Koha que si une fusion n'est pas déjà nécessaire pour une des
+  raisons précédentes (mise à jour dans le SUDOC ou localisation) et s'il n'y a
+  bien qu'une notice Koha correspondante à une fusion SUDOC. En cas de fusion
+  nécessaire mais que le chargeur ne peut pas effectuer, un message d'alerte est
+  laissé dans les logs.
 
 Pour les nouvelles notices, des exemplaires Koha peuvent être créés.
 C'est paramétrable : voir +sudoc.conf+ paramètre 'itemize'. Pour une
@@ -365,21 +370,21 @@ du répertoire d'installation du Chargeur SUDOC.
 Une section 'trans' détermine le fonctionnement du daemon de
 +sudoc-trans+ de transfert des fichiers ABES :
 
-*timeout*::
+timeout::
   Délai entre deux réveils du daemon transfert.  Par exemple, une valeur
   de +600+ signifie que la boîte aux lettres SUDOC sera examinée toutes
   les dix minutes.
-*email*::
+email::
   Section contenant les adresses de courrier électronique utilisées par
   le protocole de transfert de fichiers entre l'ABES et le serveur
   Koha :
-  'abes';;
+  abes;;
     Email de l'ABES à laquelle envoyer les messages. A priori c'est
     toujours l'adresse +abes_ftp@carmin.sudoc.abes.fr+
-  'koha';;
+  koha;;
     Email du serveur Koha. C'est la boîte aux lettres de cette adresse
     qui est examinée par le daemon de transfert.
-'mbox'::
+mbox::
   Chemin d'accès à la boîte aux lettres
   http://fr.wikipedia.org/wiki/Mbox[MBOX] contenant les messages
   adressés au serveur par l'ABES.
@@ -389,55 +394,52 @@ Une section 'trans' détermine le fonctionnement du daemon de
 Il y a pour chaque ILN une section qui définit le mode de fonctionnement
 du chargement des notices.
 
-'koha_conf'::
+koha_conf::
   Chemin d'accès au fichier de configuration de l'instance Koha de
   l'ILN. Par exemple, +/etc/koha-conf.xml+.
-'rcr'::
+rcr::
   Liste des équivalences entre les RCR et les bibliothèques Koha.
-'auth'::
+auth::
   Cette section contient tous les paramètres du chargeur des autorités
   +sudoc-load-authorities+ :   
-  'ppn_move';;
+  ppn_move;;
     Tag dans lequel déplacer le PPN de l'autorité avant son chargement.
     Le PPN est en 001. On le déplace généralement en 009. On peut
     également le déplacer en 090$p : ppn_move = 090p. On ne peut pas le
     laisse en 001 car Koha utilise toujours cette zone pour son propre
     identifiant (authid). Ce n'est pas le cas pour les notices
     bibliographiques.
-  'typefromtag';;
+  typefromtag;;
     Liste des équivalences entre la zone contenant la vedette dans
     l'autorité entrante et le type d'autorité Koha. Par exemple, si on a
     un type d'autorité Koha Nom de personne +NP+ et que les autorités
     auteurs entrantes ont leur vedette en +200+, on aura alors :
     +200: NP+.
-'biblio'::
+biblio::
   Cette section contient tous les paramètres du chargeur des notices
   bibliographiques +sudoc-load-biblios+ :   
-  'ppn_move';;
+  ppn_move;;
     Tag dans lequel déplacer le PPN de la notice bibliographique avant
     son chargement.  Le PPN est en 001. On le déplace généralement en
     _009. On peut également le déplacer en 090$p : ppn_move = 090p
-  'framework';;
+  framework;;
     Le code Koha du framework auquel affecter toutes les notices
     entrantes.
-  'authoritize';;
+  authoritize;;
     Est-ce qu'on autoritise les notices entrantes ? Oui = 1, Non = 0.
-  'itemize';;
+  itemize;;
     Est-ce qu'on exemplarise les notices entrantes ? Oui = 1, Non = 0.
-  'converter';;
+  converter;;
     Généralement laissé vide. Peut contenir le nom d'une sous-classe
     Perl spécifique de conversion des notices. Accessible uniquement à
     un programmeur Perl.
-
-Le fichier +sudoc.conf+ se trouve dans le sous-répertoire +etc+ du
-répertoire contenant l'application.
 
 ==== Exemple ====
 
 ----------
 ---
 trans:
-  timeout: 600
+  timeout: 601
   email:
     abes: abes_ftp@carmin.sudoc.abes.fr
     koha: sudoc@monserveur.fr
@@ -668,5 +670,4 @@ Fichiers d'ISBN uniquement pour un test de recouvrement.
 Cette commande ajoute à un catalogue Koha les PPN SUDOC des notices qui
 y ont été localisées automatiquement.
 
-// vim: set syntax=asciidoc:
 

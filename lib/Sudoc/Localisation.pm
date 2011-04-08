@@ -71,6 +71,7 @@ has fichier_rcr => (
 
 
 # Listes de mots vides supprimés des titres/auteurs
+# Cette liste est fournie par l'ABES
 my @stopwords = qw(
 per
 org

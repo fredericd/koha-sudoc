@@ -27,6 +27,7 @@ use Log::Dispatch;
 use Log::Dispatch::Screen;
 use Log::Dispatch::File;
 use YAML;
+use Try::Tiny;
 
 
 # Moulinette SUDOC
@@ -79,12 +80,14 @@ sub BUILD {
     my $converter = $self->sudoc->c->{$self->sudoc->iln}->{biblio}->{converter};
     my $class = 'Sudoc::Converter';
     $class .= "::$converter" if $converter;
-    unless ( eval "use $class" ) {
+    try {
+        Class::MOP::load_class($class);
+    } catch {
         $self->log->warning(
             "Attention : le converter $converter n'est pas défini. " .
-            "On utilise le converter par défaut\n" );
+            "On utilise le converter par défaut.\n" );
         $class = 'Sudoc::Converter';
-    }
+    };
     $converter = $class->new( sudoc => $self->sudoc );
     $self->converter( $converter );
 }

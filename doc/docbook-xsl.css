@@ -173,6 +173,7 @@ dt {
 
 dt span.term {
   font-style: normal;
+  font-weight: bold;
 }
 
 div.variablelist dd p {

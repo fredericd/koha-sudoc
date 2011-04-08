@@ -24,6 +24,31 @@ use C4::AuthoritiesMarc;
 use MARC::Moose::Record;
 
 
+# On cherche les autorités doublons SUDOC. On renvoie la liste des notices
+# Koha correspondantes.
+sub doublons_sudoc {
+    my ($self, $record) = @_;
+    my @doublons;
+    # On cherche un 035 avec $9 sudoc qui indique une fusion d'autorité Sudoc
+    # 035$a contient le PPN de la notice qui a été fusionnée avec la notice en
+    # cours de traitement.
+    for my $field ( $record->field('035') ) {
+        my $sudoc = $field->subfield('9');
+        next unless $sudoc && $sudoc =~ /sudoc/i;
+        my $ppn = $field->subfield('a');
+        my ($authid, $auth) =
+            $self->sudoc->koha->get_auth_by_ppn( $ppn );
+        if ($auth) {
+            $self->log->notice(
+              "  Fusion Sudoc du PPN $ppn de l'autorité Koha " .
+              "$authid\n" );
+            push @doublons, { ppn => $ppn, authid => authid, auth => $auth };
+        }
+    } 
+    return \@doublons;
+}
+
+
 sub handle_record {
     my ($self, $record) = @_;
 
@@ -52,34 +77,35 @@ sub handle_record {
 
     # FIXME Reset de la connexion tous les x enregistrements
     $self->sudoc->koha->zconn_reset()  unless $self->count % 500;
+    
+    # Y a-t-il déjà dans la base Koha une autorité ayant ce PPN ?
+    my ($authid, $auth) = $self->sudoc->koha->get_auth_by_ppn($ppn);
 
-    # On cherche un 035 avec $9 sudoc qui indique une fusion de notices Sudoc
-    # 035$a contient le PPN de la notice qui a été fusionnée avec la notice en cours de
-    # traitement.
-    my ($authid, $auth);
-    for my $field ( $record->field('035') ) {
-        my $sudoc = $field->subfield('9');
-        next unless $sudoc && $sudoc =~ /sudoc/i;
-        my $ppn_doublon = $field->subfield('a');
-        print "ppn doublon: $ppn_doublon\n";
-        ($authid, $auth) =
-            $self->sudoc->koha->get_auth_by_ppn( $ppn_doublon );
-        if ($auth) {
-            $self->log->notice(
-              "  PPN $ppn fusion Sudoc du PPN $ppn_doublon de la notice Koha " .
-              "$authid\n" );
-            last;
+    # Les doublons SUDOC. Il n'y a qu'un seul cas où on peut en faire quelque
+    # chose. Si on a déjà trouvé une autorité Koha ci-dessus, on ne peut rien
+    # faire : en effet, on a déjà une cible pour fusionner la notice entrante.
+    # S'il y a plus d'un doublon qui correspond à des notices Koha, on ne sait
+    # pas à quelle notice Koha fusionner la notice entrante.
+    my $doublons = $self->doublons_sudoc($record);
+    if ( @$doublons ) {
+        if ( $auth || @$doublons > 1 ) {
+            $self->log->warning(
+                "  Attention ! la notice entrante doit être fusionnée à plusieurs " .
+                "notices Koha existantes. A FAIRE MANUELLEMENT\n" );
         }
-    } 
+        else {
+            # On fusionne le doublon SUDOC (unique) avec la notice SUDOC entrante
+            my $d = shift @$doublons;
+            ($authid, $auth) = ($d->{authid}, $d->{auth});
+        }
+    }
 
-    # Y a-t-il déjà dans la base Koha une authorité ayant ce PPN ?
-    unless ($authid) {
-        ($authid, $auth) = $self->sudoc->koha->get_auth_by_ppn($ppn);
-        if ( $auth ) {
-            $record->append(
-                MARC::Moose::Field::Control->new( tag => '001', value => $authid) );
-            $self->count_replaced( $self->count_replaced + 1 );
-        }
+    # Si on a trouvé une autorité correspondante, et une seule, on ajoute son
+    # authid à l'autorité entrante afin de forcer sa mise à jour.
+    if ( $auth ) {
+        $record->append(
+            MARC::Moose::Field::Control->new( tag => '001', value => $authid) );
+        $self->count_replaced( $self->count_replaced + 1 );
     }
 
     ($authid) = AddAuthority($record->as('Legacy'), $authid, $authtypecode)

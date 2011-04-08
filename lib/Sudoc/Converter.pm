@@ -18,7 +18,6 @@
 package Sudoc::Converter;
 use Moose;
 
-use YAML;
 
 # Moulinette SUDOC
 has sudoc => ( is => 'rw', isa => 'Sudoc', required => 1 );

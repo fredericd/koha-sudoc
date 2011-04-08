@@ -13,7 +13,6 @@ use Getopt::Long;
 use Pod::Usage;
 use Koha;
 use Sudoc;
-use Sudoc::AuthoritiesLoader;
 use YAML;
 
 my ($help, $init);

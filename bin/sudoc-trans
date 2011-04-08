@@ -9,6 +9,7 @@ use lib "$Bin/../lib";
 use feature ":5.10";
 use POE;
 use Mail::Box::Manager;
+use DateTime;
 use Sudoc;
 
 
@@ -57,7 +58,9 @@ sub send_gtd {
     my $body = $msg_abes->body;
     my ($jobid) = $body =~ /JobId\s*:\s*(\d*)/;
     my ($iln)   = $body =~ /\/iln(\d*)\//;
-    my ($year)  = $body =~ /DAT (\d{4})/;
+
+    # La date
+    my $year = DateTime->now->year;
 
     print "Envoi GTD : ILN $iln, job $jobid, year $year\n";
 
@@ -70,11 +73,11 @@ sub send_gtd {
 
     $body = Mail::Message::Body::Lines->new(
         data =>
-            "GTD_ILN=$iln\n" .
-            "GTD_YEAR=$year\n" .
-            "GTD_FILE_TO=" . $conf->{ftp_host} . "\n" .
-            "GTD_ORDER=TR$jobid\n" .
-            "GTD_REMOTE_DIR=spool/$iln/staged\n",
+            "GTD_ILN = $iln\n" .
+            "GTD_YEAR = $year\n" .
+            "GTD_FILE_TO = " . $conf->{ftp_host} . "\n" .
+            "GTD_ORDER = TR$jobid*\n" .
+            "GTD_REMOTE_DIR = spool/$iln/staged\n",
     );
 
     my $message = Mail::Message->new(
