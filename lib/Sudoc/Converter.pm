@@ -22,6 +22,21 @@ use Moose;
 # Moulinette SUDOC
 has sudoc => ( is => 'rw', isa => 'Sudoc', required => 1 );
 
+# Les exemplaires courants. 
+# ->{rcr}->{id}->{915}
+#              ->{930}
+#              ->{999}
+# 076797597:
+#   915:
+#   917:
+#   930:
+#   999:
+# 243615450:
+#   915:
+#   930:
+#   991:
+has item => ( is => 'rw', isa => 'HashRef' );
+
 
 # On supprime un certain nombre de champs de la notice SUDOC entrante
 sub clear {
@@ -32,6 +47,46 @@ sub clear {
 # Création des exemplaires Koha en 995 en fonction des données locales SUDOC
 sub itemize {
     my ($self, $record) = @_;
+
+    my $myrcr = $self->sudoc->c->{$self->sudoc->iln}->{rcr};
+    # On crée la structure de données items
+    my $item = {};
+    for my $field ( $record->field('9..') ) {
+        my $value = $field->subfield('5');
+        next unless $value;
+        my ($rcr, $id) = $value =~ /(.*):(.*)/;
+        unless ( $myrcr->{$rcr} ) {
+            # Cas, improbable, d'un RCR qui ne serait pas dans la liste des RCR
+            # FIXME On pourrait le logguer quelque part.
+            next;
+        }
+        $item->{$rcr} ||= {};
+        $item->{$rcr}->{$id} ||= {};
+        $item->{$rcr}->{$id}->{$field->tag} = $field;
+    }
+    $self->item($item);
+
+    # On crée les exemplaires à partir de 930 et 915
+    while ( my ($rcr, $item_rcr) = each %$item ) {
+        my $branch = $myrcr->{$rcr};
+        while ( my ($id, $ex) = each %$item_rcr ) { # Les exemplaires d'un RCR
+            # On prend le code à barre en 915$b, et s'il n'y en a pas on prend
+            # EPN SUDOC ($id)
+            my $barcode = $ex->{915};
+            $barcode = $barcode->subfield('b')  if $barcode;
+            $barcode = $id unless $barcode;
+            my $cote = $ex->{930}->subfield('a');
+            $record->append( MARC::Moose::Field::Std->new(
+                tag => '995',
+                subf => [
+                    [ b => $branch ],
+                    [ c => $branch ],
+                    [ f => $barcode ],
+                    [ k => $cote ],
+                ]
+            ) );
+        }
+    }
 }
 
 

@@ -24,9 +24,9 @@ use YAML;
 
 
 # Création des exemplaires Koha en 995 en fonction des données locales SUDOC
-sub itemize {
+after 'itemize' => sub {
     my ($self, $record) = @_;
-}
+};
 
 
 1;

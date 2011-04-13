@@ -5,9 +5,12 @@ v1.0, avril 2011: Première version pour la v1.0.
 
 [NOTE]
 ================================================================================
-La version PDF en-ligne de ce document est disponible à cette URL :
+Une version en-ligne de ce document est disponible aux URL suivantes :
 
-- http://www.tamil.fr/sudoc/sudoc.pdf[http://www.tamil.fr/sudoc/sudoc.pdf]
+- *HTML* :
+  http://www.tamil.fr/sudoc/sudoc.html[http://www.tamil.fr/sudoc/sudoc.html]
+- *PDF* :
+  http://www.tamil.fr/sudoc/sudoc.pdf[http://www.tamil.fr/sudoc/sudoc.pdf]
 ================================================================================
 
 [IMPORTANT]
@@ -310,6 +313,8 @@ reprenant des données de champs locaux (niveau 2) de la notice entrante.
 Pour les mises à jour, il peut y avoir des règles de fusion entre la
 notice entrante et la notice existante.
 
+===== Fusion =====
+
 Pour chaque notice bibliographique, on détermine s'il s'agit d'une
 nouveauté ou de la mise à jour d'une autorité existante. Les nouveautés
 sont ajoutées à Koha.  Les mises à jour remplacent les notices Koha
@@ -339,13 +344,29 @@ Il y a trois cas de figure où l'on a affaire à une mise à jour :
   nécessaire mais que le chargeur ne peut pas effectuer, un message d'alerte est
   laissé dans les logs.
 
+===== Exemplarisation =====
+
 Pour les nouvelles notices, des exemplaires Koha peuvent être créés.
 C'est paramétrable : voir +sudoc.conf+ paramètre 'itemize'. Pour une
 mise à jour, la notice bibliographique est fusionnée avec la notice
 entrante mais ses exemplaires ne sont pas affectés. Il n'y pas de
 logique de fusion des exemplaires en standard.
 
-Pour toute notice, il est possible d'autoritiser les zones contrôlées
+En standard, le Chargeur SUDOC crée automatiquement des exemplaires Koha (zones
+995) à partir du contenu des zones 915 et 930 des notices entrantes. Les
+sous-champs suivants de la zone 995 sont créés de la façon suivante :
+
+- *$a* contient le code bibliothèque Koha du RCR de l'exemplaire SUDOC. Ce code
+  est obtenu à partir de la table d'équivalence RCR:code Koha de +sudoc.conf+.
+- *$b* idem. On a donc toujours $b = $a.
+- *$f* contient le code à barres de l'exemplaire : 915$b ou, en son absence,
+  l'EPN (le n° d'exemplaire SUDOC). Si l'EPN est utilisé, il est préférable de
+  modifier par la suite les codes à barres dans Koha. 
+- *$k* contient la cote qui se trouve en 930$a.
+
+===== Autoritisation =====
+
+Pour toute notice, il est possible "d'autoritiser" les zones contrôlées
 par autorités (7xx, 6xx, etc.), c.-à-d. leur ajouter l'identifiant des
 autorités Koha. En effet, les notices entrantes ont un PPN SUDOC dans le
 sous-champ $3. Il convient d'y ajouter un sous-champ $9 contenant le
