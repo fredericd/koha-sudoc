@@ -116,16 +116,17 @@ sub handle_record {
 
     if ( $koha_record ) {
         # Modification d'une notice
+        $self->converter->clean($record);
+        $self->converter->merge($record, $koha_record);
         $self->log->debug("  Notice après traitements :\n" . $record->as('Text') );
         $self->log->notice("  * Remplace $biblionumber\n" );
-        $self->converter->merge($record, $koha_record);
         ModBiblio($record->as('Legacy'), $biblionumber, $framework)
             if $self->doit;
     }
     else {
         # Nouvelle notice
         $self->converter->itemize($record);
-        $self->converter->clear($record);
+        $self->converter->clean($record);
         $self->log->debug("  Notice après traitements :\n" . $record->as('Text') );
         $self->log->notice("  * Ajout\n" );
         $framework = $self->sudoc->c->{$self->sudoc->iln}->{biblio}->{framework};

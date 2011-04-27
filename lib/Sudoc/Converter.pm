@@ -38,8 +38,9 @@ has sudoc => ( is => 'rw', isa => 'Sudoc', required => 1 );
 has item => ( is => 'rw', isa => 'HashRef' );
 
 
-# On supprime un certain nombre de champs de la notice SUDOC entrante
-sub clear {
+# On nettoie la notice entrante : suppression de champs, ajout auto de
+# champs, etc.
+sub clean {
     my ($self, $record) = @_;
 }
 
@@ -70,8 +71,8 @@ sub itemize {
     while ( my ($rcr, $item_rcr) = each %$item ) {
         my $branch = $myrcr->{$rcr};
         while ( my ($id, $ex) = each %$item_rcr ) { # Les exemplaires d'un RCR
-            # On prend le code à barre en 915$b, et s'il n'y en a pas on prend
-            # EPN SUDOC ($id)
+            # On prend le code à barres en 915$b, et s'il n'y en a pas on prend
+            # l'EPN SUDOC ($id)
             my $barcode = $ex->{915};
             $barcode = $barcode->subfield('b')  if $barcode;
             $barcode = $id unless $barcode;
@@ -105,13 +106,15 @@ sub authoritize {
         if ($rs->size() >= 1 ) {
             my $auth = MARC::Moose::Record::new_from(
                 $rs->record(0)->raw(), 'Iso2709' );
-            my @sf;
-            for ( @{$field->subf} ) {
-                push @sf, [ $_->[0] => $_->[1] ];
-                push @sf, [ '9' => $auth->field('001')->value ]
-                    if $_->[0] eq '3';
-            }
-            $field->subf(\@sf);
+            $field->subf( do {
+                my @sf;
+                for ( @{$field->subf} ) {
+                    push @sf, [ $_->[0] => $_->[1] ];
+                    push @sf, [ '9' => $auth->field('001')->value ]
+                        if $_->[0] eq '3';
+                }
+                \@sf;
+            } );
         }
     }
 }

@@ -20,6 +20,7 @@ use Moose;
 
 extends 'Sudoc::Converter';
 
+use MARC::Moose::Field::Std;
 use YAML;
 
 
@@ -28,5 +29,31 @@ after 'itemize' => sub {
     my ($self, $record) = @_;
 };
 
+
+# Les champs à supprimer de la notice entrante.
+my @todelete = qw( 915 917 930 991 999);
+ 
+after 'clean' => sub {
+    my ($self, $record) = @_;
+
+    print "AVANT:",  $record->as('Text');
+
+    # Suppression des champs SUDOC dont on ne veut pas dans le catalogue
+    # Koha
+    $record->fields( [ grep { not $_->tag ~~ @todelete } @{$record->fields} ] );
+
+    # On détermine le type de doc biblio
+    my $tdoc;
+    if ( my $field = $record->field('995') ) {
+        $tdoc = $field->subfield('r');
+        $tdoc = 'MONO' unless $tdoc;
+    }
+    if ( $tdoc ) {
+        $record->append( MARC::Moose::Field::Std->new(
+            tag => '915', subf => [ [ a => $tdoc ], [ b => '0' ] ] ) );
+    }
+    print $record->as('Text');
+    exit;
+};
 
 1;

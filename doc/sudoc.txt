@@ -376,6 +376,31 @@ ce qui peut convenir à un établissement dont tout le Catalogue Koha
 provient du SUDOC sans notices locales.  Voir +sudoc.conf+ paramètre
 'authoritize'.
 
+=== Fichiers de log ===
+
+Les chargeurs des notices bibliographiques et des autorités affichent à l'écran
+quelques informations sur les traitements qu'ils effectuent. Le détail de
+l'activité des chargeurs est écrit dans des fichiers de log se trouvant dans le
+répertoire +var/log+ :
+
+- <ILN>-Biblios.log
+- <ILN>-Authorities.log
+
+Ces log contiennent les informations suivantes :
+
+- Nom du fichier chargé
+- Nombre de notice/autorités chargées dont nombre de notices fusionnées
+- Notice/autorité SUDOC entrante brute
+- Notice/autorité avant chargement dans Koha, donc avec exemplaires, liens aux
+  autorités, fusion, etc.
+- Rapport d'anomalie
+
+En phase de test, on peut utiliser les chargeurs sans le paramètre +--doit+.
+Ainsi les notices/autorités sont préparées pour être chargées dans Koha mais ne
+sont pas effectivement chargées. En examinant les log, on peut voir les
+traitements réalisés et vérifier qu'ils correspondent bien à ce que l'on
+souhaitait obtenir.
+
 === Fichier de configuration sudoc.conf ===
 
 Un fichier de configuration +sudoc.conf+ contient tous les paramètres
@@ -447,7 +472,9 @@ biblio::
     Le code Koha du framework auquel affecter toutes les notices
     entrantes.
   authoritize;;
-    Est-ce qu'on autoritise les notices entrantes ? Oui = 1, Non = 0.
+    Est-ce qu'on autoritise les notices entrantes ? Oui = 1, Non = 0. Le
+    chargement de notices bibliographiques est sensiblement plus rapide en
+    l'absence d'autoritisation.
   itemize;;
     Est-ce qu'on exemplarise les notices entrantes ? Oui = 1, Non = 0.
   converter;;
