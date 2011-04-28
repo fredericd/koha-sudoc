@@ -36,8 +36,6 @@ my @todelete = qw( 915 917 930 991 999);
 after 'clean' => sub {
     my ($self, $record) = @_;
 
-    print "AVANT:",  $record->as('Text');
-
     # Suppression des champs SUDOC dont on ne veut pas dans le catalogue
     # Koha
     $record->fields( [ grep { not $_->tag ~~ @todelete } @{$record->fields} ] );
@@ -52,8 +50,6 @@ after 'clean' => sub {
         $record->append( MARC::Moose::Field::Std->new(
             tag => '915', subf => [ [ a => $tdoc ], [ b => '0' ] ] ) );
     }
-    print $record->as('Text');
-    exit;
 };
 
 1;
