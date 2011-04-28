@@ -28,6 +28,7 @@ use Log::Dispatch::Screen;
 use Log::Dispatch::File;
 use YAML;
 use Try::Tiny;
+use Locale::TextDomain 'fr.tamil.sudoc';
 
 
 # Moulinette SUDOC
@@ -84,8 +85,10 @@ sub BUILD {
         Class::MOP::load_class($class);
     } catch {
         $self->log->warning(
-            "Attention : le converter $converter n'est pas défini. " .
-            "On utilise le converter par défaut.\n" );
+            __x("Warning: converter {converter} isn't defined. " .
+                "Default converter will be used.",
+                converter => $converter) .
+            "\n" );
         $class = 'Sudoc::Converter';
     };
     $converter = $class->new( sudoc => $self->sudoc );
@@ -101,8 +104,9 @@ sub handle_record {
 sub run {
     my $self = shift;
 
-    $self->log->notice("Chargement du fichier : " . $self->file . "\n");
-    $self->log->notice("** Test **\n") unless $self->doit;
+    $self->log->notice(
+        __x("Loading file: {file}", file => $self->file) . "\n");
+    $self->log->notice(__"** Test **" . "\n") unless $self->doit;
     my $reader = MARC::Moose::Reader::File::Iso2709->new(
         file => $self->sudoc->spool->file_path( $self->file ) );
     while ( my $record = $reader->read() ) {
@@ -110,13 +114,22 @@ sub run {
         $self->handle_record($record);
     }
     if ( $self->doit ) {
-        $self->log->notice( "Enregistrements chargés : " . $self->count . ", dont " .
-            $self->count_replaced . " remplacés\n" );
+        $self->log->notice(
+            __nx("One record has been loaded",
+                 "Number of record loaded: {count}",
+                 $self->count,
+                 count => $self->count) .
+            "\n" .
+            __nx("One record has been merged",
+                 "Number of merged records: {count}",
+                 $self->count_replaced,
+                 count => $self->count_replaced) .
+            "\n" );
         $self->sudoc->spool->move_done($self->file);
     }
     else {
         $self->log->notice(
-            "** Test ** Le fichier " . $self->file . " n'a pas été chargé\n" );
+            __x("** Test ** File {file} has not been loaded", file => $self->file) . "\n" );
     }
 }
 

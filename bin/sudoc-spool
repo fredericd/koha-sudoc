@@ -14,6 +14,8 @@ use Pod::Usage;
 use Koha;
 use Sudoc;
 use YAML;
+use Locale::TextDomain ('fr.tamil.sudoc');
+
 
 my ($help, $init);
 GetOptions(
@@ -30,8 +32,10 @@ if ( $help || !$iln ) {
 
 my $sudoc  = Sudoc->new;
 
+
 if ( $init ) {
-    print "Initialisation du spool de l'ILN $iln\n";
+    print __x("{iln} ILN spool init", 
+              iln => $iln), "\n";
     $sudoc->spool->init_iln($iln);
     exit;
 }
@@ -43,42 +47,42 @@ if ( @ARGV ) {
     for my $file (@ARGV) {
         my $path = $sudoc->spool->file_path($file );
         unless ( $path ) {
-            print "Le fichier $file n'existe pas\n";
+            print __x("File {file} doesn't exist", file => $path), "\n";
             next;
         }
-        print "Fichier $path :\n";
+        print __x("File {file}:", file => $path ), "\n";
         system( "yaz-marcdump $path | less" );
     }
 }
 else {
     my $handle_files = [
         {
-            msg     => "Fichiers des autorités chargées",
+            msg     => __"Files containing loaded authorities:",
             where   => 'done',
             type    => 'c',
         }, 
         {
-            msg     => "Fichiers des notices biblio chargées",
+            msg     => __"Files containing loaded biblio records:",
             where   => 'done',
             type    => '[a|b]',
         }, 
         {
-            msg     => "Fichiers des autorités en attente de chargement",
+            msg     => __"Files containing waiting authorities:",
             where   => 'waiting',
             type    => 'c',
         }, 
         {
-            msg     => "Fichiers des notices biblio en attente de chargement",
+            msg     => __"Files containing waiting biblio records:",
             where   => 'waiting',
             type    => '[a|b]',
         }, 
         {
-            msg     => "Fichiers des autorités en cours de transfert",
+            msg     => __"Files containing authorities beeing transfered:",
             where   => 'staged',
             type    => 'c',
         }, 
         {
-            msg     => "Fichiers des notices biblio en cours de transfert",
+            msg     => __"Files containing biblio records beeing transfered:",
             where   => 'staging',
             type    => '[a|b]',
         }, 
@@ -86,11 +90,12 @@ else {
     for my $h ( @$handle_files ) {
         my $files = $sudoc->spool->files( $h->{where}, $h->{type} );
         next unless @$files;
-        print $h->{msg}, " : \n";
+        print $h->{msg}, "\n";
         my $count = 0;
         for my $file (@$files) {
             $count++;
-            print sprintf("  %3d. ", $count), $file, "\n";
+            print sprintf ("  %3d. ", $count), $file, "\n";
+           
         }
     }
 }

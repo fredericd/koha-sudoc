@@ -25,7 +25,7 @@ use Koha;
 use Sudoc::Spool;
 use MARC::Moose::Field::Std;
 use MARC::Moose::Field::Control;
-
+use Locale::TextDomain 'fr.tamil.sudoc';
 
 
 # L'ILN sélectionnée
@@ -36,7 +36,7 @@ has iln => (
         my ($self, $iln) = @_;
         my $conf = $self->c->{$iln};
         unless ($conf) {
-            print "L'ILN $iln est absent de sudoc.conf\n";
+            print __x("ILN {iln} is missing in sudoc.conf", iln => $iln), "\n";
             exit;
         }
         $self->koha( Koha->new( conf_file => $self->c->{$iln}->{koha_conf} ) );

@@ -22,6 +22,7 @@ extends 'Sudoc::Loader';
 
 use C4::Biblio;
 use C4::Items;
+use Locale::TextDomain 'fr.tamil.sudoc';
 
 
 # On cherche les notices doublons SUDOC. On renvoie la liste des notices
@@ -40,8 +41,9 @@ sub doublons_sudoc {
             $self->sudoc->koha->get_biblio_by_ppn( $ppn );
         if ($koha_record) {
             $self->log->notice(
-              "  Fusion Sudoc du PPN $ppn de la notice Koha " .
-              "$biblionumber\n" );
+              __x("  Merging Sudoc PPN {ppn} with Koha biblio {biblionumber}",
+                  ppn => $ppn, biblionumber => $biblionumber) .
+              "\n" );
             push @doublons, {
                 ppn => $ppn,                   record => $koha_record,
                 biblionumber => $biblionumber, framework => $framework,
@@ -60,7 +62,9 @@ sub handle_record {
 
     my $ppn = $record->field('001')->value;
     my $conf = $self->sudoc->c->{$self->sudoc->iln}->{biblio};
-    $self->log->notice( "Notice #" . $self->count . " PPN $ppn\n" );
+    $self->log->notice(
+        __x("Biblio record #{count} PPN {ppn}",
+            count => $self->count, ppn => $ppn) . "\n" );
     $self->log->debug( $record->as('Text') );
 
     # On déplace le PPN
@@ -71,7 +75,9 @@ sub handle_record {
     ($biblionumber, $framework, $koha_record) =
         $self->sudoc->koha->get_biblio_by_ppn( $ppn );
     if ($koha_record) {
-        $self->log->debug("  PPN trouvé dans la notice Koha $biblionumber\n" );
+        $self->log->debug(
+            __x("  PPN found in Koha biblio record {biblionumber}",
+                biblionumber => $biblionumber) . "\n" );
     }
     else {
         # On cherche un 035 avec un $5 contenant un RCR de l'ILN, auquel cas $a contient
@@ -85,8 +91,9 @@ sub handle_record {
                 $self->sudoc->koha->get_biblio( $biblionumber );
             if ($koha_record) {
                 $self->log->notice(
-                  "  Fusion avec la notice Koha $biblionumber trouvée en 035\$a " .
-                  "pour le RCR $rcr\n");
+                  __x("  Merging Koha biblio {biblionumber} found in 035\$a " .
+                      "for RCR {rcr}",
+                      biblionumber => $biblionumber, rcr => $rcr) . "\n");
                 last;
             }
         } 
@@ -118,8 +125,10 @@ sub handle_record {
         # Modification d'une notice
         $self->converter->clean($record);
         $self->converter->merge($record, $koha_record);
-        $self->log->debug("  Notice après traitements :\n" . $record->as('Text') );
-        $self->log->notice("  * Remplace $biblionumber\n" );
+        $self->log->debug(
+            __("  Biblio after processing:\n") . $record->as('Text') );
+        $self->log->notice(
+            __x("  * Replace {biblionumber}", biblionumber => $biblionumber) ."\n" );
         ModBiblio($record->as('Legacy'), $biblionumber, $framework)
             if $self->doit;
     }
@@ -127,8 +136,9 @@ sub handle_record {
         # Nouvelle notice
         $self->converter->itemize($record);
         $self->converter->clean($record);
-        $self->log->debug("  Notice après traitements :\n" . $record->as('Text') );
-        $self->log->notice("  * Ajout\n" );
+        $self->log->debug(
+            __("  Biblio after processing:\n") . $record->as('Text') );
+        $self->log->notice(__("  * Add") . "\n" );
         $framework = $self->sudoc->c->{$self->sudoc->iln}->{biblio}->{framework};
         if ( $self->doit ) {
             my $marc = $record->as('Legacy');

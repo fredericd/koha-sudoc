@@ -22,6 +22,7 @@ extends 'Sudoc::Loader';
 
 use C4::AuthoritiesMarc;
 use MARC::Moose::Record;
+use Locale::TextDomain('fr.tamil.sudoc');
 
 
 # On cherche les autorités doublons SUDOC. On renvoie la liste des notices
@@ -40,9 +41,9 @@ sub doublons_sudoc {
             $self->sudoc->koha->get_auth_by_ppn( $ppn );
         if ($auth) {
             $self->log->notice(
-              "  Fusion Sudoc du PPN $ppn de l'autorité Koha " .
-              "$authid\n" );
-            push @doublons, { ppn => $ppn, authid => authid, auth => $auth };
+              __x("  Sudoc merging of PPN {ppn} with Koha authority {id}",
+                  ppn => $ppn, authid => $authid) . "\n" );
+            push @doublons, { ppn => $ppn, authid => $authid, auth => $auth };
         }
     } 
     return \@doublons;
@@ -55,7 +56,9 @@ sub handle_record {
     my $conf = $self->sudoc->c->{$self->sudoc->iln}->{auth};
 
     my $ppn = $record->field('001')->value;
-    $self->log->notice( "Autorité #" . $self->count . " PPN $ppn\n");
+    $self->log->notice(
+        __x("Authority #{count} PPN {ppn}",
+            count => $self->count, ppn => $ppn) . "\n");
     $self->log->debug( $record->as('Text'), "\n" );
 
     # On détermine le type d'autorité
@@ -68,7 +71,7 @@ sub handle_record {
         }
     }
     unless ( $authtypecode ) {
-        $self->warning( "  ERREUR: Autorité sans champ Vedette\n" );
+        $self->warning( __"  ERROR: Authority without heading" . "\n" );
         return;
     }
 
@@ -90,8 +93,8 @@ sub handle_record {
     if ( @$doublons ) {
         if ( $auth || @$doublons > 1 ) {
             $self->log->warning(
-                "  Attention ! la notice entrante doit être fusionnée à plusieurs " .
-                "notices Koha existantes. A FAIRE MANUELLEMENT\n" );
+                __"  Warning ! the entering biblio record has to be merged to" .
+                  "several existing Koha biblios. TO BE DONE MANUALLY" . "\n" );
         }
         else {
             # On fusionne le doublon SUDOC (unique) avec la notice SUDOC entrante
@@ -112,8 +115,11 @@ sub handle_record {
         if $self->doit;
     $authid = 0 unless $authid;
     $self->log->notice(
-        ($auth ? "  * Remplace" : "  * Ajout") .
-        " authid $authid\n" );
+        ( $auth
+          ? __x("  * Replace {authid}", authid => $authid)
+          : __x("  * Add {authid}", authid => $authid)
+        )
+        . "\n" );
 }
 
 1;
