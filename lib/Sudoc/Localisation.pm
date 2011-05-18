@@ -317,8 +317,8 @@ sub get_file {
     my $fh = $file->{fh};
     if ( $line > $self->lines ) {
         my $index = $file->{index} + 1;
-        my $name = $prefix . $file->{rcr} . 'u.' .
-                   sprintf("%04d", $index);
+        my $name = $prefix . $file->{rcr} . 'u_' .
+                   sprintf("%04d", $index) . '.txt';
         close($fh) if $fh;
         open $fh, ">$name";
         $file->{index} = $index;
