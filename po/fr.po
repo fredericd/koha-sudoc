@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: 1.0\n"
 "Report-Msgid-Bugs-To: Tamil <contact@tamil.fr>\n"
-"POT-Creation-Date: 2011-04-28 21:52+0200\n"
+"POT-Creation-Date: 2011-04-29 07:38+0200\n"
 "PO-Revision-Date: 2011-04-27 22:45\n"
 "Last-Translator: Frédéric Demians <frederic@tamil.fr>\n"
 "Language-Team: Tamil <contact@tamil.fr>\n"
@@ -90,7 +90,7 @@ msgid_plural "Number of merged records: {count}"
 msgstr[0] "Un enregistrement a été fusionné"
 msgstr[1] "Nombre d'enregistrements fusionné : {count}"
 
-#: ../lib/Sudoc/Loader.pm:132
+#: ../lib/Sudoc/Loader.pm:133
 #, perl-brace-format
 msgid "** Test ** File {file} has not been loaded"
 msgstr "** Test ** Le fichier {file} n'a pas été chargé"
