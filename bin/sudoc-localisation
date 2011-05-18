@@ -73,8 +73,8 @@ la convention de nommage demandée par l'ABES : commence par la lettre i ou r (p
 ISBN ou Date-Auteur-Titre), suivi du RCR de la bibliothèque, puis le code de
 PEB (toujours u). Ces noms de fichiers sont suffixés d'un index. Par exemple :
 
- i3641767u.0001
- i3641767u.0002
+ i3641767u_0001.txt
+ i3641767u_0002.txt
 
 =head1 PARAMETRES
 
