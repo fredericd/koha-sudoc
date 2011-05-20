@@ -42,7 +42,7 @@ sub doublons_sudoc {
             $self->log->notice(
               "  Fusion Sudoc du PPN $ppn de l'autorité Koha " .
               "$authid\n" );
-            push @doublons, { ppn => $ppn, authid => authid, auth => $auth };
+            push @doublons, { ppn => $ppn, authid => $authid, auth => $auth };
         }
     } 
     return \@doublons;
