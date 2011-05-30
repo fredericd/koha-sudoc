@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: 1.0\n"
 "Report-Msgid-Bugs-To: Tamil <contact@tamil.fr>\n"
-"POT-Creation-Date: 2011-04-29 07:38+0200\n"
+"POT-Creation-Date: 2011-05-30 07:59+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -55,6 +55,20 @@ msgstr ""
 msgid "Files containing biblio records beeing transfered:"
 msgstr ""
 
+#: ../bin/sudoc-trans:35
+msgid "Starting ABES transfer daemon"
+msgstr ""
+
+#: ../bin/sudoc-trans:66
+#, perl-brace-format
+msgid "Send GTD: ILN {iln}, job {jobid}, year {year}\n"
+msgstr ""
+
+#: ../bin/sudoc-trans:98
+#, perl-brace-format
+msgid "End file transfer from ABES for ILN {iln}\n"
+msgstr ""
+
 #: ../lib/Sudoc.pm:39
 #, perl-brace-format
 msgid "ILN {iln} is missing in sudoc.conf"
@@ -89,7 +103,7 @@ msgid_plural "Number of merged records: {count}"
 msgstr[0] ""
 msgstr[1] ""
 
-#: ../lib/Sudoc/Loader.pm:133
+#: ../lib/Sudoc/Loader.pm:132
 #, perl-brace-format
 msgid "** Test ** File {file} has not been loaded"
 msgstr ""

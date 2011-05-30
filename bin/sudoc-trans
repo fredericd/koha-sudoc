@@ -11,6 +11,7 @@ use POE;
 use Mail::Box::Manager;
 use DateTime;
 use Sudoc;
+use Locale::TextDomain 'fr.tamil.sudoc';
 
 
 has sudoc => ( is => 'rw', isa => 'Sudoc', default => sub { Sudoc->new } );
@@ -31,7 +32,7 @@ my $daemon_id = 'sudoc-trans';
 sub BUILD {
     my $self = shift;
 
-    print "Démarrage du daemon de transfert ABES\n";
+    print __"Starting ABES transfer daemon", "\n";
 
     my $timeout = $self->sudoc->c->{trans}->{timeout};
     POE::Session->create(
@@ -62,7 +63,8 @@ sub send_gtd {
     # La date
     my $year = DateTime->now->year;
 
-    print "Envoi GTD : ILN $iln, job $jobid, year $year\n";
+    print __x ("Send GTD: ILN {iln}, job {jobid}, year {year}\n",
+               iln => $iln, jobid => $jobid, year => $year );
 
     my $conf = $self->sudoc->c->{trans};
 
@@ -93,7 +95,8 @@ sub move_to_waiting {
     my $body = $msg->body;
     my ($iln) = $body =~ /GTD_ILN\s*=\s*(\d*)/i;
  
-    print "Fin transfert par l'ABES des fichiers de l'ILN $iln\n";
+    print __x ("End file transfer from ABES for ILN {iln}\n",
+               iln => $iln);
 
     my $sudoc = $self->sudoc;
     $sudoc->iln($iln);
@@ -159,6 +162,7 @@ sudoc-trans - Transfert des fichiers Sudoc
 
 =head1 DESCRIPTION
 
+Voir la doc. principale.
 
 =head1 PARAMETRES
 

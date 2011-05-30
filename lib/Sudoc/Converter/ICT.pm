@@ -27,6 +27,68 @@ use YAML;
 # Création des exemplaires Koha en 995 en fonction des données locales SUDOC
 after 'itemize' => sub {
     my ($self, $record) = @_;
+
+    #print Dump($self->item);
+
+    # On reprend tout, donc on efface les exemplaires créés avec la
+    # logique par défaut
+    $record->fields( [ grep { $_->tag ne '995' } @{$record->fields} ] );
+
+    # On crée les exemplaires à partir de 930, 915 et 999
+    my $myrcr = $self->sudoc->c->{$self->sudoc->iln}->{rcr};
+    my $f999; # Le champ 999 courant
+    my $subf;   # Les sous-champs en cours de construction
+    my $append = sub { # Ajout à $subf d'un sous-champ de $f999
+        my $letter = shift;
+        return unless $f999;
+        my $value = $f999->subfield($letter);
+        return unless $value;
+        push @$subf, [ $letter => $value ];
+    };
+    while ( my ($rcr, $item_rcr) = each %{$self->item} ) {
+        my $branch = $myrcr->{$rcr};
+        while ( my ($id, $ex) = each %$item_rcr ) { # Les exemplaires d'un RCR
+            $subf = [];
+            $f999 = $ex->{999};
+
+            $append->('a');
+
+            # $b et $c = Les codes de site Koha
+            push @$subf, [ b => $branch ], [ c => $branch ];
+
+            # $d = Le code rétroconversion de 991$a
+            my $value = $ex->{991};
+            if ( $value ) {
+                $value = $value->subfield('a');
+                push @$subf, [ d => $value ] if $value;
+            }
+
+            $append->('e');
+
+            # $f Code à barres
+            # On prend le code à barres en 915$b, et s'il n'y en a pas on prend
+            # l'EPN SUDOC ($id)
+            $value = $ex->{915};
+            $value = $value->subfield('b')  if $value;
+            $value = $id unless $value;
+            push @$subf, [ f => $value ];
+
+            # $j Numéro d'inventaire
+            $append->('j');
+
+            # $k Cote = 930$a
+            $value = $ex->{930}->subfield('a');
+            push @$subf, [ k => $value ];
+
+            # On copie telles quelles toutes les lettres de 999 en 995
+            # pour l'intervalle l..z
+            $append->($_) for ( "l" .. "z" );
+            $record->append( MARC::Moose::Field::Std->new(
+                tag => '995',
+                subf => $subf ) );
+        }
+    }
+
 };
 
 

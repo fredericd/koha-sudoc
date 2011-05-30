@@ -4,7 +4,6 @@
 # you have to adhere to make syntax.
 LINGUAS = de \
 	      fr \
-          ru \
 
 # Textdomain for our package.
 TEXTDOMAIN = fr.tamil.sudoc

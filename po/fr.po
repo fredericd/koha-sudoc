@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: 1.0\n"
 "Report-Msgid-Bugs-To: Tamil <contact@tamil.fr>\n"
-"POT-Creation-Date: 2011-04-29 07:38+0200\n"
+"POT-Creation-Date: 2011-05-30 07:59+0200\n"
 "PO-Revision-Date: 2011-04-27 22:45\n"
 "Last-Translator: Frédéric Demians <frederic@tamil.fr>\n"
 "Language-Team: Tamil <contact@tamil.fr>\n"
@@ -56,6 +56,20 @@ msgstr "Fichiers des autorités en cours de transfert :"
 msgid "Files containing biblio records beeing transfered:"
 msgstr "Fichiers des notices en cours de transfert :"
 
+#: ../bin/sudoc-trans:35
+msgid "Starting ABES transfer daemon"
+msgstr "Démarrage de la tâche de fond de transfert des fichiers ABES"
+
+#: ../bin/sudoc-trans:66
+#, perl-brace-format
+msgid "Send GTD: ILN {iln}, job {jobid}, year {year}\n"
+msgstr "Envoi GTD : ILN {iln}, job {jobid}, année {year}\n"
+
+#: ../bin/sudoc-trans:98
+#, perl-brace-format
+msgid "End file transfer from ABES for ILN {iln}\n"
+msgstr "Fin du transfert de l'ABES pour l'ILN {iln}\n"
+
 #: ../lib/Sudoc.pm:39
 #, perl-brace-format
 msgid "ILN {iln} is missing in sudoc.conf"
@@ -90,7 +104,7 @@ msgid_plural "Number of merged records: {count}"
 msgstr[0] "Un enregistrement a été fusionné"
 msgstr[1] "Nombre d'enregistrements fusionné : {count}"
 
-#: ../lib/Sudoc/Loader.pm:133
+#: ../lib/Sudoc/Loader.pm:132
 #, perl-brace-format
 msgid "** Test ** File {file} has not been loaded"
 msgstr "** Test ** Le fichier {file} n'a pas été chargé"

@@ -26,6 +26,7 @@ use MARC::Record;
 use MARC::Moose::Record;
 use C4::Biblio;
 use YAML;
+use Try::Tiny;
 
 
 has conf_file => ( is => 'rw', isa => 'Str' );
@@ -168,14 +169,16 @@ sub get_biblio {
 # Lecture d'une notice biblio par son PPN
 sub get_biblio_by_ppn {
     my ($self, $ppn) = @_;
-    my $rs = $self->zbiblio()->search_pqf( "\@attr 1=PPN $ppn" );
-    my ($record, $biblionumber, $framework);;
-    if ( $rs->size() >= 1 ) {
-        $record = $rs->record(0);
-        $record = MARC::Moose::Record::new_from( $record->raw(), 'Iso2709' );
-        return (undef, undef, undef) unless $record;
-        ($biblionumber, $framework) = $self->get_biblionumber_framework($record);
-    } 
+    my ($rs, $record, $biblionumber, $framework);;
+    try {
+        $rs = $self->zbiblio()->search_pqf( "\@attr 1=PPN $ppn" );
+        if ( $rs->size() >= 1 ) {
+            $record = $rs->record(0);
+            $record = MARC::Moose::Record::new_from( $record->raw(), 'Iso2709' );
+            return (undef, undef, undef) unless $record;
+            ($biblionumber, $framework) = $self->get_biblionumber_framework($record);
+        } 
+    };
     return ($biblionumber, $framework, $record);
 }
 
@@ -183,14 +186,16 @@ sub get_biblio_by_ppn {
 # Lecture d'une autorité par son PPN
 sub get_auth_by_ppn {
     my ($self, $ppn) = @_;
-    my $rs = $self->zauth()->search_pqf( "\@attr 1=PPN $ppn" );
-    my ($authid, $record);;
-    if ( $rs->size() >= 1 ) {
-        $record = $rs->record(0);
-        $record = MARC::Moose::Record::new_from( $record->raw(), 'Iso2709' );
-        # FIXME: En dur, le authid Koha en 001, comme dans Koha lui-même
-        $authid = $record->field('001')->value if $record;
-    } 
+    my ($rs, $authid, $record);
+    try {
+        $rs = $self->zauth()->search_pqf( "\@attr 1=PPN $ppn" );
+        if ( $rs->size() >= 1 ) {
+            $record = $rs->record(0);
+            $record = MARC::Moose::Record::new_from( $record->raw(), 'Iso2709' );
+            # FIXME: En dur, le authid Koha en 001, comme dans Koha lui-même
+            $authid = $record->field('001')->value if $record;
+        } 
+    };
     return ($authid, $record);
 }
 

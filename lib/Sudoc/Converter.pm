@@ -18,6 +18,8 @@
 package Sudoc::Converter;
 use Moose;
 
+# FIXME: à supprimer
+#use Sudoc::Converter::ICT;
 
 # Moulinette SUDOC
 has sudoc => ( is => 'rw', isa => 'Sudoc', required => 1 );

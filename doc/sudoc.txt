@@ -148,6 +148,7 @@ Installez les bibliothèques Perl requises :
 cpan MARC::Moose::Record
 cpan POE
 cpan Log::Dispatch
+cpan Locale::TextDomain
 ----------------------------------------
 
 Pour exécuter les scripts du chargeur, faites pointer la variable
@@ -157,6 +158,10 @@ l'installation dans +/usr/local/koha+, sous Linux :
 ----------------------------------------
 export PATH=$PATH:/usr/local/koha/sudoc/bin
 ----------------------------------------
+
+Et bien sûr, il faut que vous ayez au moyen au moins une instance de
+Koha installée, avec les variables d'environnement +KOHA_CONF+ et
++PERL5LIB+ correctement initialisées.
 
 [CAUTION]
 Lisez attentivement la suite de ce document pour comprendre le
@@ -251,6 +256,13 @@ bibliographiques.
 Le Chargeur SUDOC dispose de deux programmes distincts de chargement des
 notices : un premier pour les notices bibliographiques et un second pour
 les notices d'autorités. 
+
+[NOTE]
+Si vous n'avez pas utilisé +sudoc-trans+ pour placer vos fichiers de
+notices dans le spool de votre ILN, vous pouvez le faire à la main :
+Copiez dans +var/spool/<ILN>/waiting+ le fichiers de l'ABES. Vous
+pouvez ensuite les lister avec la comamnde +sudoc-spool <ILN>+, puis
+les charger avec les commandes décrites ci-dessous.
 
 [WARNING]
 Il faut toujours commencer par charger les autorités afin de permettre
@@ -356,9 +368,9 @@ En standard, le Chargeur SUDOC crée automatiquement des exemplaires Koha (zones
 995) à partir du contenu des zones 915 et 930 des notices entrantes. Les
 sous-champs suivants de la zone 995 sont créés de la façon suivante :
 
-- *$a* contient le code bibliothèque Koha du RCR de l'exemplaire SUDOC. Ce code
+- *$b* contient le code bibliothèque Koha du RCR de l'exemplaire SUDOC. Ce code
   est obtenu à partir de la table d'équivalence RCR:code Koha de +sudoc.conf+.
-- *$b* idem. On a donc toujours $b = $a.
+- *$c* idem. On a donc toujours $c = $b.
 - *$f* contient le code à barres de l'exemplaire : 915$b ou, en son absence,
   l'EPN (le n° d'exemplaire SUDOC). Si l'EPN est utilisé, il est préférable de
   modifier par la suite les codes à barres dans Koha. 
@@ -561,13 +573,6 @@ bibliographiques :
 -----
 melm 009        PPN,PPN:n
 -----
-
-[WARNING]
-Un bug de Zebra empêche le Chargeur SUDOC de fonctionner tant que
-l'index PPN ne contient pas au moins une valeur.  Il faut donc ajouter à
-une notice bibliographique et à une autorité un champ PPN contenant une
-valeur arbitraire qui ne risque pas de rentrer en collision avec un PPN
-vrai, par exemple la valeur +test+.
 
 == Chargement initial ==
 
