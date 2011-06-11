@@ -429,9 +429,9 @@ Une section 'trans' détermine le fonctionnement du daemon de
 +sudoc-trans+ de transfert des fichiers ABES :
 
 timeout::
-  Délai entre deux réveils du daemon transfert.  Par exemple, une valeur
-  de +600+ signifie que la boîte aux lettres SUDOC sera examinée toutes
-  les dix minutes.
+  Délai en secondes entre deux réveils du daemon transfert.  Par
+  exemple, une valeur de +600+ signifie que la boîte aux lettres SUDOC
+  sera examinée toutes les dix minutes.
 email::
   Section contenant les adresses de courrier électronique utilisées par
   le protocole de transfert de fichiers entre l'ABES et le serveur
