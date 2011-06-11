@@ -83,7 +83,7 @@ else {
         }, 
         {
             msg     => __"Files containing biblio records beeing transfered:",
-            where   => 'staging',
+            where   => 'staged',
             type    => '[a|b]',
         }, 
     ];
