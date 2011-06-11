@@ -18,8 +18,6 @@
 package Sudoc::Converter;
 use Moose;
 
-# FIXME: à supprimer
-#use Sudoc::Converter::ICT;
 
 # Moulinette SUDOC
 has sudoc => ( is => 'rw', isa => 'Sudoc', required => 1 );
@@ -40,6 +38,15 @@ has sudoc => ( is => 'rw', isa => 'Sudoc', required => 1 );
 has item => ( is => 'rw', isa => 'HashRef' );
 
 
+# Le framework auquel affecter la notice biblio. Valeur par défaut prise
+# dans sudoc.conf.  Peut-être surchargé pour attribuer un framework
+# différent en fonction du type de doc.
+sub framework {
+    my ($self, $record) = @_;
+    $self->sudoc->c->{$self->sudoc->iln}->{biblio}->{framework};
+}
+
+
 # On nettoie la notice entrante : suppression de champs, ajout auto de
 # champs, etc.
 sub clean {
@@ -47,7 +54,16 @@ sub clean {
 }
 
 
+# La notice doit-elle être passée ? Par défaut, on garde toute notice.
+sub skip {
+    my ($self, $record) = @_;
+    return 0;
+}
+
+
 # Création des exemplaires Koha en 995 en fonction des données locales SUDOC
+# Création également de la structure de données $self->item qui contient
+# le détail des données d'exemplaire par numéro d'exemplaire.
 sub itemize {
     my ($self, $record) = @_;
 
@@ -102,22 +118,21 @@ sub authoritize {
 
     my $zconn = $self->sudoc->koha->zauth();
     for my $field ( $record->field('5..|6..|7..') ) {
-        my $ppn = $field->subfield('3');
-        next unless $ppn;
-        my $rs = $zconn->search_pqf( "\@attr 1=PPN $ppn" );
-        if ($rs->size() >= 1 ) {
-            my $auth = MARC::Moose::Record::new_from(
-                $rs->record(0)->raw(), 'Iso2709' );
-            $field->subf( do {
-                my @sf;
-                for ( @{$field->subf} ) {
-                    push @sf, [ $_->[0] => $_->[1] ];
-                    push @sf, [ '9' => $auth->field('001')->value ]
-                        if $_->[0] eq '3';
+        my @subf;
+        for my $sf ( @{$field->subf} ) {
+            my ($letter, $value) = @$sf;
+            push @subf, [ $letter => $value ];
+            if ( $letter eq '3' ) {
+                my $rs = $zconn->search_pqf( "\@attr 1=PPN $value" );
+                if ($rs->size() >= 1 ) {
+                    my $auth = MARC::Moose::Record::new_from(
+                        $rs->record(0)->raw(), 'Iso2709' );
+                    push @subf, [ '9' => $auth->field('001')->value ]
+                        if $auth;
                 }
-                \@sf;
-            } );
+            }
         }
+        $field->subf(\@subf);
     }
 }
 

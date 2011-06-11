@@ -43,8 +43,14 @@ has doit => ( is => 'rw', isa => 'Bool', default => 0 );
 # Compteur d'enregistrements traités
 has count => (  is => 'rw', isa => 'Int', default => 0 );
 
+# Compteur d'enregistrements ajoutés
+has count_added => (  is => 'rw', isa => 'Int', default => 0 );
+
 # Compteur d'enregistrements remplacés
 has count_replaced => (  is => 'rw', isa => 'Int', default => 0 );
+
+# Compteur d'enregistrements non traités
+has count_skipped => ( is => 'rw', isa => 'Int', default => 0 );
 
 # Converter
 has converter => (
@@ -113,24 +119,32 @@ sub run {
         $self->count( $self->count + 1 );
         $self->handle_record($record);
     }
-    if ( $self->doit ) {
-        $self->log->notice(
-            __nx("One record has been loaded",
-                 "Number of record loaded: {count}",
-                 $self->count,
-                 count => $self->count) .
-            "\n" .
-            __nx("One record has been merged",
-                 "Number of merged records: {count}",
-                 $self->count_replaced,
-                 count => $self->count_replaced) .
-            "\n" );
-        $self->sudoc->spool->move_done($self->file);
-    }
-    else {
-        $self->log->notice(
-            __x("** Test ** File {file} has not been loaded", file => $self->file) . "\n" );
-    }
+    
+    $self->sudoc->spool->move_done($self->file)  if $self->doit;
+    $self->log->notice(
+        __nx("One record has been handled",
+             "Number of record handled: {count}",
+             $self->count,
+             count => $self->count) .
+        "\n" .
+        __nx("One record has been added",
+             "Number of record added: {count}",
+             $self->count_added,
+             count => $self->count_added) .
+        "\n" .
+        __nx("One record has been merged",
+             "Number of merged records: {count}",
+             $self->count_replaced,
+             count => $self->count_replaced) .
+        "\n" .
+        __nx("One record has been skipped",
+             "Number of skipped records: {count}",
+             $self->count_skipped,
+             count => $self->count_skipped) .
+        "\n" );
+    $self->log->notice(
+        __x("** Test ** File {file} has not been loaded", file => $self->file) . "\n" )
+        unless $self->doit;
 }
 
 

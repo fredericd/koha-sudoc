@@ -78,9 +78,6 @@ sub handle_record {
     # On déplace le PPN de 001 en 009
     $self->sudoc->ppn_move($record, $conf->{ppn_move});
 
-    # FIXME Reset de la connexion tous les x enregistrements
-    $self->sudoc->koha->zconn_reset()  unless $self->count % 500;
-    
     # Y a-t-il déjà dans la base Koha une autorité ayant ce PPN ?
     my ($authid, $auth) = $self->sudoc->koha->get_auth_by_ppn($ppn);
 

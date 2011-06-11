@@ -22,6 +22,30 @@ extends 'Sudoc::Converter';
 
 use MARC::Moose::Field::Std;
 use YAML;
+use Locale::TextDomain 'fr.tamil.sudoc';
+
+
+sub record_is_peri {
+    my $record = shift;
+    my $leader = $record->leader();
+    $leader && substr($leader, 7, 1) eq 's';
+}
+
+
+# Deux framework: ICT et PER. Toute notice est associée à ICT sauf les
+# notices de périodique.
+override 'framework' => sub {
+    my ($self, $record) = @_;
+    record_is_peri($record) ? 'PER' : $self->SUPER::framework($record);
+};
+
+
+# On supprime purement et simplement les notices PERI qui n'ont pas
+# de zone 955
+override skip => sub {
+    my ($self, $record) = @_;
+    record_is_peri($record) && not $record->field('955') ? 1 : 0;
+};
 
 
 # Création des exemplaires Koha en 995 en fonction des données locales SUDOC
@@ -33,6 +57,19 @@ after 'itemize' => sub {
     # On reprend tout, donc on efface les exemplaires créés avec la
     # logique par défaut
     $record->fields( [ grep { $_->tag ne '995' } @{$record->fields} ] );
+
+    # Pour les périodiques, on place les cotes en 687, on ne crée pas
+    # d'exemplaires.
+    if ( record_is_peri($record) ) {
+        while ( my ($rcr, $item_rcr) = each %{$self->item} ) {
+            while ( my ($id, $ex) = each %$item_rcr ) {
+                $record->append( MARC::Moose::Field::Std->new(
+                    tag => '687',
+                    subf => [ [ a => $ex->{930}->subfield('a') ] ] ) );
+            }
+        }
+        return;
+    }
 
     # On crée les exemplaires à partir de 930, 915 et 999
     my $myrcr = $self->sudoc->c->{$self->sudoc->iln}->{rcr};
@@ -104,14 +141,16 @@ after 'clean' => sub {
 
     # On détermine le type de doc biblio
     my $tdoc;
-    if ( my $field = $record->field('995') ) {
+    if ( record_is_peri($record) ) {
+        $tdoc = 'PERI';
+    }
+    elsif ( my $field = $record->field('995') ) {
         $tdoc = $field->subfield('r');
-        $tdoc = 'MONO' unless $tdoc;
     }
-    if ( $tdoc ) {
-        $record->append( MARC::Moose::Field::Std->new(
-            tag => '915', subf => [ [ a => $tdoc ], [ b => '0' ] ] ) );
-    }
+    $tdoc = 'MONO' unless $tdoc;
+    $record->append( MARC::Moose::Field::Std->new(
+        tag => '915', subf => [ [ a => $tdoc ], [ b => '0' ] ] ) );
+
 };
 
 1;

@@ -58,7 +58,7 @@ sub handle_record {
     my ($self, $record) = @_;
 
     # FIXME Reset de la connexion tous les x enregistrements
-    $self->sudoc->koha->zconn_reset()  unless $self->count % 100;
+    $self->sudoc->koha->zconn_reset()  unless $self->count % 10;
 
     my $ppn = $record->field('001')->value;
     my $conf = $self->sudoc->c->{$self->sudoc->iln}->{biblio};
@@ -70,7 +70,16 @@ sub handle_record {
     # On déplace le PPN
     $self->sudoc->ppn_move($record, $conf->{ppn_move});
 
-    # On cherche si la notice entrante ne se trouve pas déjà dans le catalogue Koha.
+    # Est-ce qu'il faut passer la notice ?
+    if ( $self->converter->skip($record) ) {
+        $record = undef;
+        $self->count_skipped( $self->count_skipped + 1 );
+        $self->log->notice( __"  * Skipped\n" );
+        return;
+    }
+
+    # On cherche si la notice entrante ne se trouve pas déjà dans le
+    # catalogue Koha.
     my ($biblionumber, $framework, $koha_record);
     ($biblionumber, $framework, $koha_record) =
         $self->sudoc->koha->get_biblio_by_ppn( $ppn );
@@ -82,7 +91,7 @@ sub handle_record {
     else {
         # On cherche un 035 avec un $5 contenant un RCR de l'ILN, auquel cas $a contient
         # le biblionumber d'une notice Koha
-        my $rcr_hash = $self->sudoc->c->{ $self->sudoc->iln }->{rcr};
+        my $rcr_hash = $conf->{rcr};
         for my $field ( $record->field('035') ) {
             my $rcr = $field->subfield('5');
             next unless $rcr && $rcr_hash->{$rcr};
@@ -99,17 +108,18 @@ sub handle_record {
         } 
     }
 
-    # Les doublons SUDOC. Il n'y a qu'un seul cas où peut en faire quelque chose. Si on
-    # a déjà trouvé une notice Koha ci-dessus, on ne peut rien faire : en effet, on a
-    # déjà une cible pour fusionner la notice entrante. S'il y a plus d'un doublon qui
-    # correspond à des notices Koha, on ne sait à quelle notice Koha fusionner la notice
-    # entrante.
+    # Les doublons SUDOC. Il n'y a qu'un seul cas où on peut en faire
+    # quelque chose. Si on a déjà trouvé une notice Koha ci-dessus, on
+    # ne peut rien faire : en effet, on a déjà une cible pour fusionner
+    # la notice entrante. S'il y a plus d'un doublon qui correspond à
+    # des notices Koha, on ne sait à quelle notice Koha fusionner la
+    # notice entrante.
     my $doublons = $self->doublons_sudoc($record);
     if ( @$doublons ) {
         if ( $koha_record || @$doublons > 1 ) {
             $self->log->warning(
-                "  Attention ! la notice entrante doit être fusionnée à plusieurs " .
-                "notices Koha existantes. A FAIRE MANUELLEMENT\n" );
+                __"  Warning! the entering biblio must be merged into several " .
+                  "existing Koha biblio records. TO BE DONE MANUALLY\n" );
         }
         else {
             # On fusionne le doublon SUDOC (unique) avec la notice SUDOC entrante
@@ -123,6 +133,7 @@ sub handle_record {
 
     if ( $koha_record ) {
         # Modification d'une notice
+        $self->count_replaced( $self->count_replaced + 1 );
         $self->converter->clean($record);
         $self->converter->merge($record, $koha_record);
         $self->log->debug(
@@ -134,18 +145,19 @@ sub handle_record {
     }
     else {
         # Nouvelle notice
+        $self->count_added( $self->count_added + 1 );
         $self->converter->itemize($record);
         $self->converter->clean($record);
         $self->log->debug(
             __("  Biblio after processing:\n") . $record->as('Text') );
         $self->log->notice(__("  * Add") . "\n" );
-        $framework = $self->sudoc->c->{$self->sudoc->iln}->{biblio}->{framework};
+        $framework = $self->converter->framework($record);
         if ( $self->doit ) {
             my $marc = $record->as('Legacy');
             my ($biblionumber, $biblioitemnumber) =
                 AddBiblio($marc, $framework, { defer_marc_save => 1 });
             my ($itemnumbers_ref, $errors_ref) =
-                AddItemBatchFromMarc($marc, $biblionumber, $biblioitemnumber, '' );
+                AddItemBatchFromMarc($marc, $biblionumber, $biblioitemnumber, $framework);
         }
     }
     $self->log->debug("\n");
