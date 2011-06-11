@@ -88,9 +88,9 @@ sub zconn {
 
     my $zc = $self->_zconn->{$server};
     #return $zc  if $zc && $zc->errcode() == 0 && $zc->_check();
-    return $zc  if $zc && $zc->errcode() == 0;
+    return $zc  if $zc;
 
-    #FIXME: à réactiver pour s'assurer que de nouvelles connexion ne sont
+    #FIXME: à réactiver pour s'assurer que de nouvelles connexions ne sont
     # créées inutilement.
     #print "zconn: nouvelle connexion\n";
     my $c        = $self->conf;
