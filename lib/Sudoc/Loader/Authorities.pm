@@ -55,6 +55,9 @@ sub handle_record {
 
     my $conf = $self->sudoc->c->{$self->sudoc->iln}->{auth};
 
+    # FIXME Reset de la connexion tous les x enregistrements
+    $self->sudoc->koha->zconn_reset()  unless $self->count % 100;
+
     my $ppn = $record->field('001')->value;
     $self->log->notice(
         __x("Authority #{count} PPN {ppn}",
@@ -90,7 +93,7 @@ sub handle_record {
     if ( @$doublons ) {
         if ( $auth || @$doublons > 1 ) {
             $self->log->warning(
-                __"  Warning ! the entering biblio record has to be merged to" .
+                __"  Warning! the entering biblio record has to be merged to" .
                   "several existing Koha biblios. TO BE DONE MANUALLY" . "\n" );
         }
         else {
@@ -108,8 +111,23 @@ sub handle_record {
         $self->count_replaced( $self->count_replaced + 1 );
     }
 
-    ($authid) = AddAuthority($record->as('Legacy'), $authid, $authtypecode)
-        if $self->doit;
+    if ( $self->doit ) {
+        my $legacy = $record->as('Legacy');
+        # FIXME: Bug SUDOC, certaines notices UTF8 n'ont pas 50 en position 13
+        my $field = $legacy->field('100');
+        if ( $field ) {
+            my $value = $field->subfield('a');
+            my $enc = substr($value, 13, 2);
+            if ( $enc ne '50' ) {
+                $self->log->warning(
+                    __"  Warning! bad encoding in position 13. Fix it." . "\n" );
+                substr($value, 13, 2) = '50';
+                $field->update( a => $value );
+            }
+        }
+        ($authid) = AddAuthority($legacy, $authid, $authtypecode);
+    }
+
     $authid = 0 unless $authid;
     $self->log->notice(
         ( $auth
