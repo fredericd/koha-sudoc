@@ -4,9 +4,9 @@ use Moose;
 use diagnostics;
 use POE;
 use EchoWatcher;
+use Locale::TextDomain 'fr.tamil.sudoc';
 
 with 'WatchableTask';
-
 
 # Mode verbeux ?
 has verbose => ( is => 'rw', isa => 'Int' );
@@ -80,7 +80,7 @@ sub process {
 
 
 sub start_message {
-    print "Start process...\n";
+    print __"Start process..." . "\n";
 }
 
 
@@ -91,7 +91,7 @@ sub process_message {
 
 sub end_message {
     my $self = shift; 
-    print sprintf("  %#6d", $self->count), " records processed.\n";
+    print __x ("  {count} records processed", count => $self->count) . "\n";
 }
 
 

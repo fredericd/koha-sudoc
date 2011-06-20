@@ -4,6 +4,8 @@
 ../bin/sudoc-spool
 ../bin/sudoc-trans
 
+
+../lib/FileProcess.pm
 ../lib/Sudoc.pm
 ../lib/Sudoc/Converter.pm
 ../lib/Sudoc/Loader.pm
@@ -13,4 +15,4 @@
 ../lib/Sudoc/Converter/ISH.pm
 ../lib/Sudoc/Loader/Authorities.pm
 ../lib/Sudoc/Loader/Biblios.pm
-
+../lib/Sudoc/PPNize/Updater.pm

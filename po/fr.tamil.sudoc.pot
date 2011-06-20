@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: Tamil <contact@tamil.fr>\n"
-"POT-Creation-Date: 2011-06-10 14:45+0200\n"
+"POT-Creation-Date: 2011-06-20 18:18+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -70,6 +70,15 @@ msgstr ""
 msgid "End file transfer from ABES for ILN {iln}\n"
 msgstr ""
 
+#: ../lib/FileProcess.pm:83
+msgid "Start process...\n"
+msgstr ""
+
+#: ../lib/FileProcess.pm:94
+#, perl-brace-format
+msgid "  {count} records processed"
+msgstr ""
+
 #: ../lib/Sudoc.pm:39
 #, perl-brace-format
 msgid "ILN {iln} is missing in sudoc.conf"
@@ -128,27 +137,31 @@ msgstr ""
 msgid "  Sudoc merging of PPN {ppn} with Koha authority {id}"
 msgstr ""
 
-#: ../lib/Sudoc/Loader/Authorities.pm:60
+#: ../lib/Sudoc/Loader/Authorities.pm:63
 #, perl-brace-format
 msgid "Authority #{count} PPN {ppn}"
 msgstr ""
 
-#: ../lib/Sudoc/Loader/Authorities.pm:74
+#: ../lib/Sudoc/Loader/Authorities.pm:77
 msgid "  ERROR: Authority without heading\n"
 msgstr ""
 
-#: ../lib/Sudoc/Loader/Authorities.pm:93
+#: ../lib/Sudoc/Loader/Authorities.pm:96
 msgid ""
-"  Warning ! the entering biblio record has to be merged toseveral existing "
+"  Warning! the entering biblio record has to be merged toseveral existing "
 "Koha biblios. TO BE DONE MANUALLY\n"
 msgstr ""
 
-#: ../lib/Sudoc/Loader/Authorities.pm:116
+#: ../lib/Sudoc/Loader/Authorities.pm:123
+msgid "  Warning! bad encoding in position 13. Fix it.\n"
+msgstr ""
+
+#: ../lib/Sudoc/Loader/Authorities.pm:134
 #, perl-brace-format
 msgid "  * Replace {authid}"
 msgstr ""
 
-#: ../lib/Sudoc/Loader/Authorities.pm:117
+#: ../lib/Sudoc/Loader/Authorities.pm:135
 #, perl-brace-format
 msgid "  * Add {authid}"
 msgstr ""
@@ -167,31 +180,36 @@ msgstr ""
 msgid "  * Skipped\n"
 msgstr ""
 
-#: ../lib/Sudoc/Loader/Biblios.pm:87
+#: ../lib/Sudoc/Loader/Biblios.pm:88
 #, perl-brace-format
 msgid "  PPN found in Koha biblio record {biblionumber}"
 msgstr ""
 
-#: ../lib/Sudoc/Loader/Biblios.pm:102
+#: ../lib/Sudoc/Loader/Biblios.pm:103
 #, perl-brace-format
 msgid "  Merging Koha biblio {biblionumber} found in 035$a for RCR {rcr}"
 msgstr ""
 
-#: ../lib/Sudoc/Loader/Biblios.pm:119
+#: ../lib/Sudoc/Loader/Biblios.pm:121
 msgid ""
 "  Warning! the entering biblio must be merged into several existing Koha "
 "biblio records. TO BE DONE MANUALLY\n"
 msgstr ""
 
-#: ../lib/Sudoc/Loader/Biblios.pm:138 ../lib/Sudoc/Loader/Biblios.pm:150
+#: ../lib/Sudoc/Loader/Biblios.pm:140 ../lib/Sudoc/Loader/Biblios.pm:152
 msgid "  Biblio after processing:\n"
 msgstr ""
 
-#: ../lib/Sudoc/Loader/Biblios.pm:140
+#: ../lib/Sudoc/Loader/Biblios.pm:142
 #, perl-brace-format
 msgid "  * Replace {biblionumber}"
 msgstr ""
 
-#: ../lib/Sudoc/Loader/Biblios.pm:151
+#: ../lib/Sudoc/Loader/Biblios.pm:153
 msgid "  * Add"
+msgstr ""
+
+#: ../lib/Sudoc/PPNize/Updater.pm:66
+#, perl-brace-format
+msgid "  No biblio record found with biblionumber {biblionumber}"
 msgstr ""

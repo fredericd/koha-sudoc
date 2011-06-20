@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: 1.0\n"
 "Report-Msgid-Bugs-To: Tamil <contact@tamil.fr>\n"
-"POT-Creation-Date: 2011-06-10 14:45+0200\n"
+"POT-Creation-Date: 2011-06-20 18:18+0200\n"
 "PO-Revision-Date: 2011-04-27 22:45\n"
 "Last-Translator: Frédéric Demians <frederic@tamil.fr>\n"
 "Language-Team: Tamil <contact@tamil.fr>\n"
@@ -70,6 +70,15 @@ msgstr "Envoi GTD : ILN {iln}, job {jobid}, année {year}\n"
 msgid "End file transfer from ABES for ILN {iln}\n"
 msgstr "Fin du transfert de l'ABES pour l'ILN {iln}\n"
 
+#: ../lib/FileProcess.pm:83
+msgid "Start process...\n"
+msgstr "Démarrage du traitement...\n"
+
+#: ../lib/FileProcess.pm:94
+#, perl-brace-format
+msgid "  {count} records processed"
+msgstr "  {count} enregistrements traités"
+
 #: ../lib/Sudoc.pm:39
 #, perl-brace-format
 msgid "ILN {iln} is missing in sudoc.conf"
@@ -128,29 +137,33 @@ msgstr "** Test ** Le fichier {file} n'a pas été chargé"
 msgid "  Sudoc merging of PPN {ppn} with Koha authority {id}"
 msgstr "  Fusion Sudoc du PPN {ppn} avec l'autorité Koha {id}"
 
-#: ../lib/Sudoc/Loader/Authorities.pm:60
+#: ../lib/Sudoc/Loader/Authorities.pm:63
 #, perl-brace-format
 msgid "Authority #{count} PPN {ppn}"
 msgstr "Autorité #{count} PPN {ppn}"
 
-#: ../lib/Sudoc/Loader/Authorities.pm:74
+#: ../lib/Sudoc/Loader/Authorities.pm:77
 msgid "  ERROR: Authority without heading\n"
 msgstr "  ERREUR : Autorité sans champ vedertte\n"
 
-#: ../lib/Sudoc/Loader/Authorities.pm:93
+#: ../lib/Sudoc/Loader/Authorities.pm:96
 msgid ""
-"  Warning ! the entering biblio record has to be merged toseveral existing "
+"  Warning! the entering biblio record has to be merged toseveral existing "
 "Koha biblios. TO BE DONE MANUALLY\n"
 msgstr ""
-"  Attention ! la notice biblio entrante doit être fusionnée à plusieurs "
+"  Attention! la notice biblio entrante doit être fusionnée à plusieurs "
 "notices Koha existantes. À FAIRE MANUELLEMENT\n"
 
-#: ../lib/Sudoc/Loader/Authorities.pm:116
+#: ../lib/Sudoc/Loader/Authorities.pm:123
+msgid "  Warning! bad encoding in position 13. Fix it.\n"
+msgstr "  Attention ! mauvais encodage en position 13. On le corrige.\n"
+
+#: ../lib/Sudoc/Loader/Authorities.pm:134
 #, perl-brace-format
 msgid "  * Replace {authid}"
 msgstr "  * Remplace {authid}"
 
-#: ../lib/Sudoc/Loader/Authorities.pm:117
+#: ../lib/Sudoc/Loader/Authorities.pm:135
 #, perl-brace-format
 msgid "  * Add {authid}"
 msgstr "  * Ajoute {authid}"
@@ -169,34 +182,39 @@ msgstr "Notice #{count} PPN {ppn}"
 msgid "  * Skipped\n"
 msgstr "  * Ignoré\n"
 
-#: ../lib/Sudoc/Loader/Biblios.pm:87
+#: ../lib/Sudoc/Loader/Biblios.pm:88
 #, perl-brace-format
 msgid "  PPN found in Koha biblio record {biblionumber}"
 msgstr "  Le PPN a été trouvé dans la notice Koha {biblionumber}"
 
-#: ../lib/Sudoc/Loader/Biblios.pm:102
+#: ../lib/Sudoc/Loader/Biblios.pm:103
 #, perl-brace-format
 msgid "  Merging Koha biblio {biblionumber} found in 035$a for RCR {rcr}"
 msgstr ""
 "  Fusion de la notice Koha {biblionumber} trouvée en 035$a pour le RCR {rcr}"
 
-#: ../lib/Sudoc/Loader/Biblios.pm:119
+#: ../lib/Sudoc/Loader/Biblios.pm:121
 msgid ""
 "  Warning! the entering biblio must be merged into several existing Koha "
 "biblio records. TO BE DONE MANUALLY\n"
 msgstr ""
-"  Attention ! la notice biblio entrante doit être fusionnée à plusieurs "
+"  Attention! la notice biblio entrante doit être fusionnée à plusieurs "
 "notices Koha existantes. À FAIRE MANUELLEMENT\n"
 
-#: ../lib/Sudoc/Loader/Biblios.pm:138 ../lib/Sudoc/Loader/Biblios.pm:150
+#: ../lib/Sudoc/Loader/Biblios.pm:140 ../lib/Sudoc/Loader/Biblios.pm:152
 msgid "  Biblio after processing:\n"
 msgstr "  Notice après traitements : \n"
 
-#: ../lib/Sudoc/Loader/Biblios.pm:140
+#: ../lib/Sudoc/Loader/Biblios.pm:142
 #, perl-brace-format
 msgid "  * Replace {biblionumber}"
 msgstr "  * Remplace {biblionumber}"
 
-#: ../lib/Sudoc/Loader/Biblios.pm:151
+#: ../lib/Sudoc/Loader/Biblios.pm:153
 msgid "  * Add"
 msgstr "  * Ajout"
+
+#: ../lib/Sudoc/PPNize/Updater.pm:66
+#, perl-brace-format
+msgid "  No biblio record found with biblionumber {biblionumber}"
+msgstr "  Pas de notice trouvée ayant le biblionumber {biblionumber}"

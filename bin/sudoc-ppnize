@@ -1,0 +1,101 @@
+#!/usr/bin/perl 
+
+package Main;
+
+use strict;
+use warnings;
+
+
+use FindBin qw( $Bin );
+use lib "$Bin/../lib";
+
+use Getopt::Long;
+use Pod::Usage;
+use Sudoc;
+use Sudoc::PPNize::Reader;
+use Sudoc::PPNize::Updater;
+
+my ($help, $doit);
+GetOptions(
+    'help|h'   => \$help,
+    'doit'     => \$doit,
+);
+
+my $iln = shift @ARGV;
+if ( $help || !$iln ) {
+    pod2usage( -verbose => 2 );
+    exit;
+}
+my $sudoc  = Sudoc->new;
+$sudoc->iln($iln);
+
+my $file = shift @ARGV;
+unless ($file) {
+    pod2usage( -verbose => 2 );
+    exit;
+}
+
+my $updater = Sudoc::PPNize::Updater->new(
+    reader  => Sudoc::PPNize::Reader->new( file => $file ),
+    sudoc   => $sudoc,
+    doit    => $doit,
+    verbose => 1,
+);
+$updater->run();
+
+
+=encoding utf-8
+
+=head1 NOM
+
+sudoc-ppnize - PPNize les notices Koha à partir d'un fichier d'équivalences SUDOC
+
+=head1 SYNOPSYS
+
+ sudoc-ppnize 80
+ sudoc-ppnize 80 --dat
+
+=head1 DESCRIPTION
+
+A partir d'un Catalogue Koha, ce script génère des fichiers d'ISBN ou de
+Date-Auteur-Titre. Ces fichiers sont demandés par l'ABES afin de réaliser soit
+un test de recouvrement soit une localisation automatique. Ces fichiers suivent
+la convention de nommage demandée par l'ABES : commence par la lettre i ou r (pour
+ISBN ou Date-Auteur-Titre), suivi du RCR de la bibliothèque, puis le code de
+PEB (toujours u). Ces noms de fichiers sont suffixés d'un index. Par exemple :
+
+ i3641767u_0001.txt
+ i3641767u_0002.txt
+
+=head1 PARAMETRES
+
+=over
+
+=item --help, -h
+
+Affiche cette page d'aide
+
+=item --doit
+
+Effectue effectivement le traitement
+
+=back
+
+
+=head1 COPYRIGHT AND LICENSE
+
+Copyright (C) 2011 Tamil s.a.r.l.
+L<http://www.tamil.fr>
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
