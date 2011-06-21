@@ -140,6 +140,26 @@ sub authoritize {
 # Fusion d'une notice entrante Sudoc avec une notice Koha
 sub merge {
     my ($self, $record, $krecord) = @_;
+
+    # On garde les champs "protégés" de la notice Koha
+    my $conf = $self->sudoc->c->{$self->sudoc->iln}->{biblio};
+    if ( my $proteger = $conf->{proteger} ) {
+        for my $tag ( @$proteger ) { 
+            my @fields = $krecord->field($tag);
+            next unless @fields;
+            my @sf;
+            my $notdone = 1;
+            for my $field ( @{$record->fields} ) {
+                if ( $notdone && $field->tag gt $tag ) {
+                    push @sf, @fields;
+                    $notdone = 0;
+                }
+                push @sf, $field;
+            }
+            push @sf, @fields if $notdone;
+            $record->fields( \@sf );         
+        }
+    }
 }
 
 
