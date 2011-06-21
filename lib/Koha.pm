@@ -95,7 +95,7 @@ sub zconn {
     #print "zconn: nouvelle connexion\n";
     my $c        = $self->conf;
     my $name     = $server eq 'biblio' ? 'biblioserver' : 'authorityserver';
-    my $syntax   = "usmarc";
+    #my $syntax   = "Unimarc";
     my $host     = $c->{listen}->{$name}->{content};
     my $user     = $c->{serverinfo}->{$name}->{user};
     my $password = $c->{serverinfo}->{$name}->{password};
@@ -111,7 +111,7 @@ sub zconn {
     #$o->option(count => $piggyback) if $piggyback;
     $o->option( cqlfile => $c->{server}->{$name}->{cql2rpn} );
     $o->option( cclfile => $c->{serverinfo}->{$name}->{ccl2rpn} );
-    $o->option( preferredRecordSyntax => $syntax );
+    #$o->option( preferredRecordSyntax => $syntax );
     $o->option( elementSetName => "F"); # F for 'full' as opposed to B for 'brief'
     $o->option( databaseName => $server eq 'biblio' ? "biblios" : "authorities");
 
@@ -178,6 +178,8 @@ sub get_biblio_by_ppn {
             return (undef, undef, undef) unless $record;
             ($biblionumber, $framework) = $self->get_biblionumber_framework($record);
         } 
+    } catch {
+        warn "ZOOM error: $_";
     };
     return ($biblionumber, $framework, $record);
 }

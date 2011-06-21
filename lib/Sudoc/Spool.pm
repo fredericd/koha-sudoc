@@ -61,9 +61,21 @@ sub files {
 }
 
 
-sub waiting_files {
-    my ($self, $type) = @_;
-    $self->files( 'waiting', $type );
+# Retourne le premier lot de fichiers d'une catégorie et d'un type donnée
+sub first_batch_files {
+    my ($self, $where, $type) = @_;
+
+    my $files = $self->files($where, $type);
+    return unless $files;
+
+    my ($prefix_first) = $files->[0] =~ /^(.*)[A|B|C]001.RAW/;
+    my @first_files;
+    for my $file (@$files) {
+        my ($prefix) = $file =~ /^(.*)[A|B|C]001.RAW/;
+        last if $prefix ne $prefix_first;
+        push @first_files, $file;
+    }
+    return \@first_files;
 }
 
 

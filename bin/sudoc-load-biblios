@@ -30,14 +30,16 @@ if ( $help || !$iln ) {
 
 my $sudoc  = Sudoc->new;
 $sudoc->iln($iln);
-my $files = $sudoc->spool->waiting_files('[a|b]');
-for my $file (@$files) {
-    my $loader = Sudoc::Loader::Biblios->new(
-        sudoc => $sudoc,
-        file => $file,
-        doit => $doit,
-    );
-    $loader->run();
+my $files = $sudoc->spool->first_batch_files('waiting', '[a|b]');
+if ( @$files ) {
+    for my $file (@$files) {
+        my $loader = Sudoc::Loader::Biblios->new(
+            sudoc => $sudoc,
+            file => $file,
+            doit => $doit,
+        );
+        $loader->run();
+    }
 }
 
 =encoding utf-8
