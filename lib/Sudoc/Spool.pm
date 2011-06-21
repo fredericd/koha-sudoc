@@ -36,6 +36,14 @@ my $done_dir    = 'done';
 has sudoc => ( is => 'rw', isa => 'Sudoc', required => 1 );
 
 
+sub _sortable_name {
+    my $name = shift;
+    $name = sprintf("TR%05dR%05d", $1, $2) . $3
+        if $name =~ /^TR(\d*)R(\d*)(.*)$/;
+    return $name;
+}
+
+
 # Retourne les fichiers d'une categorie (staged/waiting/done) et d'un
 # type donnée. Par ex: 
 # $files = $spool->file('waiting', 'c');
@@ -48,7 +56,8 @@ sub files {
     my $dir = $self->sudoc->sudoc_root . "/$spool_dir/" .
               $self->sudoc->iln . "/$subdir";
     opendir(my $hdir, $dir) || die "Impossible d'ouvrir $dir: $!";
-    [ sort grep { /$type\d{3}.raw$/i } readdir($hdir) ];
+    [ sort { _sortable_name($a) cmp _sortable_name($b) }
+        grep { /$type\d{3}.raw$/i } readdir($hdir) ];
 }
 
 
