@@ -66,7 +66,7 @@ sub first_batch_files {
     my ($self, $where, $type) = @_;
 
     my $files = $self->files($where, $type);
-    return unless $files;
+    return $files unless @$files;
 
     my ($prefix_first) = $files->[0] =~ /^(.*)[A|B|C]001.RAW/;
     my @first_files;
