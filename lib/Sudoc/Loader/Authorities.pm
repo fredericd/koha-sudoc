@@ -62,7 +62,7 @@ sub handle_record {
     $self->log->notice(
         __x("Authority #{count} PPN {ppn}",
             count => $self->count, ppn => $ppn) . "\n");
-    $self->log->debug( $record->as('Text'), "\n" );
+    $self->log->debug( $record->as('Text') );
 
     # On détermine le type d'autorité
     my $authtypecode;
@@ -110,6 +110,9 @@ sub handle_record {
             MARC::Moose::Field::Control->new( tag => '001', value => $authid) );
         $self->count_replaced( $self->count_replaced + 1 );
     }
+    else {
+        $self->count_added( $self->count_added + 1 );
+    }
 
     if ( $self->doit ) {
         my $legacy = $record->as('Legacy');
@@ -135,6 +138,7 @@ sub handle_record {
           : __x("  * Add {authid}", authid => $authid)
         )
         . "\n" );
+    $self->log->debug( "\n" );
 }
 
 1;
