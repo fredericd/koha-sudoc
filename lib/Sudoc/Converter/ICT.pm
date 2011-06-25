@@ -32,11 +32,12 @@ sub record_is_peri {
 }
 
 
-# Deux framework: ICT et PER. Toute notice est associée à ICT sauf les
-# notices de périodique.
+# Trois frameworks : ICT, ART et PER. Toute notice est associée à ICT
+# sauf les notices de périodique PER et d'article (ART)
 override 'framework' => sub {
     my ($self, $record) = @_;
-    record_is_peri($record) ? 'PER' : $self->SUPER::framework($record);
+    record_is_peri($record) ? 'PER' : 
+    $record->field('463')   ? 'ART' : $self->SUPER::framework($record);
 };
 
 
