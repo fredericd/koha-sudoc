@@ -153,17 +153,7 @@ sub merge {
         for my $tag ( @$proteger ) { 
             my @fields = $krecord->field($tag);
             next unless @fields;
-            my @sf;
-            my $notdone = 1;
-            for my $field ( @{$record->fields} ) {
-                if ( $notdone && $field->tag gt $tag ) {
-                    push @sf, @fields;
-                    $notdone = 0;
-                }
-                push @sf, $field;
-            }
-            push @sf, @fields if $notdone;
-            $record->fields( \@sf );         
+            $record->append(@fields);
         }
     }
 }
