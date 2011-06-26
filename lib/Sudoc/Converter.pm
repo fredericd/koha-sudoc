@@ -143,12 +143,12 @@ sub merge {
 
     # On supprime de la notice SUDOC les champs à exclure
     my $conf = $self->sudoc->c->{$self->sudoc->iln}->{biblio};
-    if ( my $exclure = $conf->{exclure} && ref($exclure) eq 'ARRAY' ) {
+    my $exclure = $conf->{exclure};
+    if ( $exclure && ref($exclure) eq 'ARRAY' ) {
         $record->fields( [ grep { not $_->tag ~~ @$exclure } @{$record->fields} ] );
     }
 
     # On garde les champs "protégés" de la notice Koha
-    my $conf = $self->sudoc->c->{$self->sudoc->iln}->{biblio};
     if ( my $proteger = $conf->{proteger} ) {
         for my $tag ( @$proteger ) { 
             my @fields = $krecord->field($tag);
