@@ -54,7 +54,6 @@ sub process {
     return 0 unless $equival;
 
     $self->SUPER::process();
-    use YAML;
 
     # On retrouve la notice biblio dont on a le numéro
     my $ppn = $equival->{ppn};

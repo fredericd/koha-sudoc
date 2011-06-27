@@ -134,8 +134,8 @@ sub handle_record {
     if ( $koha_record ) {
         # Modification d'une notice
         $self->count_replaced( $self->count_replaced + 1 );
-        $self->converter->clean($record);
         $self->converter->merge($record, $koha_record);
+        $self->converter->clean($record);
         $self->log->debug(
             __("  Biblio after processing:\n") . $record->as('Text') );
         $self->log->notice(
