@@ -116,7 +116,7 @@ after 'itemize' => sub {
 
             # $k Cote = 930$a
             $value = $ex->{930}->subfield('a');
-            push @$subf, [ k => $value ];
+            push @$subf, [ k => $value ] if $value;
 
             # On copie telles quelles toutes les lettres de 999 en 995
             # pour l'intervalle l..z

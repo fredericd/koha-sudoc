@@ -130,6 +130,7 @@ sub handle_record {
     }
 
     $self->converter->authoritize( $record );
+    $self->converter->linking( $record );
 
     if ( $koha_record ) {
         # Modification d'une notice

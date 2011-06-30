@@ -137,6 +137,34 @@ sub authoritize {
 }
 
 
+# Lien des notices biblio entre elles
+sub linking {
+    my ($self, $record) = @_;
+
+    # Ne rien faire si c'est demandé pour l'ILN
+    return unless $self->sudoc->c->{ $self->sudoc->iln }->{biblio}->{linking};
+
+    my $zconn = $self->sudoc->koha->zbiblio();
+    for my $field ( $record->field('4..|5..') ) {
+        my @subf;
+        for my $sf ( @{$field->subf} ) {
+            my ($letter, $value) = @$sf;
+            push @subf, [ $letter => $value ];
+            if ( $letter eq '0' ) {
+                my $rs = $zconn->search_pqf( "\@attr 1=PPN $value" );
+                if ($rs->size() >= 1 ) {
+                    my $biblio = MARC::Moose::Record::new_from(
+                        $rs->record(0)->raw(), 'Iso2709' );
+                    push @subf, [ '9' => $biblio->field('001')->value ]
+                        if $biblio;
+                }
+            }
+        }
+        $field->subf(\@subf);
+    }
+}
+
+
 # Fusion d'une notice entrante Sudoc avec une notice Koha
 sub merge {
     my ($self, $record, $krecord) = @_;
