@@ -29,6 +29,7 @@ trans:
   biblio:
     ppn_move: 009
     authoritize: 1
+    linking: 1
     itemize: 1
     framework: ICT
     converter: 
