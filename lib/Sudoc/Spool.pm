@@ -38,8 +38,11 @@ has sudoc => ( is => 'rw', isa => 'Sudoc', required => 1 );
 
 sub _sortable_name {
     my $name = shift;
-    $name = sprintf("TR%05dR%05d", $1, $2) . $3
-        if $name =~ /^TR(\d*)R(\d*)(.*)$/;
+    if ( $name =~ /^TR(\d*)R(\d*)([A-C])(.*)$/ ) {
+        my $letter = $3 eq 'A' ? 'B' :
+                     $3 eq 'B' ? 'A' : $3;
+        $name = sprintf("TR%05dR%05d", $1, $2) . $letter . $4;
+    }
     return $name;
 }
 
@@ -68,10 +71,10 @@ sub first_batch_files {
     my $files = $self->files($where, $type);
     return $files unless @$files;
 
-    my ($prefix_first) = $files->[0] =~ /^(.*)[A|B|C]001.RAW/;
+    my ($prefix_first) = $files->[0] =~ /^(.*)001.RAW/;
     my @first_files;
     for my $file (@$files) {
-        my ($prefix) = $file =~ /^(.*)[A|B|C]001.RAW/;
+        my ($prefix) = $file =~ /^(.*)\d{3}.RAW/;
         last if $prefix ne $prefix_first;
         push @first_files, $file;
     }
