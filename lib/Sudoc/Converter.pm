@@ -38,6 +38,30 @@ has sudoc => ( is => 'rw', isa => 'Sudoc', required => 1 );
 has item => ( is => 'rw', isa => 'HashRef' );
 
 
+# Initialisation du hash item
+sub item_init {
+    my ($self, $record) = @_;
+
+    my $myrcr = $self->sudoc->c->{$self->sudoc->iln}->{rcr};
+    # On crée la structure de données items
+    my $item = {};
+    for my $field ( $record->field('9..') ) {
+        my $value = $field->subfield('5');
+        next unless $value;
+        my ($rcr, $id) = $value =~ /(.*):(.*)/;
+        unless ( $myrcr->{$rcr} ) {
+            # Cas, improbable, d'un RCR qui ne serait pas dans la liste des RCR
+            # FIXME On pourrait le logguer quelque part.
+            next;
+        }
+        $item->{$rcr} ||= {};
+        $item->{$rcr}->{$id} ||= {};
+        $item->{$rcr}->{$id}->{$field->tag} = $field;
+    }
+    $self->item($item);
+}
+
+
 # Le framework auquel affecter la notice biblio. Valeur par défaut prise
 # dans sudoc.conf.  Peut-être surchargé pour attribuer un framework
 # différent en fonction du type de doc.
@@ -68,22 +92,7 @@ sub itemize {
     my ($self, $record) = @_;
 
     my $myrcr = $self->sudoc->c->{$self->sudoc->iln}->{rcr};
-    # On crée la structure de données items
-    my $item = {};
-    for my $field ( $record->field('9..') ) {
-        my $value = $field->subfield('5');
-        next unless $value;
-        my ($rcr, $id) = $value =~ /(.*):(.*)/;
-        unless ( $myrcr->{$rcr} ) {
-            # Cas, improbable, d'un RCR qui ne serait pas dans la liste des RCR
-            # FIXME On pourrait le logguer quelque part.
-            next;
-        }
-        $item->{$rcr} ||= {};
-        $item->{$rcr}->{$id} ||= {};
-        $item->{$rcr}->{$id}->{$field->tag} = $field;
-    }
-    $self->item($item);
+    my $item = $self->{item};
 
     # On crée les exemplaires à partir de 930 et 915
     while ( my ($rcr, $item_rcr) = each %$item ) {
