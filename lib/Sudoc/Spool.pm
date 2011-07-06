@@ -43,6 +43,11 @@ sub _sortable_name {
                      $3 eq 'B' ? 'A' : $3;
         $name = sprintf("TR%05dR%05d", $1, $2) . $letter . $4;
     }
+    elsif ( $name =~ /^(.*)R(\d*)([A-C])(.*)\.RAW$/ ) {
+        my $letter = $3 eq 'A' ? 'B' :
+                     $3 eq 'B' ? 'A' : $3;
+        $name = "$1R$2$letter$4.RAW";
+    }
     return $name;
 }
 
