@@ -174,6 +174,18 @@ sub linking {
 }
 
 
+sub _key_dedup {
+    my $field = shift;
+    my $key;
+    for ( @{$field->subf} ) {
+        my ($letter, $value) = @$_;
+        next unless $letter =~ /[a-z]/;
+        $key .= $value;
+    }
+    return $key;
+}
+
+
 # Fusion d'une notice entrante Sudoc avec une notice Koha
 sub merge {
     my ($self, $record, $krecord) = @_;
@@ -186,11 +198,30 @@ sub merge {
     }
 
     # On garde les champs "protégés" de la notice Koha
+    # On évite les doublons
     if ( my $proteger = $conf->{proteger} ) {
+        my $pt = {}; # Hash de hash de tag - clé de dédoublonnage
+        for my $tag ( @$proteger ) {
+            $pt->{$tag} ||= {};
+            for my $field ( $record->field($tag) ) {
+                my $key = _key_dedup($field);
+                $pt->{$tag}->{$key} = undef;
+            }
+        }
         for my $tag ( @$proteger ) { 
             my @fields = $krecord->field($tag);
             next unless @fields;
-            $record->append(@fields);
+            if ( exists $pt->{$tag} ) {
+                my @keeps;
+                for my $field (@fields) {
+                    my $key = _key_dedup($field);
+                    push @keeps, $field  unless exists $pt->{$tag}->{$key};
+                }
+                $record->append(@keeps);
+            }
+            else {
+                $record->append(@fields);
+            }
         }
     }
 }
