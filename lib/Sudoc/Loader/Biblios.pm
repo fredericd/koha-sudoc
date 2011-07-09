@@ -129,7 +129,7 @@ sub handle_record {
         }
     }
 
-    $self->converter->item_init( $record );
+    $self->converter->init( $record );
     $self->converter->authoritize( $record );
     $self->converter->linking( $record );
 

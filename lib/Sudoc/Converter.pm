@@ -38,8 +38,32 @@ has sudoc => ( is => 'rw', isa => 'Sudoc', required => 1 );
 has item => ( is => 'rw', isa => 'HashRef' );
 
 
+# Les méthodes de cette classe sont appelées dans un certain ordre par
+# le chargeur des notices biblios, selon qu'il s'agisse d'une nouvelle
+# notice ou d'une notice qui existe déjà dans Koha:
+#
+# Méthode       ajout  modif 
+# skip            0      0
+# init            O      O
+# authoritize     O      O
+# linking         O      O
+# itemize         N      O
+# merge           O      N
+# clean           O      O
+# framework       O      N
+
+
+# La notice doit-elle être passée ? Par défaut, on garde toute notice.
+sub skip {
+    my ($self, $record) = @_;
+    return 0;
+}
+
+
+# Première méthode appelée pour un enregistrement SUDOC entrant, que ce
+# soit un doublon ou une nouvelle notice.
 # Initialisation du hash item
-sub item_init {
+sub init {
     my ($self, $record) = @_;
 
     my $myrcr = $self->sudoc->c->{$self->sudoc->iln}->{rcr};
@@ -59,62 +83,6 @@ sub item_init {
         $item->{$rcr}->{$id}->{$field->tag} = $field;
     }
     $self->item($item);
-}
-
-
-# Le framework auquel affecter la notice biblio. Valeur par défaut prise
-# dans sudoc.conf.  Peut-être surchargé pour attribuer un framework
-# différent en fonction du type de doc.
-sub framework {
-    my ($self, $record) = @_;
-    $self->sudoc->c->{$self->sudoc->iln}->{biblio}->{framework};
-}
-
-
-# On nettoie la notice entrante : suppression de champs, ajout auto de
-# champs, etc.
-sub clean {
-    my ($self, $record) = @_;
-}
-
-
-# La notice doit-elle être passée ? Par défaut, on garde toute notice.
-sub skip {
-    my ($self, $record) = @_;
-    return 0;
-}
-
-
-# Création des exemplaires Koha en 995 en fonction des données locales SUDOC
-# Création également de la structure de données $self->item qui contient
-# le détail des données d'exemplaire par numéro d'exemplaire.
-sub itemize {
-    my ($self, $record) = @_;
-
-    my $myrcr = $self->sudoc->c->{$self->sudoc->iln}->{rcr};
-    my $item = $self->{item};
-
-    # On crée les exemplaires à partir de 930 et 915
-    while ( my ($rcr, $item_rcr) = each %$item ) {
-        my $branch = $myrcr->{$rcr};
-        while ( my ($id, $ex) = each %$item_rcr ) { # Les exemplaires d'un RCR
-            # On prend le code à barres en 915$b, et s'il n'y en a pas on prend
-            # l'EPN SUDOC ($id)
-            my $barcode = $ex->{915};
-            $barcode = $barcode->subfield('b')  if $barcode;
-            $barcode = $id unless $barcode;
-            my $cote = $ex->{930}->subfield('a');
-            $record->append( MARC::Moose::Field::Std->new(
-                tag => '995',
-                subf => [
-                    [ b => $branch ],
-                    [ c => $branch ],
-                    [ f => $barcode ],
-                    [ k => $cote ],
-                ]
-            ) );
-        }
-    }
 }
 
 
@@ -174,6 +142,38 @@ sub linking {
 }
 
 
+# Création des exemplaires Koha en 995 en fonction des données locales
+# SUDOC, au moyen de la structure de données $self->item.
+sub itemize {
+    my ($self, $record) = @_;
+
+    my $myrcr = $self->sudoc->c->{$self->sudoc->iln}->{rcr};
+    my $item = $self->{item};
+
+    # On crée les exemplaires à partir de 930 et 915
+    while ( my ($rcr, $item_rcr) = each %$item ) {
+        my $branch = $myrcr->{$rcr};
+        while ( my ($id, $ex) = each %$item_rcr ) { # Les exemplaires d'un RCR
+            # On prend le code à barres en 915$b, et s'il n'y en a pas on prend
+            # l'EPN SUDOC ($id)
+            my $barcode = $ex->{915};
+            $barcode = $barcode->subfield('b')  if $barcode;
+            $barcode = $id unless $barcode;
+            my $cote = $ex->{930}->subfield('a');
+            $record->append( MARC::Moose::Field::Std->new(
+                tag => '995',
+                subf => [
+                    [ b => $branch ],
+                    [ c => $branch ],
+                    [ f => $barcode ],
+                    [ k => $cote ],
+                ]
+            ) );
+        }
+    }
+}
+
+
 sub _key_dedup {
     my $field = shift;
     my $key;
@@ -226,5 +226,20 @@ sub merge {
     }
 }
 
+
+# On nettoie la notice entrante : suppression de champs, ajout auto de
+# champs, etc.
+sub clean {
+    my ($self, $record) = @_;
+}
+
+
+# Le framework auquel affecter la notice biblio. Valeur par défaut prise
+# dans sudoc.conf.  Peut-être surchargé pour attribuer un framework
+# différent en fonction du type de doc.
+sub framework {
+    my ($self, $record) = @_;
+    $self->sudoc->c->{$self->sudoc->iln}->{biblio}->{framework};
+}
 
 1;
