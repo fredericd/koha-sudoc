@@ -132,7 +132,7 @@ sub linking {
                 if ($rs->size() >= 1 ) {
                     my $biblio = MARC::Moose::Record::new_from(
                         $rs->record(0)->raw(), 'Iso2709' );
-                    push @subf, [ '9' => $biblio->field('001')->value ]
+                    push @subf, [ '9' => $self->sudoc->koha->get_biblionumber($biblio) ],
                         if $biblio;
                 }
             }
