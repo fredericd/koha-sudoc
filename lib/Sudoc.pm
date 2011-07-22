@@ -39,7 +39,8 @@ has iln => (
             print __x("ILN {iln} is missing in sudoc.conf", iln => $iln), "\n";
             exit;
         }
-        $self->koha( Koha->new( conf_file => $self->c->{$iln}->{koha_conf} ) );
+        my $conf_file = $self->c->{$iln}->{koha_conf};
+        $self->koha( Koha->new( conf_file => $conf_file ) );
     }
 );
 
