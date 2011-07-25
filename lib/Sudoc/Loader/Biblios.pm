@@ -20,6 +20,7 @@ use Moose;
 
 extends 'Sudoc::Loader';
 
+use YAML;
 use Locale::TextDomain 'fr.tamil.sudoc';
 
 
@@ -164,6 +165,8 @@ sub handle_record {
                 AddBiblio($marc, $framework, { defer_marc_save => 1 });
             my ($itemnumbers_ref, $errors_ref) =
                 AddItemBatchFromMarc($marc, $biblionumber, $biblioitemnumber, $framework);
+            $self->log->warning( "error while adding item:\n" . Dump($errors_ref) )
+                if @$errors_ref;
         }
     }
     $self->log->debug("\n");
