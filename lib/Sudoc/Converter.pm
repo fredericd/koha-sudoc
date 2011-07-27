@@ -83,6 +83,14 @@ sub init {
         $item->{$rcr}->{$id}->{$field->tag} = $field;
     }
     $self->item($item);
+
+    # On supprime de la notice SUDOC les champs à exclure
+    my $conf = $self->sudoc->c->{$self->sudoc->iln}->{biblio};
+    my $exclure = $conf->{exclure};
+    if ( $exclure && ref($exclure) eq 'ARRAY' ) {
+        $record->fields( [ grep { not $_->tag ~~ @$exclure } @{$record->fields} ] );
+    }
+
 }
 
 
@@ -190,15 +198,9 @@ sub _key_dedup {
 sub merge {
     my ($self, $record, $krecord) = @_;
 
-    # On supprime de la notice SUDOC les champs à exclure
-    my $conf = $self->sudoc->c->{$self->sudoc->iln}->{biblio};
-    my $exclure = $conf->{exclure};
-    if ( $exclure && ref($exclure) eq 'ARRAY' ) {
-        $record->fields( [ grep { not $_->tag ~~ @$exclure } @{$record->fields} ] );
-    }
-
     # On garde les champs "protégés" de la notice Koha
     # On évite les doublons
+    my $conf = $self->sudoc->c->{$self->sudoc->iln}->{biblio};
     if ( my $proteger = $conf->{proteger} ) {
         my $pt = {}; # Hash de hash de tag - clé de dédoublonnage
         for my $tag ( @$proteger ) {
