@@ -167,8 +167,8 @@ sub handle_record {
                 AddItemBatchFromMarc($marc, $biblionumber, $biblioitemnumber, $framework);
             $self->log->warning( "error while adding item:\n" . Dump($errors_ref) )
                 if @$errors_ref;
-            C4::Biblio::_strip_item_fields($marc, '');
-            ModBiblioMarc( $marc, $biblionumber, '' );
+            C4::Biblio::_strip_item_fields($marc, $framework);
+            ModBiblioMarc($marc, $biblionumber, $framework);
         }
     }
     $self->log->debug("\n");
