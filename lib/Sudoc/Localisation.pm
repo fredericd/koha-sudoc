@@ -18,6 +18,7 @@
 package Sudoc::Localisation;
 use Moose;
 
+use C4::Items;
 use YAML;
 
 extends 'RecordWriter';
@@ -337,6 +338,7 @@ sub write_isbn {
     return unless @isbns;
 
     my $biblionumber = $self->sudoc->koha->get_biblionumber($record);
+    my $items = GetItemsByBiblioitemnumber($biblionumber);
     for my $isbn ( @isbns ) {
         $isbn = $isbn->subfield('a');
         next unless $isbn;
@@ -345,11 +347,11 @@ sub write_isbn {
         # On nettoie les ISBN de la forme 122JX(vol1)
         $isbn = $1 if $isbn =~ /(.*)\(/;
         next unless $isbn;
-        for my $ex ( $record->field('995') ) {
-            my $branch = $ex->subfield('b');
+        for my $ex ( @$items ) {
+            my $branch = $ex->{homebranch};
             my $file = $self->get_file($branch, 'i');
             next unless $file;
-            my $cote = $ex->subfield('k') || '';
+            my $cote = $ex->{itemcallnumber};
             my $fh = $file->{fh};
             if ( $self->test ) {
                 print $fh "$isbn\n";
@@ -371,8 +373,14 @@ sub write_dat {
     return unless $date =~ /(\d{4})/;
     $date = $1;
 
-    my $auteur = $record->field('700') || '';
-    $auteur = $auteur->subfield('a') || ''  if $auteur;
+    my $auteur;
+    for my $tag ( qw( 700 701 702 710 711 712 ) ) {
+        $auteur = $record->field($tag);
+        next unless $auteur;
+        $auteur = $auteur->subfield('a');
+        last if $auteur;
+    }
+    $auteur ||= '';
 
     my $titre = $record->field('200') || '';
     $titre = $titre->subfield('a') || '' if $titre;
@@ -398,12 +406,13 @@ sub write_dat {
     $titre = lc $titre;
     
     my $dat = "$date;$auteur;$titre";
-    my $biblionumber = $record->field('090')->subfield('a');
-    for my $ex ( $record->field('995') ) {
-        my $branch = $ex->subfield('b');
+    my $biblionumber = $self->sudoc->koha->get_biblionumber($record);
+    my $items = GetItemsByBiblioitemnumber($biblionumber);
+    for my $ex ( @$items ) {
+        my $branch = $ex->{homebranch};
         my $file = $self->get_file($branch, 'r');
         next unless $file;
-        my $cote = $ex->subfield('k') || '';
+        my $cote = $ex->{itemcallnumber} || '';
         my $fh = $file->{fh};
         if ( $self->test ) {
             print $fh "$dat\n";
@@ -422,7 +431,7 @@ sub write {
     $self->SUPER::write();
 
     # S'il la notice contient déjà un PPN, inutile de la traiter
-    #return if $record->field('001');
+    return if $record->field('009');
 
     $self->dat ? $self->write_dat($record) : $self->write_isbn($record);
 }
