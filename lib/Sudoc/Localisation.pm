@@ -348,11 +348,19 @@ sub write_isbn {
     for my $isbn ( @isbns ) {
         $isbn = $isbn->subfield('a');
         next unless $isbn;
+        if ( $isbn =~ /^978/ ) {
+            if ( my $i = Business::ISBN->new($isbn) ) {
+                if ( $i = $i->as_isbn10 ) {
+                    $isbn = $i->as_string;
+                }
+            }
+        }
         $isbn =~ s/ //g;
         $isbn =~ s/-//g;
         # On nettoie les ISBN de la forme 122JX(vol1)
         $isbn = $1 if $isbn =~ /(.*)\(/;
         next unless $isbn;
+        # Si c'est un EAN, on convertit en ISBN...
         for my $ex ( @$items ) {
             my $branch = $ex->{homebranch};
             my $file = $self->get_file($branch, 'i');
