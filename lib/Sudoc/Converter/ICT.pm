@@ -102,6 +102,8 @@ after 'itemize' => sub {
             $value = $id unless $value;
             push @$subf, [ f => $value ];
 
+            $append->($_) for ( "g" .. "i" );
+
             # $j Numéro d'inventaire
             $append->('j');
 
