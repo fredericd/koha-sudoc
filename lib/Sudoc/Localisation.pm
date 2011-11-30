@@ -35,6 +35,10 @@ has test => ( is => 'rw', isa => 'Bool', default => 1 );
 # Nombre max de lignes par fichier
 has lines => ( is => 'rw', isa => 'Int', default => 1000 );
 
+# Disponibilité pour le PEB ?
+has peb => ( is => 'rw', isa => 'Bool', default => 1 );
+
+
 #
 # Les fichiers par RCR, avec branch Koha correspondante. Les info proviennent
 # du fichier de conf sudoc.conf et sont construites à l'instantiation de
@@ -318,7 +322,9 @@ sub get_file {
     my $fh = $file->{fh};
     if ( $line > $self->lines ) {
         my $index = $file->{index} + 1;
-        my $name = $prefix . $file->{rcr} . 'u_' .
+        my $name = $prefix . $file->{rcr} .
+                   ( $self->peb ? 'u' : 'g' ) .
+                   '_' .
                    sprintf("%04d", $index) . '.txt';
         close($fh) if $fh;
         open $fh, ">$name";

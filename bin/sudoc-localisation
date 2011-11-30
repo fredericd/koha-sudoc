@@ -17,15 +17,17 @@ use Sudoc;
 use Sudoc::Localisation;
 use Conversion;
 
-my ($help, $select, $lignes, $test, $dat);
+my ($help, $select, $lignes, $test, $dat, $peb);
 $select = "SELECT biblionumber FROM biblio";
 $lignes = 1000;
+$peb = 1;
 GetOptions(
     'help|h'   => \$help,
     'select=s' => \$select,
     'lignes=i' => \$lignes,
     'test'     => \$test,
     'dat'      => \$dat,
+    'peb!'     => \$peb,
 );
 
 my $iln = shift @ARGV;
@@ -44,7 +46,8 @@ my $converter = Conversion->new(
         sudoc => $sudoc,
         test  => $test,
         lines => $lignes,
-        dat   => $dat ),
+        dat   => $dat,
+        peb   => $peb ),
    verbose => 1 
 );
 $converter->run();       
@@ -105,6 +108,12 @@ lignes.
 =item --test
 
 Fichiers d'ISBN uniquement pour un test de recouvrement.
+
+=item --peb | --nopeb
+
+Notices disponibles pour le PEB ? Si non fourni, disponibles pour le PEB. Les
+fichiers générés pour le PEB contiennent "u" dans leur nom. Ceux contenant des
+notices non disponibles pour le PEB ont un nom comprenant un "g".
 
 =back
 
