@@ -7,7 +7,7 @@ use FindBin qw( $Bin );
 use lib "$Bin/../lib";
 
 use feature ":5.10";
-use POE;
+use AnyEvent;
 use Mail::Box::Manager;
 use DateTime;
 use Sudoc;
@@ -35,19 +35,12 @@ sub BUILD {
     print __"Starting ABES transfer daemon", "\n";
 
     my $timeout = $self->sudoc->c->{trans}->{timeout};
-    POE::Session->create(
-        inline_states => {
-            _start => sub { 
-                $_[HEAP]{$daemon_id} 
-                  = $_[KERNEL]->alarm_set( tick => time() + $timeout );
-            },  
-            tick => sub {
-                $self->transfert_abes();
-                $_[HEAP]{$daemon_id} 
-                  = $_[KERNEL]->alarm_set( tick => time() + $timeout );
-            },  
-        }
+    my $idle = AnyEvent->timer(
+        after    => $timeout,
+        interval => $timeout,
+        cb       => sub { $self->transfert_abes(); }
     );
+    AnyEvent->condvar->recv;
 }
 
 
@@ -147,7 +140,6 @@ if ( $help ) {
 }
 
 Sudoc::TransferDaemon->new( );
-POE::Kernel->run();
 
 
 =encoding utf-8

@@ -2,11 +2,12 @@ package FileProcess;
 use Moose;
 
 use diagnostics;
-use POE;
+use AnyEvent;
 use EchoWatcher;
 use Locale::TextDomain 'fr.tamil.sudoc';
 
 with 'WatchableTask';
+
 
 # Mode verbeux ?
 has verbose => ( is => 'rw', isa => 'Int' );
@@ -20,11 +21,7 @@ has watcher => (
 # Le compteur d'avancement, nombre d'enregistrements traités
 has count => ( is => 'rw', isa => 'Int', default => 0 );
 
-# TODELETE
-# Will the session (POE task) run in an existing kernel?
-# has run_already =>  ( is => 'rw', isa => 'Bool', default => 0 );
-
-# Is it a blocking task (not a POE task)
+# Is it a blocking task (not a task)
 has blocking => ( is => 'rw', isa => 'Bool', default => 0 );
 
 
@@ -34,7 +31,7 @@ sub run {
         $self->run_blocking();
     }
     else {
-        $self->run_poe();
+        $self->run_task();
     }
 }
 
@@ -47,40 +44,36 @@ sub run_blocking {
 }
 
 
-sub run_poe {
+sub run_task {
     my $self = shift;
+
     if ( $self->verbose ) {
-        my $watcher = EchoWatcher->new( delay => 2, action => $self );
+        my $watcher = EchoWatcher->new( delay => 1, action => $self );
         $self->watcher( $watcher );
         $watcher->start();
     }
-    POE::Session->create(
-        inline_states => {
-            _start => sub { $_[KERNEL]->yield("next") },
-            next   => sub {
-                if ( $self->process() ) {
-                    $_[KERNEL]->yield("next");
-                }
-                elsif ( $self->verbose() ) {
-                    $self->watcher->stop();
-                }
-            },
-        },
+
+    my $end_run = AnyEvent->condvar;
+    my $idle = AnyEvent->idle(
+        cb => sub {
+            unless ( $self->process() ) {
+                $self->watcher->stop() if $self->watcher;
+                $end_run->send;
+            }
+        }
     );
-    #POE::Kernel->run() unless $self->run_already;
-    POE::Kernel->run();
+    $end_run->recv;
 }
 
 
 sub process {
     my $self = shift;
     $self->count( $self->count + 1 );
-    return;
 }
 
 
 sub start_message {
-    print __"Start process..." . "\n";
+    print __"Start process...\n";
 }
 
 
@@ -91,7 +84,10 @@ sub process_message {
 
 sub end_message {
     my $self = shift; 
-    print __x ("  {count} records processed", count => $self->count) . "\n";
+    print __xn("One record processed",
+               "Records processed: {count}",
+               $self->count,
+               count => $self->count), "\n";
 }
 
 
@@ -114,4 +110,14 @@ generic are available here to be used in each implementation.
 
 =head2 
 =back
+
+=head1 COPYRIGHT AND LICENSE
+
+Copyright 2009-2011 by Tamil, s.a.r.l.
+
+L<http://www.tamil.fr>
+
+This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl itself.
+
 
