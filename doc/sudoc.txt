@@ -1,6 +1,7 @@
 = Chargeur SUDOC Koha =
 Tamil s.a.r.l. <contact@tamil.fr>
 v1.0, avril 2011: Première version pour la v1.0.
+v1.1, décembre 2011: Première version pour la v1.1.
 
 
 [NOTE]
@@ -574,6 +575,45 @@ bibliographiques :
 melm 009        PPN,PPN:n
 -----
 
+=== Automatisation ===
+
+Les différents programmes du Chargeur SUDOC doivent être utilisés conjointement
+et en séquence afin de réaliser les opérations de chargement des notices : 1°)
+autorités, 2°) notices liées, 3°) notices bibliographiques. De plus, entre
+chaque chargement, l'indexation des nouvelles données doit être réalisée.
+
+Toutes ces tâches peuvent être automatisées au moyen d'un script Shell. Par exemple :
+
+-----
+#!/bin/sh
+ 
+CLIENT='xxx'
+ILN='123'
+DOIT='--doit'
+EMAIL_FROM='Tamil e-Biblio Service <contact@tamil.fr>'
+EMAIL_TO='xx@yy.fr'
+EMAIL_CC='yy@zz.fr'
+SLEEP='5m'
+TMP_FILE="/tmp/sudoc_$CLIENT"
+
+export LANG='fr_FR.UTF-8'
+
+exec 1>$TMP_FILE 2>&1
+echo "Chargement SUDOC"
+
+sudoc-load-authorities $ILN $DOIT
+echo ----------------------------------------
+sleep $SLEEP
+sudoc-load-biblios $ILN $DOIT
+echo ----------------------------------------
+sleep $SLEEP
+sudoc-load-biblios $ILN $DOIT
+ 
+iconv -f utf8 -t latin1 -c $TMP_FILE | \
+  mail -a "FROM: $EMAIL_FROM" -s 'Chargement SUDOC' -c $EMAIL_CC $EMAIL_TO
+-----
+
+
 == Chargement initial ==
 
 Opération de chargement initial des notices d'un établissement dans le
@@ -674,12 +714,11 @@ Date-Auteur-Titre. Ces fichiers sont demandés par l'ABES afin de réaliser soit
 un test de recouvrement soit une localisation automatique. Ces fichiers suivent
 la convention de nommage demandée par l'ABES : commence par la lettre i ou r (pour
 ISBN ou Date-Auteur-Titre), suivi du RCR de la bibliothèque, puis le code de
-PEB (toujours u pour le moment). Ces noms de fichiers sont suffixés d'un
-index. Par exemple :
+PEB (u ou g). Ces noms de fichiers sont suffixés d'un index. Par exemple :
 
 -----
 i3641767u.0001
-i3641767u.0002
+i3641767g.0002
 -----
 
 Permet d'obtenir la liste des ISBN d'un Catalogue.  Plusieurs fichiers sont
@@ -716,6 +755,12 @@ lignes.
 ==== --test ====
 
 Fichiers d'ISBN uniquement pour un test de recouvrement.
+
+==== --peb | --nopeb ====
+
+Notices disponibles pour le PEB ? Si non fourni, disponibles pour le PEB. Les
+fichiers générés pour le PEB contiennent "u" dans leur nom. Ceux contenant des
+notices non disponibles pour le PEB ont un nom comprenant un "g".
 
 
 === sudoc-ppnize ===
