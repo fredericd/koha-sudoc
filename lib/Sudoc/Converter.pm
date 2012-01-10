@@ -43,7 +43,7 @@ has item => ( is => 'rw', isa => 'HashRef' );
 # notice ou d'une notice qui existe déjà dans Koha:
 #
 # Méthode       ajout  modif 
-# skip            0      0
+# skip            O      O
 # init            O      O
 # authoritize     O      O
 # linking         O      O

@@ -17,9 +17,12 @@
 
 package Sudoc::Localisation;
 use Moose;
+use 5.010;
+use utf8;
 
 use C4::Items;
 use YAML;
+use Encode;
 
 extends 'RecordWriter';
 
@@ -152,7 +155,6 @@ tdo
 lan
 pay
 fct
-
 a
 ad
 alla
@@ -378,6 +380,41 @@ sub write_isbn {
 }
 
 
+sub _clean_string {
+    my $value = shift;
+
+    # Suppression des accents, passage en minuscule
+    $value = decode('UTF-8', $value) unless utf8::is_utf8($value);
+    $value = lc $value;
+    $value =~ y/âàáäçéèêëïîíôöóøùûüñčć°/aaaaceeeeiiioooouuuncco/;
+
+    $value =~ s/;/ /g;
+    $value =~ s/,/ /g;
+    $value =~ s/"/ /g;
+    $value =~ s/\?/ /g;
+    $value =~ s/!/ /g;
+    $value =~ s/'/ /g;
+    $value =~ s/\'/ /g;
+    $value =~ s/\)/ /g;
+    $value =~ s/\(/ /g;
+    $value =~ s/\]/ /g;
+    $value =~ s/\[/ /g;
+    $value =~ s/:/ /g;
+    $value =~ s/=/ /g;
+    $value =~ s/-/ /g;
+    $value =~ s/\x{0088}/ /g;
+    $value =~ s/\x{0089}/ /g;
+    $value =~ s/\x{0098}/ /g;
+    $value =~ s/\x{0099}/ /g;
+    $value =~ s/\x9c/ /g;
+    $value =~ s/\./ /g;
+
+    while ( $value =~ s/  / / ) { ; }
+
+    return $value;
+}
+
+
 sub write_dat {
     my ($self, $record) = @_;
 
@@ -391,33 +428,27 @@ sub write_dat {
     for my $tag ( qw( 700 701 702 710 711 712 ) ) {
         $auteur = $record->field($tag);
         next unless $auteur;
-        $auteur = $auteur->subfield('a');
+        $auteur = $auteur->subfield('a') || '';
+        $auteur = _clean_string($auteur);
         last if $auteur;
     }
     $auteur ||= '';
 
+    # Traitement du titre
     my $titre = $record->field('200') || '';
     $titre = $titre->subfield('a') || '' if $titre;
-    $titre =~ s/;/ /g;
-    $titre =~ s/,/ /g;
-    $titre =~ s/"/ /g;
-    $titre =~ s/\?/ /g;
-    $titre =~ s/!/ /g;
-    $titre =~ s/'/ /g;
-    $titre =~ s/\'/ /g;
-    $titre =~ s/\)/ /g;
-    $titre =~ s/\(/ /g;
-    $titre =~ s/:/ /g;
-    $titre =~ s/=/ /g;
-    $titre =~ s/\./ /g;
+
+    # Suppression des accents, passage en minuscule
+    $titre = _clean_string($titre);
 
     # Les mots vides
-    for my $word ( @stopwords ) { $titre =~ s/ $word / /gi; }
+    for my $word ( @stopwords ) {
+        $titre =~ s/\b$word\b/ /gi;
+    }
 
     while ( $titre =~ s/  / / ) { ; }
     $titre =~ s/^ *//;
     $titre =~ s/ *$//;
-    $titre = lc $titre;
     
     my $dat = "$date;$auteur;$titre";
     my $biblionumber = $self->sudoc->koha->get_biblionumber($record);
@@ -442,10 +473,10 @@ sub write_dat {
 sub write {
     my ($self, $record) = @_;
 
-    $self->SUPER::write();
-
     # S'il la notice contient déjà un PPN, inutile de la traiter
     return if $record->field('009');
+
+    $self->SUPER::write();
 
     $self->dat ? $self->write_dat($record) : $self->write_isbn($record);
 }
