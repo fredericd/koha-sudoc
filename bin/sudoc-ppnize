@@ -52,20 +52,26 @@ sudoc-ppnize - PPNize les notices Koha à partir d'un fichier d'équivalences SU
 
 =head1 SYNOPSYS
 
- sudoc-ppnize 80
- sudoc-ppnize 80 --dat
+ sudoc-ppnize 80 L035-ILN80-abcd.raw
+ sudoc-ppnize 80 L035-ILN80-abcd.raw --verbose
+ sudoc-ppnize 80 L035-ILN80-abcd.raw --doit
 
 =head1 DESCRIPTION
 
-A partir d'un Catalogue Koha, ce script génère des fichiers d'ISBN ou de
-Date-Auteur-Titre. Ces fichiers sont demandés par l'ABES afin de réaliser soit
-un test de recouvrement soit une localisation automatique. Ces fichiers suivent
-la convention de nommage demandée par l'ABES : commence par la lettre i ou r (pour
-ISBN ou Date-Auteur-Titre), suivi du RCR de la bibliothèque, puis le code de
-PEB (toujours u). Ces noms de fichiers sont suffixés d'un index. Par exemple :
+Après une localisation automatique, l'ABES fournit un fichier d'équivalences
+entre les PPN les notices SUDOC et les biblionumber des notices Koha. Ce script
+modifie les notices Koha en y ajoutant en 009 le PPN du Sudoc.  
 
- i3641767u_0001.txt
- i3641767u_0002.txt
+Le fichier fourni est consitué d'une ligne par équivalence, chaque ligne ayant
+le format suivant :
+
+  PPN <PPN> : <biblionumber>
+
+Par exemple :
+
+  PPN 000004405 : 17417
+  PPN 000006475 : 11841
+  PPN 000007323 : 5810
 
 =head1 PARAMETRES
 
