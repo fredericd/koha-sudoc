@@ -1,4 +1,4 @@
-# Copyright (C) 2011 Tamil s.a.r.l. - http://www.tamil.fr
+# Copyright (C) 2012 Tamil s.a.r.l. - http://www.tamil.fr
 #
 # This file is part of Chargeur SUDOC Koha.
 #
@@ -51,6 +51,10 @@ has peb => ( is => 'rw', isa => 'Bool', default => 1 );
 #   BIB1 => {
 #     branch => 'BIB1',         
 #     rcr    => '1255872545',  # RCR correspondant à la biblio Koha
+#     key    => {
+#        cle1 => [ [biblionumber1, cote1],  [biblionumber2, cote2], ... ],
+#        cle2 => [ [
+#     },
 #     line   => 123,           # N° de ligne dans le fichier courant
 #     index  => 2,             # Index du ficier (fichier.index)
 #   },
@@ -58,22 +62,21 @@ has peb => ( is => 'rw', isa => 'Bool', default => 1 );
 #     ...
 # }
 #   
-has fichier_rcr => (
+has loc => (
     is => 'rw',
     isa => 'HashRef',
     default => sub {
         my $self = shift;
-        my %fichier_rcr;
+        my %loc;
         my $hbranch = $self->sudoc->c->{$self->sudoc->iln}->{branch};
         while ( my ($branch, $rcr) = each %$hbranch ) {
-            $fichier_rcr{$branch} = {
+            $loc{$branch} = {
                 branch => $branch,
                 rcr    => $rcr,
-                line   => 9999,
-                index  => 0,
+                key    => {},
             };
         }
-        $self->fichier_rcr( \%fichier_rcr );
+        $self->loc( \%loc );
     },
 );
 
@@ -315,30 +318,6 @@ which
 );
 
 
-sub get_file {
-    my ($self, $branch, $prefix) = @_;
-    my $file = $self->fichier_rcr->{$branch};
-    return unless $file;
-    my $line = $file->{line};
-    $line++;
-    my $fh = $file->{fh};
-    if ( $line > $self->lines ) {
-        my $index = $file->{index} + 1;
-        my $name = $prefix . $file->{rcr} .
-                   ( $self->peb ? 'u' : 'g' ) .
-                   '_' .
-                   sprintf("%04d", $index) . '.txt';
-        close($fh) if $fh;
-        open $fh, ">$name";
-        $file->{index} = $index;
-        $file->{fh}    = $fh;
-        $line = 1;
-    }
-    $file->{line} = $line;
-    return $file;
-}
-
-
 sub write_isbn {
     my ($self, $record) = @_;
 
@@ -365,16 +344,13 @@ sub write_isbn {
         # Si c'est un EAN, on convertit en ISBN...
         for my $ex ( @$items ) {
             my $branch = $ex->{homebranch};
-            my $file = $self->get_file($branch, 'i');
-            next unless $file;
-            my $cote = $ex->{itemcallnumber};
-            my $fh = $file->{fh};
-            if ( $self->test ) {
-                print $fh "$isbn\n";
-            }
-            else {
-                print $fh "$isbn;$cote;$biblionumber\n";
-            }
+            my $loc = $self->loc->{$branch};
+            next unless $loc;
+            my $key = $loc->{key};
+            my $cote = $ex->{itemcallnumber} || '';
+            $key->{$isbn} ||= [];
+            push @{$key->{$isbn}}, [$biblionumber, $cote];
+            last;
         }
     }
 }
@@ -455,18 +431,58 @@ sub write_dat {
     my $items = GetItemsByBiblioitemnumber($biblionumber);
     for my $ex ( @$items ) {
         my $branch = $ex->{homebranch};
-        my $file = $self->get_file($branch, 'r');
-        next unless $file;
+        my $loc = $self->loc->{$branch};
+        next unless $loc;
+        my $key = $loc->{key};
         my $cote = $ex->{itemcallnumber} || '';
-        my $fh = $file->{fh};
-        if ( $self->test ) {
-            print $fh "$dat\n";
-        }
-        else {
-            print $fh "$dat;$cote;$biblionumber\n";
-        }
+        $key->{$dat} ||= [];
+        push @{$key->{$dat}}, [$biblionumber, $cote];
+        last;
     }
 
+}
+
+
+sub write_to_file {
+    my $self = shift;
+
+    my $max_lines = $self->lines;
+    my $prefix = $self->dat ? 'r' : 'i';
+    for my $loc ( values %{$self->loc} ) {
+        my $fh;
+        open my $fh_mult, ">",
+          $prefix . $loc->{rcr} . ( $self->peb ? 'u' : 'g' ) . "_clemult.txt";
+        my $index = 0;
+        my $line = 99999999;
+        for my $key ( sort keys %{$loc->{key}} ) {
+            my @bncote = @{$loc->{key}->{$key}};
+            if ( @bncote == 1 ) {
+                if ( $line > $self->lines ) {
+                    my $index++;
+                    my $name = $prefix . $loc->{rcr} .
+                               ( $self->peb ? 'u' : 'g' ) .
+                               '_' .
+                               sprintf("%04d", $index) . '.txt';
+                    close($fh) if $fh;
+                    open $fh, ">:encoding(utf8)", $name;
+                    $line = 0;
+                }
+                if ( $self->test ) {
+                    print $fh "$key\n";
+                }
+                else {
+                    my ($biblionumber, $cote) = @{$bncote[0]};
+                    print $fh "$key;$cote;$biblionumber\n"
+                }
+                $line++;
+            }
+            else {
+                print $fh_mult
+                  "$key\n  ",
+                  join("\n  ", map { $_->[0] . " " . $_->[1] } @bncote), "\n";
+            }
+        }
+    }
 }
 
 
