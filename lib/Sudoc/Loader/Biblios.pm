@@ -21,7 +21,9 @@ use Moose;
 extends 'Sudoc::Loader';
 
 use YAML;
+use Locale::Messages;
 use Locale::TextDomain 'fr.tamil.sudoc';
+
 
 
 # On cherche les notices doublons SUDOC. On renvoie la liste des notices

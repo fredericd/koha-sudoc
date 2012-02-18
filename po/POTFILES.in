@@ -5,9 +5,7 @@
 ../bin/sudoc-trans
 
 
-../lib/FileProcess.pm
 ../lib/Sudoc.pm
-../lib/Sudoc/Converter.pm
 ../lib/Sudoc/Loader.pm
 ../lib/Sudoc/Localisation.pm
 ../lib/Sudoc/Spool.pm

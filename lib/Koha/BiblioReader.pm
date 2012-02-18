@@ -23,7 +23,7 @@ use Moose::Util::TypeConstraints;
 use MARC::Moose::Record;
 use MARC::Moose::Parser::Iso2709;
 
-extends 'RecordReader';
+with 'MooseX::RW::Reader';
 
 
 has koha => ( is => 'rw', isa => 'Koha', required => 1 );
@@ -60,7 +60,7 @@ sub read {
 
     while ( my ($id) = $self->sth->fetchrow ) {
         if ( my $record = $self->get( $id ) ) {
-            $self->SUPER::read();
+            $self->count($self->count + 1);
             $self->id( $id );
             return $record;
         }

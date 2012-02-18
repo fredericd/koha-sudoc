@@ -24,7 +24,7 @@ use C4::Items;
 use YAML;
 use Encode;
 
-extends 'RecordWriter';
+with 'MooseX::RW::Writer::File';
 
 # Moulinette SUDOC
 has sudoc => ( is => 'rw', isa => 'Sudoc', required => 1 );
@@ -492,7 +492,7 @@ sub write {
     # S'il la notice contient déjà un PPN, inutile de la traiter
     return if $record->field('009');
 
-    $self->SUPER::write();
+    $self->count( $self->count + 1);
 
     $self->dat ? $self->write_dat($record) : $self->write_isbn($record);
 }

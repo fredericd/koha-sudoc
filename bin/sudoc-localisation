@@ -2,20 +2,19 @@
 
 package Main;
 
+use 5.010;
+use utf8;
 use strict;
 use warnings;
-
-
 use FindBin qw( $Bin );
 use lib "$Bin/../lib";
-
 use Getopt::Long;
 use Pod::Usage;
 use Koha;
 use Koha::BiblioReader;
 use Sudoc;
 use Sudoc::Localisation;
-use Conversion;
+use Koha::Contrib::Tamil::Conversion;
 
 my ($help, $select, $lignes, $test, $dat, $peb);
 $select = "SELECT biblionumber FROM biblio";
@@ -46,7 +45,7 @@ my $writer = Sudoc::Localisation->new(
     lines => $lignes,
     dat   => $dat,
     peb   => $peb);
-my $converter = Conversion->new(
+my $converter = Koha::Contrib::Tamil::Conversion->new(
    reader  => $reader,
    writer  => $writer,
    verbose => 1 

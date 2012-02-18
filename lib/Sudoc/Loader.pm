@@ -18,9 +18,10 @@
 package Sudoc::Loader;
 use Moose;
 
+use 5.010;
+use utf8;
 use FindBin qw( $Bin );
 use lib "$Bin/../lib";
-
 use MARC::Moose::Reader::File::Iso2709;
 use Sudoc::Converter;
 use Log::Dispatch;
@@ -81,6 +82,7 @@ sub BUILD {
         filename  => $self->sudoc->sudoc_root . '/var/log/' .
                      $self->sudoc->iln . "-$id.log",
         mode      => '>>',
+        binmode   => ':utf8',
     ) );
 
     # Instanciation du converter

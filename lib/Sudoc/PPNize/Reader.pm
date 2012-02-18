@@ -19,17 +19,7 @@ package Sudoc::PPNize::Reader;
 use Moose;
 
 
-extends 'RecordReader::File';
-
-has fh => ( is => 'rw' );
-
-
-sub BUILD {
-    my $self = shift;
-
-    open( my $fh, '<',$self->file );
-    $self->fh($fh);
-}
+with 'MooseX::RW::Reader::File';
 
 
 
