@@ -207,6 +207,7 @@ sub merge {
             $pt->{$tag} ||= {};
             for my $field ( $record->field($tag) ) {
                 my $key = _key_dedup($field);
+                next unless $key;
                 $pt->{$tag}->{$key} = undef;
             }
         }
@@ -217,6 +218,7 @@ sub merge {
                 my @keeps;
                 for my $field (@fields) {
                     my $key = _key_dedup($field);
+                    next unless $key;
                     push @keeps, $field  unless exists $pt->{$tag}->{$key};
                 }
                 $record->append(@keeps);
