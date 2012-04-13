@@ -143,13 +143,20 @@ chose comme ceci :
                 `-- ILN186-TEST-933r376A001.raw
 ----------------------------------------
    
-Installez les bibliothèques Perl requises :
+Installez les bibliothèques Perl requises (as root) :
 
 ----------------------------------------
-cpan MARC::Moose::Record
-cpan POE
-cpan Log::Dispatch
-cpan Locale::TextDomain
+cpan App::cpanminus
+cpanm MARC::Moose::Record
+cpanm AnyEvent
+cpanm Log::Dispatch
+cpanm Locale::TextDomain
+----------------------------------------
+
+La commande +perldoc+ doit être installé. Instllation sous Debian/Ubuntu:
+
+----------------------------------------
+apt-get install perl-doc
 ----------------------------------------
 
 Pour exécuter les scripts du chargeur, faites pointer la variable
