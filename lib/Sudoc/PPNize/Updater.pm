@@ -7,7 +7,7 @@ use Log::Dispatch::File;
 use Locale::TextDomain "fr.tamil.sudoc";
 use C4::Biblio;
 
-extends 'Koha::Contrib::Tamil::FileProcess';
+extends 'AnyEvent::Processor';
 
 
 # Le lecteur d'enregistrements utilisé par la conversion
