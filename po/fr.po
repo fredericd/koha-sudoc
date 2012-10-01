@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: 1.0\n"
 "Report-Msgid-Bugs-To: Tamil <contact@tamil.fr>\n"
-"POT-Creation-Date: 2012-02-18 21:09+0100\n"
+"POT-Creation-Date: 2012-10-01 10:40+0200\n"
 "PO-Revision-Date: 2011-04-27 22:45\n"
 "Last-Translator: Frédéric Demians <frederic@tamil.fr>\n"
 "Language-Team: Tamil <contact@tamil.fr>\n"
@@ -123,68 +123,68 @@ msgstr[1] "Nombre d'enregistrements ignorés : {count}"
 msgid "** Test ** File {file} has not been loaded"
 msgstr "** Test ** Le fichier {file} n'a pas été chargé"
 
-#: ../lib/Sudoc/Loader/Authorities.pm:44
-#, perl-brace-format
-msgid "  Sudoc merging of PPN {ppn} with Koha authority {id}"
-msgstr "  Fusion Sudoc du PPN {ppn} avec l'autorité Koha {id}"
-
-#: ../lib/Sudoc/Loader/Authorities.pm:63
+#: ../lib/Sudoc/Loader/Authorities.pm:46
 #, perl-brace-format
 msgid "Authority #{count} PPN {ppn}"
 msgstr "Autorité #{count} PPN {ppn}"
 
-#: ../lib/Sudoc/Loader/Authorities.pm:77
+#: ../lib/Sudoc/Loader/Authorities.pm:60
 msgid "  ERROR: Authority without heading\n"
 msgstr "  ERREUR : Autorité sans champ vedertte\n"
 
-#: ../lib/Sudoc/Loader/Authorities.pm:96
-msgid ""
-"  Warning! the entering biblio record has to be merged toseveral existing "
-"Koha biblios. TO BE DONE MANUALLY\n"
-msgstr ""
-"  Attention! la notice biblio entrante doit être fusionnée à plusieurs "
-"notices Koha existantes. À FAIRE MANUELLEMENT\n"
-
-#: ../lib/Sudoc/Loader/Authorities.pm:126
+#: ../lib/Sudoc/Loader/Authorities.pm:89
 msgid "  Warning! bad encoding in position 13. Fix it.\n"
 msgstr "  Attention ! mauvais encodage en position 13. On le corrige.\n"
 
-#: ../lib/Sudoc/Loader/Authorities.pm:137
+#: ../lib/Sudoc/Loader/Authorities.pm:100
 #, perl-brace-format
 msgid "  * Replace {authid}"
 msgstr "  * Remplace {authid}"
 
-#: ../lib/Sudoc/Loader/Authorities.pm:138
+#: ../lib/Sudoc/Loader/Authorities.pm:101
 #, perl-brace-format
 msgid "  * Add {authid}"
 msgstr "  * Ajoute {authid}"
 
-#: ../lib/Sudoc/Loader/Biblios.pm:43
+#: ../lib/Sudoc/Loader/Authorities.pm:120
+#, perl-brace-format
+msgid ""
+"  Sudoc merging with this authority of obsolete authority (PPN "
+"{obsolete_ppn}, authid {obsolete_authid})"
+msgstr ""
+"  Fusion Sudoc à cette autorités de l'autorité obsolète "
+"(PPN {obsolete_ppn}, authid {obsolete_authid})"
+
+#: ../lib/Sudoc/Loader/Authorities.pm:149
+msgid "  Linked biblios modified: "
+msgstr "  Notices biblio liées qui ont été modifiées : "
+
+#: ../lib/Sudoc/Loader/Biblios.pm:45
 #, perl-brace-format
 msgid "  Merging Sudoc PPN {ppn} with Koha biblio {biblionumber}"
 msgstr "  Fusion Sudoc du PPN {ppn} avec la notice Koha {biblionumber}"
 
-#: ../lib/Sudoc/Loader/Biblios.pm:71
+#: ../lib/Sudoc/Loader/Biblios.pm:73
 #, perl-brace-format
 msgid "Biblio record #{count} PPN {ppn}"
 msgstr "Notice #{count} PPN {ppn}"
 
-#: ../lib/Sudoc/Loader/Biblios.pm:82
+#: ../lib/Sudoc/Loader/Biblios.pm:84
 msgid "  * Skipped\n"
 msgstr "  * Ignoré\n"
 
-#: ../lib/Sudoc/Loader/Biblios.pm:93
+#: ../lib/Sudoc/Loader/Biblios.pm:95
 #, perl-brace-format
 msgid "  PPN found in Koha biblio record {biblionumber}"
 msgstr "  Le PPN a été trouvé dans la notice Koha {biblionumber}"
 
-#: ../lib/Sudoc/Loader/Biblios.pm:108
+#: ../lib/Sudoc/Loader/Biblios.pm:110
 #, perl-brace-format
 msgid "  Merging Koha biblio {biblionumber} found in 035$a for RCR {rcr}"
 msgstr ""
 "  Fusion de la notice Koha {biblionumber} trouvée en 035$a pour le RCR {rcr}"
 
-#: ../lib/Sudoc/Loader/Biblios.pm:126
+#: ../lib/Sudoc/Loader/Biblios.pm:128
 msgid ""
 "  Warning! the entering biblio must be merged into several existing Koha "
 "biblio records. TO BE DONE MANUALLY\n"
@@ -192,16 +192,16 @@ msgstr ""
 "  Attention! la notice biblio entrante doit être fusionnée à plusieurs "
 "notices Koha existantes. À FAIRE MANUELLEMENT\n"
 
-#: ../lib/Sudoc/Loader/Biblios.pm:147 ../lib/Sudoc/Loader/Biblios.pm:159
+#: ../lib/Sudoc/Loader/Biblios.pm:149 ../lib/Sudoc/Loader/Biblios.pm:161
 msgid "  Biblio after processing:\n"
 msgstr "  Notice après traitements : \n"
 
-#: ../lib/Sudoc/Loader/Biblios.pm:149
+#: ../lib/Sudoc/Loader/Biblios.pm:151
 #, perl-brace-format
 msgid "  * Replace {biblionumber}"
 msgstr "  * Remplace {biblionumber}"
 
-#: ../lib/Sudoc/Loader/Biblios.pm:160
+#: ../lib/Sudoc/Loader/Biblios.pm:162
 msgid "  * Add"
 msgstr "  * Ajout"
 
