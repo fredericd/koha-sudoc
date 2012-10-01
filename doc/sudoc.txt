@@ -167,9 +167,9 @@ l'installation dans +/usr/local/koha+, sous Linux :
 export PATH=$PATH:/usr/local/koha/sudoc/bin
 ----------------------------------------
 
-Et bien sûr, il faut que vous ayez au moyen au moins une instance de
-Koha installée, avec les variables d'environnement +KOHA_CONF+ et
-+PERL5LIB+ correctement initialisées.
+Et bien sûr, il faut que vous ayez au moins une instance de Koha installée,
+avec les variables d'environnement +KOHA_CONF+ et +PERL5LIB+ correctement
+initialisées.
 
 [CAUTION]
 Lisez attentivement la suite de ce document pour comprendre le
@@ -283,21 +283,19 @@ Le script de chargement des autorités 'sudoc-load-authorities' examine le
 répertoire des fichiers en attente de chargement. Il traite un-à-un les
 fichiers d'autorités.
 
-Pour chaque autorité, on détermine s'il s'agit d'une nouveauté ou de la
-mise à jour d'une autorité existante. Les nouveautés sont ajoutées à
-Koha.  Les mises à jour remplacent les autorités Koha correspondantes.
+Pour chaque autorité, on détermine s'il s'agit d'une nouveauté ou de la mise à
+jour d'une autorité existante. Les nouveautés sont ajoutées à Koha.  Les mises
+à jour remplacent les autorités Koha correspondantes.  On interroge les
+autorités Koha pour savoir s'il en existe une ayant l'identifiant de la notice
+entrante (son PPN en 001). Si c'est le cas, il s'agit d'une autorité déjà
+présente dans Koha et qui a été modifiée dans le SUDOC.
 
-Il y a deux cas de figure où l'on a affaire à une mise à jour :
-
-. 'Fusion SUDOC' -- La zone 035 est d'abord examinée afin de déterminer
-  si l'autorité est marquée comme étant une fusion SUDOC de notices.
-  Dans ce cas, on peut savoir si une autorité Koha existe déjà ayant
-  l'identifiant (PPN) de l'autorité ayant fusionnée avec l'autorité
-  entrante.
-. 'Mise à jour dans le SUDOC' -- On interroge les autorités Koha pour
-  savoir s'il en existe une ayant l'identifiant de la notice entrante
-  (son PPN en 001). Si c'est le cas, il s'agit d'une autorité déjà
-  présente dans Koha et qui a été modifiée dans le SUDOC.
+Le Chargeur traite également le cas des 'Fusion SUDOC'. La zone 035 est
+examinée afin de déterminer si l'autorité est marquée comme étant une fusion
+SUDOC d'autorités.  Dans ce cas, on peut savoir si une autorité Koha existe
+déjà ayant l'identifiant (PPN) de l'autorité obsolète ayant fusionnée avec
+l'autorité entrante. Les notices bibliographiques liées à l'ancienne autorité
+sont retrouvées et elles sont rattachées à la nouvelle autorités.
 
 Après chargement, chaque fichier d'autorités est déplacé dans le
 répertoire 'done' des fichiers ayant été traités.

@@ -185,6 +185,27 @@ sub get_biblio_by_ppn {
 }
 
 
+# Retrouve les notices associées à une autorité Koha identifiée par son authid
+# Retourne un tableau de (biblionumner, framework, record)
+sub get_biblios_by_authid {
+    my ($self, $authid) = @_;
+
+    my @records;
+    try {
+        my $rs = $self->zbiblio()->search_pqf( "\@attr 1=Koha-Auth-Number $authid" );
+        for ( my $i = 0; $i < $rs->size(); $i++ ) {
+            my $record = $rs->record($i);
+            $record = MARC::Moose::Record::new_from( $record->raw(), 'Iso2709' );
+            next unless $record;
+            my ($biblionumber, $framework) = $self->get_biblionumber_framework($record);
+            push @records, [$biblionumber, $framework, $record];
+        } 
+    } catch {
+        warn "ZOOM error: $_";
+    };
+    return @records;
+}
+
 # Lecture d'une autorité par son PPN
 sub get_auth_by_ppn {
     my ($self, $ppn) = @_;

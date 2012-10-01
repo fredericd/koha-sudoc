@@ -20,38 +20,21 @@ use Moose;
 
 extends 'Sudoc::Loader';
 
+use 5.010;
+use utf8;
 use C4::AuthoritiesMarc;
 use MARC::Moose::Record;
 use Locale::TextDomain('fr.tamil.sudoc');
 
 
-# On cherche les autorités doublons SUDOC. On renvoie la liste des notices
-# Koha correspondantes.
-sub doublons_sudoc {
-    my ($self, $record) = @_;
-    my @doublons;
-    # On cherche un 035 avec $9 sudoc qui indique une fusion d'autorité Sudoc
-    # 035$a contient le PPN de la notice qui a été fusionnée avec la notice en
-    # cours de traitement.
-    for my $field ( $record->field('035') ) {
-        my $sudoc = $field->subfield('9');
-        next unless $sudoc && $sudoc =~ /sudoc/i;
-        my $ppn = $field->subfield('a');
-        my ($authid, $auth) =
-            $self->sudoc->koha->get_auth_by_ppn( $ppn );
-        if ($auth) {
-            $self->log->notice(
-              __x("  Sudoc merging of PPN {ppn} with Koha authority {id}",
-                  ppn => $ppn, authid => $authid) . "\n" );
-            push @doublons, { ppn => $ppn, authid => $authid, auth => $auth };
-        }
-    } 
-    return \@doublons;
-}
-
-
 sub handle_record {
     my ($self, $record) = @_;
+
+    # FIXME: Ici et pas en-tête parce qu'il faut que l'environnement Shell soit
+    # déjà fixé avant de charger ces modules qui ont besoin de KOHA_CONF et qui
+    # le garde
+    use C4::Biblio;
+    use C4::Items;
 
     my $conf = $self->sudoc->c->{$self->sudoc->iln}->{auth};
 
@@ -82,29 +65,9 @@ sub handle_record {
     $self->sudoc->ppn_move($record, $conf->{ppn_move});
 
     # Y a-t-il déjà dans la base Koha une autorité ayant ce PPN ?
+    # Si oui, on ajoute son authid à l'autorité entrante afin de forcer sa mise
+    # à jour.
     my ($authid, $auth) = $self->sudoc->koha->get_auth_by_ppn($ppn);
-
-    # Les doublons SUDOC. Il n'y a qu'un seul cas où on peut en faire quelque
-    # chose. Si on a déjà trouvé une autorité Koha ci-dessus, on ne peut rien
-    # faire : en effet, on a déjà une cible pour fusionner la notice entrante.
-    # S'il y a plus d'un doublon qui correspond à des notices Koha, on ne sait
-    # pas à quelle notice Koha fusionner la notice entrante.
-    my $doublons = $self->doublons_sudoc($record);
-    if ( @$doublons ) {
-        if ( $auth || @$doublons > 1 ) {
-            $self->log->warning(
-                __"  Warning! the entering biblio record has to be merged to" .
-                  "several existing Koha biblios. TO BE DONE MANUALLY" . "\n" );
-        }
-        else {
-            # On fusionne le doublon SUDOC (unique) avec la notice SUDOC entrante
-            my $d = shift @$doublons;
-            ($authid, $auth) = ($d->{authid}, $d->{auth});
-        }
-    }
-
-    # Si on a trouvé une autorité correspondante, et une seule, on ajoute son
-    # authid à l'autorité entrante afin de forcer sa mise à jour.
     if ( $auth ) {
         $record->append(
             MARC::Moose::Field::Control->new( tag => '001', value => $authid) );
@@ -139,6 +102,55 @@ sub handle_record {
         )
         . "\n" );
     $self->log->debug( "\n" );
+
+
+    # On cherche un 035 avec $9 sudoc qui indique une fusion d'autorité Sudoc
+    # 035$a contient le PPN de la notice qui a été fusionnée avec la notice en
+    # cours de traitement.  On retrouve les notices biblio Koha liées à
+    # l'ancienne autorité et on les modifie pour qu'elle pointent sur la
+    # nouvelle autorité.
+    for my $field ( $record->field('035') ) {
+        my $sudoc = $field->subfield('9');
+        next unless $sudoc && $sudoc =~ /sudoc/i;
+        my $obsolete_ppn = $field->subfield('a');
+        my ($obsolete_authid, $auth) =
+            $self->sudoc->koha->get_auth_by_ppn($obsolete_ppn);
+        next unless $auth;
+        $self->log->notice(
+          __x("  Sudoc merging with this authority of obsolete authority (PPN {obsolete_ppn}, authid {obsolete_authid})",
+              obsolete_ppn => $obsolete_ppn, obsolete_authid => $obsolete_authid) . "\n" );
+        my @modified_biblios;
+        for ( $self->sudoc->koha->get_biblios_by_authid($obsolete_authid) ) {
+            my ($biblionumber, $framework, $modif) = @$_;
+            my $found = 0;
+            for my $field ( $modif->field("[4-7]..") ) {
+                $field->subf( [ map {
+                    my ($letter, $value) = @$_;
+                    if ( $letter eq '3' && $value eq $obsolete_ppn ) {
+                        $value = $ppn;
+                    }
+                    elsif ( $letter eq '9' && $value eq $obsolete_authid ) {
+                        $found = 1;
+                        $value = $authid;
+                    }
+                    [ $letter, $value ];
+                } @{$field->subf} ] );
+            }
+            if ( $found ) {
+                push @modified_biblios, $biblionumber;
+                $modif->delete('995');
+                $self->log->debug( $modif->as('Text') );
+                ModBiblio($modif->as('Legacy'), $biblionumber, $framework)
+                    if $self->doit;
+            }
+        }
+        if ( @modified_biblios ) {
+            $self->log->notice(
+                __x("  Linked biblios modified: "),
+                join(', ', @modified_biblios), "\n" );
+        }
+    } 
+
 }
 
 1;
