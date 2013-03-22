@@ -23,6 +23,7 @@ use utf8;
 use C4::Items;
 use YAML;
 use Encode;
+use Business::ISBN;
 
 with 'MooseX::RW::Writer::File';
 
