@@ -24,6 +24,7 @@ use C4::Items;
 use YAML;
 use Encode;
 use Business::ISBN;
+use List::Util qw/first/;
 
 with 'MooseX::RW::Writer::File';
 
@@ -330,6 +331,7 @@ sub write_isbn {
     for my $isbn ( @isbns ) {
         $isbn = $isbn->subfield('a');
         next unless $isbn;
+        # Si c'est un EAN, on convertit en ISBN...
         if ( $isbn =~ /^978/ ) {
             if ( my $i = Business::ISBN->new($isbn) ) {
                 if ( $i = $i->as_isbn10 ) {
@@ -342,15 +344,16 @@ sub write_isbn {
         # On nettoie les ISBN de la forme 122JX(vol1)
         $isbn = $1 if $isbn =~ /(.*)\(/;
         next unless $isbn;
-        # Si c'est un EAN, on convertit en ISBN...
         for my $ex ( @$items ) {
             my $branch = $ex->{homebranch};
             my $loc = $self->loc->{$branch};
             next unless $loc;
             my $key = $loc->{key};
             my $cote = $ex->{itemcallnumber} || '';
-            $key->{$isbn} ||= [];
-            push @{$key->{$isbn}}, [$biblionumber, $cote];
+            my $bibcote = $key->{$isbn} ||= [];
+            # On ne prend pas les doublons d'ISBN pour un même biblionumber
+            next if first { $_->[0] eq $biblionumber; } @$bibcote;
+            push @$bibcote, [$biblionumber, $cote];
             last;
         }
     }
@@ -451,22 +454,22 @@ sub write_to_file {
     my $prefix = $self->dat ? 'r' : 'i';
     for my $loc ( values %{$self->loc} ) {
         my $fh;
-        open my $fh_mult, ">",
+        open my $fh_mult, ">:encoding(utf8)",
           $prefix . $loc->{rcr} . ( $self->peb ? 'u' : 'g' ) . "_clemult.txt";
-        my $index = 0;
-        my $line = 99999999;
+        $loc->{index} = 0;
+        $loc->{line} = 99999999;
         for my $key ( sort keys %{$loc->{key}} ) {
             my @bncote = @{$loc->{key}->{$key}};
             if ( @bncote == 1 ) {
-                if ( $line > $self->lines ) {
-                    my $index++;
+                if ( $loc->{line} >= $self->lines ) {
+                    $loc->{index}++;
                     my $name = $prefix . $loc->{rcr} .
                                ( $self->peb ? 'u' : 'g' ) .
                                '_' .
-                               sprintf("%04d", $index) . '.txt';
+                               sprintf("%04d", $loc->{index}) . '.txt';
                     close($fh) if $fh;
                     open $fh, ">:encoding(utf8)", $name;
-                    $line = 0;
+                    $loc->{line} = 0;
                 }
                 if ( $self->test ) {
                     print $fh "$key\n";
@@ -475,7 +478,7 @@ sub write_to_file {
                     my ($biblionumber, $cote) = @{$bncote[0]};
                     print $fh "$key;$cote;$biblionumber\n"
                 }
-                $line++;
+                $loc->{line}++;
             }
             else {
                 print $fh_mult
