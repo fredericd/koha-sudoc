@@ -34,6 +34,13 @@ has sudoc => ( is => 'rw', isa => 'Sudoc', required => 1 );
 # Sortie Date-Auteur-Titre plutôt qu'ISBN
 has dat => ( is => 'rw', isa => 'Bool', default => 0 );
 
+# Où placer la cote Koha dans la notice ABES, par défaut 930 $a
+has coteabes => (
+    is => 'rw',
+    isa => 'Str',
+    default => '930 $a'
+);
+
 # Test de recouvrement (on sort moins d'info)
 has test => ( is => 'rw', isa => 'Bool', default => 1 );
 
@@ -350,6 +357,7 @@ sub write_isbn {
             next unless $loc;
             my $key = $loc->{key};
             my $cote = $ex->{itemcallnumber} || '';
+            $cote =~ s/;//g;
             my $bibcote = $key->{$isbn} ||= [];
             # On ne prend pas les doublons d'ISBN pour un même biblionumber
             next if first { $_->[0] eq $biblionumber; } @$bibcote;
@@ -469,7 +477,12 @@ sub write_to_file {
                                sprintf("%04d", $loc->{index}) . '.txt';
                     close($fh) if $fh;
                     open $fh, ">:encoding(utf8)", $name;
-                    $loc->{line} = 0;
+                    print $fh
+                        $self->dat ? 'date;auteur;titre' : 'ISBN',
+                        ';',
+                        $self->coteabes,
+                        ';L035 $a', "\n";
+                    $loc->{line} = 1;
                 }
                 if ( $self->test ) {
                     print $fh "$key\n";

@@ -714,6 +714,10 @@ traitements réalisés.
 Cette commande est à utiliser en vue d'une localisation automatique d'un
 Catalogue Koha dans le SUDOC. 
 
+La procédure et les fichiers attendus sont
+http://documentation.abes.fr/sudoc/manuels/echanges/exemplarisation_automatique/explmonogr.html[documentés
+par l'ABES].
+
 A partir d'un Catalogue Koha, ce script génère des fichiers d'ISBN ou de
 Date-Auteur-Titre. Ces fichiers sont demandés par l'ABES afin de réaliser soit
 un test de recouvrement soit une localisation automatique. Ces fichiers suivent
@@ -754,12 +758,18 @@ localisation. Par défaut, on prend toutes les notices. Exemple :
 
 ==== --lignes ====
 
-Les fichiers d'ISBN contiennent au plus <lignes> lignes. Par défaut 1000
+Les fichiers d'ISBN contiennent au plus <lignes> lignes, y compris la première
+ligne qui indique ce que contiennent les lignes suivante.. Par défaut 1000
 lignes.
 
 ==== --test ====
 
 Fichiers d'ISBN uniquement pour un test de recouvrement.
+
+==== --coteabes ====
+
+Spécifie le champ de la notoce ABES où placer la cote Koha. Par exemple, pour
+une rétroconversion, --coteabes 991\ \$a. Par défaut, "930 $a".
 
 ==== --peb | --nopeb ====
 

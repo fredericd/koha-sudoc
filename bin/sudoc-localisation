@@ -16,17 +16,19 @@ use Sudoc;
 use Sudoc::Localisation;
 use AnyEvent::Processor::Conversion;
 
-my ($help, $select, $lignes, $test, $dat, $peb);
+my ($help, $select, $lignes, $test, $dat, $coteabes, $peb);
 $select = "SELECT biblionumber FROM biblio";
 $lignes = 1000;
+$coteabes = '930 $a';
 $peb = 1;
 GetOptions(
-    'help|h'   => \$help,
-    'select=s' => \$select,
-    'lignes=i' => \$lignes,
-    'test'     => \$test,
-    'dat'      => \$dat,
-    'peb!'     => \$peb,
+    'help|h'     => \$help,
+    'select=s'   => \$select,
+    'lignes=i'   => \$lignes,
+    'test'       => \$test,
+    'dat'        => \$dat,
+    'coteabes=s' => \$coteabes,
+    'peb!'       => \$peb,
 );
 
 my $iln = shift @ARGV;
@@ -40,11 +42,12 @@ $sudoc->iln($iln);
 my $reader = Koha::BiblioReader->new( koha => $sudoc->koha );
 $reader->select($select) if $select;
 my $writer = Sudoc::Localisation->new(
-    sudoc => $sudoc,
-    test  => $test,
-    lines => $lignes,
-    dat   => $dat,
-    peb   => $peb);
+    sudoc    => $sudoc,
+    test     => $test,
+    lines    => $lignes,
+    dat      => $dat,
+    coteabes => $coteabes,
+    peb      => $peb);
 my $converter = AnyEvent::Processor::Conversion->new(
    reader  => $reader,
    writer  => $writer,
@@ -120,6 +123,11 @@ lignes.
 
 Fichiers d'ISBN uniquement pour un test de recouvrement.
 
+=item --coteabes 991\ \$a
+
+Spécifie le champ de la notice ABES où placer la cote Koha. Par exemple, pour
+une rétroconversion, --coteabes 991\ \$a. Par défaut, "930 $a".
+
 =item --peb | --nopeb
 
 Notices disponibles pour le PEB ? Si non fourni, disponibles pour le PEB. Les
@@ -143,7 +151,7 @@ envoyer du tout les notices à exemplaires multiples.
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) 2012 Tamil s.a.r.l.
+Copyright (C) 2013 Tamil s.a.r.l.
 L<http://www.tamil.fr>
 
 This program is free software: you can redistribute it and/or modify
