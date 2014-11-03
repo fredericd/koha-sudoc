@@ -18,7 +18,7 @@ Une version en-ligne de ce document est disponible aux URL suivantes :
 [IMPORTANT]
 .Résumé
 ===========
-Le 'Chargeur SUDOC Koha' est un logiciel sous licence GNU GPL. Il permet
+Le _Chargeur SUDOC Koha_ est un logiciel sous licence GNU GPL. Il permet
 de déployer un Catalogue Koha dans le SUDOC. Ses principales
 caractéristiques sont les suivantes :
 
@@ -51,9 +51,9 @@ documents (livres, thèses, revues, ressources électroniques, documents
 audiovisuels, microformes, cartes, partitions, manuscrits et livres
 anciens...)
 
-Le 'Chargeur SUDOC Koha' est une boîte à outils permettant l'échange de
+Le _Chargeur SUDOC Koha_ est une boîte à outils permettant l'échange de
 données entre le SIGB http://www.koha-community.org[Koha] et le SUDOC.
-Différentes opérations sont à réaliser afin de 'déployer' dans le SUDOC
+Différentes opérations sont à réaliser afin de _déployer_ dans le SUDOC
 un établissement (ILN pour l'ABES) constitué d'une ou plusieurs
 bibliothèques (RCR). A chaque ILN, correspond une instance de Koha et à
 chaque RCR d'un ILN correspond une bibliothèque d'une instance Koha.
@@ -188,14 +188,14 @@ chargement dans un/des catalogues Koha. Le chargeur peut fonctionner sur
 un serveur partagé disposant de plusieurs instances de Koha
 correspondant à des ILN distincts. 
 
-Pour chaque ILN, il y a un 'spool' de fichiers SUDOC qui sont placés
+Pour chaque ILN, il y a un _spool_ de fichiers SUDOC qui sont placés
 dans trois sous-répertoires. Les fichiers passent d'un sous-répertoire à
 l'autre en fonction de l'avancement des traitements :
 
-- Les fichiers arrivent de l'ABES dans le sous-répertoire 'staged' de
+- Les fichiers arrivent de l'ABES dans le sous-répertoire _staged_ de
 l'ILN. Ils y restent tout le temps du transfert par FTP. 
 - Quand ils sont entièrement téléchargés, les fichiers sont déplacés
-du sous-répertoire 'staged' dans le sous-répertoire 'waiting'.
+du sous-répertoire _staged_ dans le sous-répertoire _waiting_.
 - A une heure déterminée, a priori quand le serveur Koha est peu
 utilisé, le chargement des fichiers est lancé. Ce traitement peut être
 programmé ou lancé à la main en période de test. 
@@ -204,27 +204,27 @@ programmé ou lancé à la main en période de test.
 === Transferts des fichiers du SUDOC sur le serveur Koha ===
 
 Le transfert de fichiers du serveur du SUDOC sur le serveur Koha se
-fait au moyen de la méthode 'PUT' proposée par l'ABES. Le serveur SUDOC
+fait au moyen de la méthode _PUT_ proposée par l'ABES. Le serveur SUDOC
 et le serveur Koha réalisent des actions et échangent des messages par
 courriel selon le protocole suivant :
 
 SUDOC::       Les notices de l'ILN sont extraites selon la périodicité
               qui a été demandée à l'ABES.  Quand les fichiers sont
               prêts, un message est envoyé au serveur Koha, le message
-              'status 9'.
-Koha::        Le message 'status 9' est reçu par le serveur Koha. Un
+              _status 9_.
+Koha::        Le message _status 9_ est reçu par le serveur Koha. Un
               message GTD est envoyé au serveur de l'ABES. Il est
               demandé que les fichiers soient transférés dans un
               sous-répertoire dont le
               nom est le code de l'ILN suivi du sous-répertoire
-              'staged'. Le répertoire accessible sur le serveur Koha par
+              _staged_. Le répertoire accessible sur le serveur Koha par
               FTP/SFTP est un lien symbolique vers le Spool du chargeur.
 SUDOC::       Réception du message GTD de l'ILN. Transfert des fichiers
               par FTP sur le serveur Koha dans le sous-répertoire de
-              l'ILN.  Envoi du message 'GTD Status 0'. Signifiant que le
+              l'ILN.  Envoi du message _GTD Status 0_. Signifiant que le
               transfert est terminé.
-Koha::        Réception du message 'GTD Status 0'. Les fichiers sont
-              déplacés dans le Spool de 'staged' en 'waiting'.
+Koha::        Réception du message _GTD Status 0_. Les fichiers sont
+              déplacés dans le Spool de _staged_ en _waiting_.
 
 Les éléments suivants doivent être définis/configurés :
 
@@ -239,14 +239,14 @@ Le script +sudoc-trans+ gère ce protocole de transfert. Il examine la
 boîte aux lettres locale MBOX définie dans le fichier de configuration
 par son chemin d'accès. Il traite deux messages en provenance du SUDOC :
 
-1. 'Message status 9' qui indique qu'un lot de notices destinées à un
+1. _Message status 9_ qui indique qu'un lot de notices destinées à un
    ILN ont été extraites du SUDOC. +sudoc-trans+ répond à ce message en
    renvoyant immédiatement une demande de transfert par FTP : GTD.
 
-2. 'Message GTD Status 0' qui indique que les fichiers ont été transmis
-   par le SUDOC sur le serveur FTP dans le répertoire 'staged' du spool
+2. _Message GTD Status 0_ qui indique que les fichiers ont été transmis
+   par le SUDOC sur le serveur FTP dans le répertoire _staged_ du spool
    de l'ILN.  +sudoc-trans+ déplace les fichiers dans le répertoire
-   'waiting' du spool de l'ILN.
+   _waiting_ du spool de l'ILN.
 
 Le fonctionnement du daemon +sudoc-trans+ est piloté par la section
 <<conf-trans, Transfert>> de +sudoc.conf+.
@@ -280,7 +280,7 @@ d'autorité.
 
 ==== Notices d'autorités ====
 
-Le script de chargement des autorités 'sudoc-load-authorities' examine le
+Le script de chargement des autorités _sudoc-load-authorities_ examine le
 répertoire des fichiers en attente de chargement. Il traite un-à-un les
 fichiers d'autorités.
 
@@ -291,7 +291,7 @@ autorités Koha pour savoir s'il en existe une ayant l'identifiant de la notice
 entrante (son PPN en 001). Si c'est le cas, il s'agit d'une autorité déjà
 présente dans Koha et qui a été modifiée dans le SUDOC.
 
-Le Chargeur traite également le cas des 'Fusion SUDOC'. La zone 035 est
+Le Chargeur traite également le cas des _Fusion SUDOC_. La zone 035 est
 examinée afin de déterminer si l'autorité est marquée comme étant une fusion
 SUDOC d'autorités.  Dans ce cas, on peut savoir si une autorité Koha existe
 déjà ayant l'identifiant (PPN) de l'autorité obsolète ayant fusionnée avec
@@ -299,11 +299,11 @@ l'autorité entrante. Les notices bibliographiques liées à l'ancienne autorit�
 sont retrouvées et elles sont rattachées à la nouvelle autorités.
 
 Après chargement, chaque fichier d'autorités est déplacé dans le
-répertoire 'done' des fichiers ayant été traités.
+répertoire _done_ des fichiers ayant été traités.
 
 [IMPORTANT]
 .Indexation
-***********
+====
 Concernant l'indexation des autorités chargées, il y a plusieurs
 stratégies possibles. Il est nécessaire que toutes les autorités
 chargées soient indexées avant de passer à l'étape de chargement des
@@ -319,12 +319,12 @@ Une autre stratégie consiste à arrêter l'indexeur Zebra de Koha avant le
 lancement du chargement des autorités. A la fin du chargement, on indexe
 manuellement les autorités ajoutées/modifiées, puis on redémarre
 l'indexeur.
-***********
+====
 
 ==== Notices bibliographiques ====
 
 Le chargement des notices bibliographique est réalisé par le script
-'sudoc-load-biblios'. Tout en ayant la même logique de fonctionnement
+'sudoc-load-biblios_. Tout en ayant la même logique de fonctionnement
 que le chargeur des autorités, ce script réalise des traitements
 supplémentaires et paramétrables. On peut par exemple avoir pour un
 établissement donné une logique spécifique de création des exemplaires
@@ -341,17 +341,17 @@ correspondantes.
 
 Il y a trois cas de figure où l'on a affaire à une mise à jour :
 
-. 'Mise à jour dans le SUDOC' -- On interroge les notices Koha pour
+. _Mise à jour dans le SUDOC_ -- On interroge les notices Koha pour
   savoir s'il en existe une ayant le PPN de la notice entrante.  Si
   c'est le cas, il s'agit d'une autorité déjà présente dans Koha et qui
   a été modifiée dans le SUDOC.
-. 'Localisation SUDOC' -- On peut marquer dans le SUDOC qu'une notice
+. _Localisation SUDOC_ -- On peut marquer dans le SUDOC qu'une notice
   est déjà présente dans Koha, soit manuellement en saisissant une zone
   035 contenant un de ses RCR, soit automatiquement au moment du
   déploiement initial de l'ILN dans le SUDOC. On a alors une zone 035
   avec un sous-champ +$5+ contenant un des RCR de l'ILN et en +$a+ le
   numéro (biblionumber) de la notice Koha correspondante.
-. 'Fusion SUDOC' -- La zone 035 est examinée afin de déterminer si l'autorité
+. _Fusion SUDOC_ -- La zone 035 est examinée afin de déterminer si l'autorité
   est marquée comme étant une fusion SUDOC de notices.  On cherche une zone 035
   contenant un +$9 sudoc+. Le +$a+ contient le PPN de l'ancienne notice qui a
   été fusionnée. Dans ce cas, on peut savoir si une autorité Koha existe déjà
@@ -366,7 +366,7 @@ Il y a trois cas de figure où l'on a affaire à une mise à jour :
 ===== Exemplarisation =====
 
 Pour les nouvelles notices, des exemplaires Koha peuvent être créés.
-C'est paramétrable : voir +sudoc.conf+ paramètre 'itemize'. Pour une
+C'est paramétrable : voir +sudoc.conf+ paramètre _itemize_. Pour une
 mise à jour, la notice bibliographique est fusionnée avec la notice
 entrante mais ses exemplaires ne sont pas affectés. Il n'y pas de
 logique de fusion des exemplaires en standard.
@@ -393,7 +393,7 @@ numéro d'autorité Koha. On peut choisir de ne pas effectuer ce
 traitement, auquel cas on n'aura que des identifiants d'autorités SUDOC,
 ce qui peut convenir à un établissement dont tout le Catalogue Koha
 provient du SUDOC sans notices locales.  Voir +sudoc.conf+ paramètre
-'authoritize'.
+'authoritize_.
 
 === Fichiers de log ===
 
@@ -430,9 +430,9 @@ notices. Le fichier +sudoc.conf+ se trouve dans le sous-répertoire +etc+
 du répertoire d'installation du Chargeur SUDOC.
 
 [[conf-trans]]
-==== Section 'transfert' ====
+==== Section _transfert_ ====
 
-Une section 'trans' détermine le fonctionnement du daemon de
+Une section _trans_ détermine le fonctionnement du daemon de
 +sudoc-trans+ de transfert des fichiers ABES :
 
 timeout::
@@ -454,7 +454,7 @@ mbox::
   http://fr.wikipedia.org/wiki/Mbox[MBOX] contenant les messages
   adressés au serveur par l'ABES.
 
-==== Section 'chargement' ====
+==== Section _chargement_ ====
 
 Il y a pour chaque ILN une section qui définit le mode de fonctionnement
 du chargement des notices.
@@ -557,24 +557,24 @@ Il est nécessaire que les notices SUDOC chargées dans Koha conservent
 leur PPN car c'est au moyen de cet identifiant que le Chargeur peut
 savoir si une notice entrante doit être ajoutée à Koha ou bien si elle
 doit écraser (partiellement éventuellement) une notice existante. Le PPN
-des autorités sert également à 'autoritiser' les zones des notices
+des autorités sert également à _autoritiser_ les zones des notices
 bibliographiques liées à des autorités.
 
 En fonction de son paramétrage de Koha, il peut être nécessaire de
 déplacer le PPN dans une zone différente qui n'entre pas en conflit avec
 les zones déjà utilisées. Par exemple, il arrive que la zone 001 des
-notices bibliographiques Koha contienne le 'biblionumber' (numéro
+notices bibliographiques Koha contienne le _biblionumber_ (numéro
 interne des notices Koha). Il est recommandé de déplacer la zone 001 des
 autorités et des notices bibliographiques dans la zone 009. Cette zone
-cible est définie via le paramètre 'ppn_move' de la section biblio/auth
+cible est définie via le paramètre _ppn_move_ de la section biblio/auth
 de +sudoc.conf+. Ce déplacement est même indispensable pour les
 autorités parce que l'identifiant interne de Koha est placé en 001. Ce
 n'est pas le cas nécessairement pour les notices bibliographiques.
 
 Afin que le Chargeur SUDOC puisse interroger les PPN, il faut ajouter
-aux fichiers de configuration de Zebra un nouvel index 'PPN'. Par
+aux fichiers de configuration de Zebra un nouvel index _PPN_. Par
 exemple, si on les déplace en 009, il faudra ajouter la ligne suivante
-aux fichiers 'records.abs' des autorités et des notices
+aux fichiers _records.abs_ des autorités et des notices
 bibliographiques :
 
 -----
@@ -616,7 +616,7 @@ sleep $SLEEP
 sudoc-load-biblios $ILN $DOIT
  
 iconv -f utf8 -t latin1 -c $TMP_FILE | \
-  mail -a "FROM: $EMAIL_FROM" -s 'Chargement SUDOC' -c $EMAIL_CC $EMAIL_TO
+  mail -a "FROM: $EMAIL_FROM" -s _Chargement SUDOC_ -c $EMAIL_CC $EMAIL_TO
 -----
 
 
@@ -633,9 +633,9 @@ SUDOC.
 Ce script examine le spool des fichiers ABES d'un ILN. Pour chaque ILN,
 il y a trois sous-répertoires dans son spool :
 
-1. 'staged' contenant les fichiers en cours de transfert par l'ABES
-2. 'waiting' contenant les fichiers en attente de chargement
-3. 'done' contenant les fichiers qui ont été chargés.
+1. _staged_ contenant les fichiers en cours de transfert par l'ABES
+2. _waiting_ contenant les fichiers en attente de chargement
+3. _done_ contenant les fichiers qui ont été chargés.
 
 On obtient par exemple la liste des fichiers du spool de l'ILN 80 en
 lançant la commande :
