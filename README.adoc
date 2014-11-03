@@ -1,9 +1,8 @@
 = Chargeur SUDOC Koha =
 Tamil s.a.r.l. <contact@tamil.fr>
-v1.0, avril 2011: Première version pour la v1.0.
-v1.1, décembre 2011: Première version pour la v1.1.
-v1.2, avril 2013
-
+v1.3, novembre 2014
+:linkcss:
+:icons: font
 
 [NOTE]
 ================================================================================

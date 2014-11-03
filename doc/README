@@ -1,9 +1,0 @@
-Génération de la documentation
-
-En HTML :
-
-  a2x -d book -f xhtml --icons --icons-dir images/icons -a lang=fr sudoc.txt
-
-En PDF :
-
-  a2x -d book -f pdf --icons -a lang=fr sudoc.txt
