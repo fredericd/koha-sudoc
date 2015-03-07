@@ -1,4 +1,4 @@
-# Copyright (C) 2012 Tamil s.a.r.l. - http://www.tamil.fr
+# Copyright (C) 2015 Tamil s.a.r.l. - http://www.tamil.fr
 #
 # This file is part of Chargeur SUDOC Koha.
 #
@@ -17,7 +17,7 @@
 
 package Sudoc::Localisation;
 use Moose;
-use 5.010;
+use Modern::Perl;
 use utf8;
 
 use C4::Items;

@@ -1,4 +1,4 @@
-# Copyright (C) 2011 Tamil s.a.r.l. - http://www.tamil.fr
+# Copyright (C) 2015 Tamil s.a.r.l. - http://www.tamil.fr
 #
 # This file is part of Chargeur SUDOC Koha.
 #

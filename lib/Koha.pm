@@ -1,4 +1,4 @@
-# Copyright (C) 2011 Tamil s.a.r.l. - http://www.tamil.fr
+# Copyright (C) 2015 Tamil s.a.r.l. - http://www.tamil.fr
 #
 # This file is part of Chargeur SUDOC Koha.
 #
@@ -151,7 +151,8 @@ sub get_biblionumber_framework {
 }
 
 
-# Return a MARC::Moose::Record from its biblionumber
+# Return a MARC::Moose::Record from its biblionumber,
+# and the record framework: (framework, record)
 sub get_biblio {
     my ($self, $biblionumber) = @_; 
     my $sth = $self->dbh->prepare(
@@ -245,7 +246,7 @@ Koha - Class exposing info about a Koha instance.
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright 2011 by Tamil, s.a.r.l.
+Copyright 2015 by Tamil, s.a.r.l.
 
 L<http://www.tamil.fr>
 

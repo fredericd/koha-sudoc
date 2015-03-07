@@ -2,10 +2,8 @@
 
 package Main;
 
-use 5.010;
+use Modern::Perl;
 use utf8;
-use strict;
-use warnings;
 use FindBin qw( $Bin );
 use lib "$Bin/../lib";
 use Getopt::Long;
