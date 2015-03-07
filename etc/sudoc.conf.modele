@@ -31,7 +31,7 @@ trans:
     authoritize: 1
     linking: 1
     itemize: 1
-    framework: ICT
+    framework: MAIN
     converter: 
     exlure:
       - 680
