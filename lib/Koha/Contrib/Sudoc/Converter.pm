@@ -15,12 +15,13 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-package Sudoc::Converter;
+package Koha::Contrib::Sudoc::Converter;
 use Moose;
 
+use Modern::Perl;
 
 # Moulinette SUDOC
-has sudoc => ( is => 'rw', isa => 'Sudoc', required => 1 );
+has sudoc => ( is => 'rw', isa => 'Koha::Contrib::Sudoc', required => 1 );
 
 # Les exemplaires courants. 
 # ->{rcr}->{id}->{915}
@@ -66,7 +67,7 @@ sub skip {
 sub init {
     my ($self, $record) = @_;
 
-    my $myrcr = $self->sudoc->c->{$self->sudoc->iln}->{rcr};
+    my $myrcr = $self->sudoc->c->{rcr};
     # On crée la structure de données items
     my $item = {};
     for my $field ( $record->field('9..') ) {
@@ -85,7 +86,7 @@ sub init {
     $self->item($item);
 
     # On supprime de la notice SUDOC les champs à exclure
-    my $conf = $self->sudoc->c->{$self->sudoc->iln}->{biblio};
+    my $conf = $self->sudoc->c->{biblio};
     my $exclure = $conf->{exclure};
     if ( $exclure && ref($exclure) eq 'ARRAY' ) {
         $record->fields( [ grep { not $_->tag ~~ @$exclure } @{$record->fields} ] );
@@ -99,7 +100,7 @@ sub authoritize {
     my ($self, $record) = @_;
 
     # Ne rien faire si c'est demandé pour l'ILN
-    return unless $self->sudoc->c->{ $self->sudoc->iln }->{biblio}->{authoritize};
+    return unless $self->sudoc->c->{biblio}->{authoritize};
 
     my $zconn = $self->sudoc->koha->zauth();
     for my $field ( $record->field('5..|6..|7..') ) {
@@ -127,7 +128,7 @@ sub linking {
     my ($self, $record) = @_;
 
     # Ne rien faire si c'est demandé pour l'ILN
-    return unless $self->sudoc->c->{ $self->sudoc->iln }->{biblio}->{linking};
+    return unless $self->sudoc->c->{biblio}->{linking};
 
     my $zconn = $self->sudoc->koha->zbiblio();
     for my $field ( $record->field('4..|5..') ) {
@@ -155,7 +156,7 @@ sub linking {
 sub itemize {
     my ($self, $record) = @_;
 
-    my $myrcr = $self->sudoc->c->{$self->sudoc->iln}->{rcr};
+    my $myrcr = $self->sudoc->c->{rcr};
     my $item = $self->{item};
 
     # On crée les exemplaires à partir de 930 et 915
@@ -200,7 +201,7 @@ sub merge {
 
     # On garde les champs "protégés" de la notice Koha
     # On évite les doublons
-    my $conf = $self->sudoc->c->{$self->sudoc->iln}->{biblio};
+    my $conf = $self->sudoc->c->{biblio};
     if ( my $proteger = $conf->{proteger} ) {
         my $pt = {}; # Hash de hash de tag - clé de dédoublonnage
         for my $tag ( @$proteger ) {
@@ -243,7 +244,7 @@ sub clean {
 # différent en fonction du type de doc.
 sub framework {
     my ($self, $record) = @_;
-    $self->sudoc->c->{$self->sudoc->iln}->{biblio}->{framework};
+    $self->sudoc->c->{biblio}->{framework};
 }
 
 1;

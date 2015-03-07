@@ -1,4 +1,4 @@
-package Sudoc::PPNize::Updater;
+package Koha::Contrib::Sudoc::PPNize::Updater;
 use Moose;
 
 use Log::Dispatch;

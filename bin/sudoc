@@ -1,0 +1,50 @@
+#!/usr/bin/perl 
+
+use Modern::Perl;
+use Getopt::Long;
+use Koha::Contrib::Sudoc;
+use Koha::Contrib::Sudoc::TransferDaemon;
+use Koha::Contrib::Sudoc::Loader::Biblios;
+use Koha::Contrib::Sudoc::Loader::Authorities;
+
+
+my ($doit);
+GetOptions(
+    'doit'     => \$doit,
+);
+
+unless (@ARGV) {
+    say "Usage : sudoc init|trans|spool|biblio|autorité";
+    exit;
+}
+
+my $sudoc  = Koha::Contrib::Sudoc->new;
+my $cmd = shift @ARGV;
+
+if ( $cmd =~ /init/i ) {
+    $sudoc->spool->init();
+}
+elsif ( $cmd =~ /trans/i ) {
+    Koha::Contrib::Sudoc::TransferDaemon->new();
+}
+elsif ( $cmd =~ /spool/i ) {
+    $sudoc->spool->command(@ARGV);
+}
+
+elsif ( $cmd =~ /biblio|autori/i ) {
+    my $files = $sudoc->spool->first_batch_files(
+        'waiting',
+        $cmd =~ /biblio/ ? '[a|b]' : 'c'
+    );
+    unless ($files) {
+        say "Pas de fichier à charger";
+        exit;
+    }
+    for my $file (@$files) {
+        my $loader = $cmd =~ /biblio/
+            ? Koha::Contrib::Sudoc::Loader::Biblios->new( sudoc => $sudoc, file => $file )
+            : Koha::Contrib::Sudoc::Loader::Authorities->new( sudoc => $sudoc, file => $file );
+        $loader->doit($doit);
+        $loader->run();
+    }
+}

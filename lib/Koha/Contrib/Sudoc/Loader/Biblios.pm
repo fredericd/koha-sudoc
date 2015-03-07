@@ -15,14 +15,14 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-package Sudoc::Loader::Biblios;
+package Koha::Contrib::Sudoc::Loader::Biblios;
 use Moose;
 
-extends 'Sudoc::Loader';
+extends 'Koha::Contrib::Sudoc::Loader';
 
+use Modern::Perl;
 use YAML;
 use Locale::Messages;
-use Locale::TextDomain 'fr.tamil.sudoc';
 
 
 
@@ -41,13 +41,12 @@ sub doublons_sudoc {
         my ($biblionumber, $framework, $koha_record) =
             $self->sudoc->koha->get_biblio_by_ppn( $ppn );
         if ($koha_record) {
-            $self->log->notice(
-              __x("  Merging Sudoc PPN {ppn} with Koha biblio {biblionumber}",
-                  ppn => $ppn, biblionumber => $biblionumber) .
-              "\n" );
+            $self->log->notice("  Fusion Sudoc du PPN $ppn avec le biblionumber Koha $biblionumber\n");
             push @doublons, {
-                ppn => $ppn,                   record => $koha_record,
-                biblionumber => $biblionumber, framework => $framework,
+                ppn          => $ppn,
+                record       => $koha_record,
+                biblionumber => $biblionumber,
+                framework    => $framework,
             };
         }
     } 
@@ -68,20 +67,17 @@ sub handle_record {
     $self->sudoc->koha->zconn_reset()  unless $self->count % 10;
 
     my $ppn = $record->field('001')->value;
-    my $conf = $self->sudoc->c->{$self->sudoc->iln}->{biblio};
-    $self->log->notice(
-        __x("Biblio record #{count} PPN {ppn}",
-            count => $self->count, ppn => $ppn) . "\n" );
+    $self->log->notice("Notice #" . $self->count . " PPN $ppn\n");
     $self->log->debug( $record->as('Text') );
 
     # On déplace le PPN
-    $self->sudoc->ppn_move($record, $conf->{ppn_move});
+    $self->sudoc->ppn_move($record, $self->sudoc->c->{biblio}->{ppn_move});
 
     # Est-ce qu'il faut passer la notice ?
     if ( $self->converter->skip($record) ) {
         $record = undef;
         $self->count_skipped( $self->count_skipped + 1 );
-        $self->log->notice( __"  * Skipped\n" );
+        $self->log->notice( "  * Ignorée\n" );
         return;
     }
 
@@ -91,14 +87,12 @@ sub handle_record {
     ($biblionumber, $framework, $koha_record) =
         $self->sudoc->koha->get_biblio_by_ppn( $ppn );
     if ($koha_record) {
-        $self->log->debug(
-            __x("  PPN found in Koha biblio record {biblionumber}",
-                biblionumber => $biblionumber) . "\n" );
+        $self->log->debug("  PPN trouvé dans la notice Koha $biblionumber");
     }
     else {
         # On cherche un 035 avec un $5 contenant un RCR de l'ILN, auquel cas $a contient
         # le biblionumber d'une notice Koha
-        my $rcr_hash = $conf->{rcr};
+        my $rcr_hash = $self->sudoc->c->{rcr};
         for my $field ( $record->field('035') ) {
             my $rcr = $field->subfield('5');
             next unless $rcr && $rcr_hash->{$rcr};
@@ -107,9 +101,8 @@ sub handle_record {
                 $self->sudoc->koha->get_biblio( $biblionumber );
             if ($koha_record) {
                 $self->log->notice(
-                  __x("  Merging Koha biblio {biblionumber} found in 035\$a " .
-                      "for RCR {rcr}",
-                      biblionumber => $biblionumber, rcr => $rcr) . "\n");
+                  "  Fusion de la notice Koha $biblionumber trouvée en 035\$a " .
+                  "pour le RCR $rcr\n" );
                 last;
             }
         } 
@@ -125,8 +118,8 @@ sub handle_record {
     if ( @$doublons ) {
         if ( $koha_record || @$doublons > 1 ) {
             $self->log->warning(
-                __"  Warning! the entering biblio must be merged into several " .
-                  "existing Koha biblio records. TO BE DONE MANUALLY\n" );
+                "  Attention ! la notice entrante doit être fusionnées à plusieurs notices " .
+                  "Koha existantes. À FAIRE MANUELLEMENT\n" );
         }
         else {
             # On fusionne le doublon SUDOC (unique) avec la notice SUDOC entrante
@@ -146,9 +139,8 @@ sub handle_record {
         $self->converter->merge($record, $koha_record);
         $self->converter->clean($record);
         $self->log->debug(
-            __("  Biblio after processing:\n") . $record->as('Text') );
-        $self->log->notice(
-            __x("  * Replace {biblionumber}", biblionumber => $biblionumber) ."\n" );
+            "  Notice après traitement :\n" . $record->as('Text') );
+        $self->log->notice("  * Remplace $biblionumber\n" );
         ModBiblio($record->as('Legacy'), $biblionumber, $framework)
             if $self->doit;
     }
@@ -158,8 +150,8 @@ sub handle_record {
         $self->converter->itemize($record);
         $self->converter->clean($record);
         $self->log->debug(
-            __("  Biblio after processing:\n") . $record->as('Text') );
-        $self->log->notice(__("  * Add") . "\n" );
+            "  Notice après traitement :\n" . $record->as('Text') );
+        $self->log->notice( "  * Ajout\n" );
         $framework = $self->converter->framework($record);
         if ( $self->doit ) {
             my $marc = $record->as('Legacy');
@@ -167,7 +159,7 @@ sub handle_record {
                 AddBiblio($marc, $framework, { defer_marc_save => 1 });
             my ($itemnumbers_ref, $errors_ref) =
                 AddItemBatchFromMarc($marc, $biblionumber, $biblioitemnumber, $framework);
-            $self->log->warning( "error while adding item:\n" . Dump($errors_ref) )
+            $self->log->warning( "erreur pendant l'ajout de l'exemplaire :\n" . Dump($errors_ref) )
                 if @$errors_ref;
             C4::Biblio::_strip_item_fields($marc, $framework);
             ModBiblioMarc($marc, $biblionumber, $framework);

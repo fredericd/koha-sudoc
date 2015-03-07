@@ -15,16 +15,14 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-package Sudoc::Loader::Authorities;
+package Koha::Contrib::Sudoc::Loader::Authorities;
 use Moose;
 
-extends 'Sudoc::Loader';
+extends 'Koha::Contrib::Sudoc::Loader';
 
 use Modern::Perl;
-use utf8;
 use C4::AuthoritiesMarc;
 use MARC::Moose::Record;
-use Locale::TextDomain('fr.tamil.sudoc');
 
 
 sub handle_record {
@@ -36,16 +34,15 @@ sub handle_record {
     use C4::Biblio;
     use C4::Items;
 
-    my $conf = $self->sudoc->c->{$self->sudoc->iln}->{auth};
+    my $conf = $self->sudoc->c->{auth};
 
     # FIXME Reset de la connexion tous les x enregistrements
     $self->sudoc->koha->zconn_reset()  unless $self->count % 100;
 
     my $ppn = $record->field('001')->value;
-    $self->log->notice(
-        __x("Authority #{count} PPN {ppn}",
-            count => $self->count, ppn => $ppn) . "\n");
-    $self->log->debug( $record->as('Text') );
+    $self->log->notice( 'Autorité #' . $self->count . " PPN $ppn\n");
+    my $record_text = $record->as('Text');
+    $self->log->debug( $record_text );
 
     # On détermine le type d'autorité
     my $authtypecode;
@@ -57,7 +54,7 @@ sub handle_record {
         }
     }
     unless ( $authtypecode ) {
-        $self->warning( __"  ERROR: Authority without heading" . "\n" );
+        $self->warning("  ERREUR : Autorité sans vedette\n");
         return;
     }
 
@@ -86,7 +83,7 @@ sub handle_record {
             my $enc = substr($value, 13, 2);
             if ( $enc ne '50' ) {
                 $self->log->warning(
-                    __"  Warning! bad encoding in position 13. Fix it." . "\n" );
+                    "  Attention ! mauvais encodage en position 13. On le corrige.\n" );
                 substr($value, 13, 2) = '50';
                 $field->update( a => $value );
             }
@@ -96,11 +93,9 @@ sub handle_record {
 
     $authid = 0 unless $authid;
     $self->log->notice(
-        ( $auth
-          ? __x("  * Replace {authid}", authid => $authid)
-          : __x("  * Add {authid}", authid => $authid)
-        )
-        . "\n" );
+        ( $auth ? "  * Remplace $authid" : "  * Ajoute $authid" )
+        . "\n"
+    );
     $self->log->debug( "\n" );
 
 
@@ -117,8 +112,8 @@ sub handle_record {
             $self->sudoc->koha->get_auth_by_ppn($obsolete_ppn);
         next unless $auth;
         $self->log->notice(
-          __x("  Sudoc merging with this authority of obsolete authority (PPN {obsolete_ppn}, authid {obsolete_authid})",
-              obsolete_ppn => $obsolete_ppn, obsolete_authid => $obsolete_authid) . "\n" );
+          "  Fusison Sudoc avec cette autorité d'une autorité obsolète " .
+          "(PPN $obsolete_ppn, authid $obsolete_authid\n" );
         my @modified_biblios;
         for ( $self->sudoc->koha->get_biblios_by_authid($obsolete_authid) ) {
             my ($biblionumber, $framework, $modif) = @$_;
@@ -146,8 +141,8 @@ sub handle_record {
         }
         if ( @modified_biblios ) {
             $self->log->notice(
-                __x("  Linked biblios modified: "),
-                join(', ', @modified_biblios), "\n" );
+                "  Notices biblio liées qui ont été modifiées : " .
+                join(', ', @modified_biblios) . "\n" );
         }
     } 
 

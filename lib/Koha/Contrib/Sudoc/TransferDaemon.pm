@@ -1,20 +1,16 @@
 #!/usr/bin/perl 
 
-package Sudoc::TransferDaemon;
+package Koha::Contrib::Sudoc::TransferDaemon;
 use Moose;
 
-use FindBin qw( $Bin );
-use lib "$Bin/../lib";
-
-use feature ":5.10";
+use Modern::Perl;
 use AnyEvent;
 use Mail::Box::Manager;
 use DateTime;
-use Sudoc;
-use Locale::TextDomain 'fr.tamil.sudoc';
+use Koha::Contrib::Sudoc;
 
 
-has sudoc => ( is => 'rw', isa => 'Sudoc', default => sub { Sudoc->new } );
+has sudoc => ( is => 'rw', isa => 'Sudoc', default => sub { Koha::Contrib::Sudoc->new } );
 
 has mgr => (
     is => 'rw',
@@ -32,7 +28,7 @@ my $daemon_id = 'sudoc-trans';
 sub BUILD {
     my $self = shift;
 
-    print __"Starting ABES transfer daemon", "\n";
+    say "Starting ABES transfer daemon";
 
     my $timeout = $self->sudoc->c->{trans}->{timeout};
     my $idle = AnyEvent->timer(
@@ -56,8 +52,7 @@ sub send_gtd {
     # La date
     my $year = DateTime->now->year;
 
-    print __x ("Send GTD: ILN {iln}, job {jobid}, year {year}\n",
-               iln => $iln, jobid => $jobid, year => $year );
+    say "Send GTD: ILN $iln, job $jobid, year $year";
 
     my $conf = $self->sudoc->c->{trans};
 
@@ -88,8 +83,7 @@ sub move_to_waiting {
     my $body = $msg->body;
     my ($iln) = $body =~ /GTD_ILN\s*=\s*(\d*)/i;
  
-    print __x ("End file transfer from ABES for ILN {iln}\n",
-               iln => $iln);
+    say "End file transfer from ABES for ILN $iln";
 
     my $sudoc = $self->sudoc;
     $sudoc->iln($iln);
@@ -115,71 +109,4 @@ sub transfert_abes {
     $folder->close;
 }
 
-
-package Main;
-
-use strict;
-use warnings;
-
-use FindBin qw( $Bin );
-use lib "$Bin/../lib";
-
-use Getopt::Long;
-use Pod::Usage;
-use YAML;
-
-
-my ($help, $doit);
-GetOptions(
-    'help|h'   => \$help,
-);
-
-if ( $help ) {
-    pod2usage( -verbose => 2 );
-    exit;
-}
-
-Sudoc::TransferDaemon->new( );
-
-
-=encoding utf-8
-
-=head1 NOM
-
-sudoc-trans - Transfert des fichiers Sudoc
-
-=head1 SYNOPSYS
-
- sudoc-trans
-
-=head1 DESCRIPTION
-
-Voir la doc. principale.
-
-=head1 PARAMETRES
-
-=over
-
-=item --help, -h
-
-Affiche cette page d'aide
-
-=back
-
-=head1 COPYRIGHT AND LICENSE
-
-Copyright (C) 2011 Tamil s.a.r.l.
-L<http://www.tamil.fr>
-
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>.
+1;

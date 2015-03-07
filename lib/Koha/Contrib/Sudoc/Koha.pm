@@ -15,14 +15,14 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-package Koha;
+package Koha::Contrib::Sudoc::Koha;
 use Moose;
 
+use Modern::Perl;
 use Carp;
 use XML::Simple;
 use DBI;
 use ZOOM;
-use MARC::Record;
 use MARC::Moose::Record;
 use C4::Biblio;
 use YAML;

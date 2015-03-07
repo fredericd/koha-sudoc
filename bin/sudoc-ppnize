@@ -2,18 +2,12 @@
 
 package Main;
 
-use 5.010;
-use utf8;
-use strict;
-use warnings;
-
-use FindBin qw( $Bin );
-use lib "$Bin/../lib";
+use Modern::Perl;
 use Getopt::Long;
 use Pod::Usage;
-use Sudoc;
-use Sudoc::PPNize::Reader;
-use Sudoc::PPNize::Updater;
+use Koha::Contrib::Sudoc;
+use Koha::Contrib::Sudoc::PPNize::Reader;
+use Koha::Contrib::Sudoc::PPNize::Updater;
 
 my ($help, $doit);
 GetOptions(
@@ -22,12 +16,11 @@ GetOptions(
 );
 
 my $iln = shift @ARGV;
-if ( $help || !$iln ) {
+if ( $help ) {
     pod2usage( -verbose => 2 );
     exit;
 }
 my $sudoc  = Sudoc->new;
-$sudoc->iln($iln);
 
 my $file = shift @ARGV;
 unless ($file) {
@@ -35,73 +28,10 @@ unless ($file) {
     exit;
 }
 
-my $updater = Sudoc::PPNize::Updater->new(
-    reader  => Sudoc::PPNize::Reader->new( file => $file ),
+my $updater = Koha::Contrib::Sudoc::PPNize::Updater->new(
+    reader  => Koha::Contrib::Sudoc::PPNize::Reader->new( file => $file ),
     sudoc   => $sudoc,
     doit    => $doit,
     verbose => 1,
 );
 $updater->run();
-
-
-=encoding utf-8
-
-=head1 NOM
-
-sudoc-ppnize - PPNize les notices Koha à partir d'un fichier d'équivalences SUDOC
-
-=head1 SYNOPSYS
-
- sudoc-ppnize 80 L035-ILN80-abcd.raw
- sudoc-ppnize 80 L035-ILN80-abcd.raw --verbose
- sudoc-ppnize 80 L035-ILN80-abcd.raw --doit
-
-=head1 DESCRIPTION
-
-Après une localisation automatique, l'ABES fournit un fichier d'équivalences
-entre les PPN les notices SUDOC et les biblionumber des notices Koha. Ce script
-modifie les notices Koha en y ajoutant en 009 le PPN du Sudoc.  
-
-Le fichier fourni est consitué d'une ligne par équivalence, chaque ligne ayant
-le format suivant :
-
-  PPN <PPN> : <biblionumber>
-
-Par exemple :
-
-  PPN 000004405 : 17417
-  PPN 000006475 : 11841
-  PPN 000007323 : 5810
-
-=head1 PARAMETRES
-
-=over
-
-=item --help, -h
-
-Affiche cette page d'aide
-
-=item --doit
-
-Effectue effectivement le traitement
-
-=back
-
-
-=head1 COPYRIGHT AND LICENSE
-
-Copyright (C) 2011 Tamil s.a.r.l.
-L<http://www.tamil.fr>
-
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>.

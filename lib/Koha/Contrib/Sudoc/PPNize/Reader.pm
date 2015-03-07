@@ -1,4 +1,4 @@
-# Copyright (C) 2011 Tamil s.a.r.l. - http://www.tamil.fr
+# Copyright (C) 2015 Tamil s.a.r.l. - http://www.tamil.fr
 #
 # This file is part of Chargeur SUDOC Koha.
 #
@@ -15,25 +15,30 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-package Sudoc::Converter::ISH;
+package Koha::Contrib::Sudoc::PPNize::Reader;
 use Moose;
 
-extends 'Sudoc::Converter';
 
-use YAML;
-
-# Moulinette SUDOC
-has sudoc => ( is => 'rw', isa => 'Sudoc', required => 1 );
+with 'MooseX::RW::Reader::File';
 
 
 
+sub read {
+    my $self = shift;
 
-# Création des exemplaires Koha en 995 en fonction des données locales SUDOC
-sub itemize {
-    my ($self, $record) = @_;
+    my $fh = $self->fh;
+    
+    my $line = <$fh>;
+    return 0 unless $line;
+
+    chop $line;
+    my ($ppn, $biblionumber) = $line =~ /PPN (.*) : (.*)/;
+    return { ppn => $ppn, biblionumber => $biblionumber };
 }
 
 
 
-
+no Moose;
+__PACKAGE__->meta->make_immutable;
 1;
+

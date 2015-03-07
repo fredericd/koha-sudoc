@@ -15,25 +15,69 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-package Sudoc::Spool;
+package Koha::Contrib::Sudoc::Spool;
 use Moose;
 
+use Modern::Perl;
 use File::Copy;
 use YAML;
 
 
-# Le répertoire du spool des fichiers traités par le chargeur Sudoc,
-# ainsi que ses sous-répertoires. Les fichiers arrivent de l'ABES dans le
-# répertoire 'staged'. Puis quand ils sont entièrement téléchargés, ils
-# sont déplacés en 'waiting'. De là, ils sont chargés un à un dans Koha.
-# Après chargement, ils sont déplacés en 'done'.
-my $spool_dir   = 'var/spool';
-my $staged_dir  = 'staged';
-my $waiting_dir = 'waiting';
-my $done_dir    = 'done';
+# Le spool se trouve dans le sous-répertore var/spool du répertoire racine
+# pointé par la variable d'environnement SUDOC. Les fichiers arrivent de
+# l'ABES dans le répertoire 'staged'. Puis quand ils sont entièrement
+# téléchargés, ils sont déplacés en 'waiting'. De là, ils sont chargés un à un
+# dans Koha. Après chargement, ils sont déplacés en 'done'.
+
+my $types = [
+    [
+        "Fichiers contenant les autorités qui ont été chargées :",
+        'done',
+        'c',
+    ], 
+    [
+        "Fichiers contenant les notices biblio qui ont été chargées :",
+        'done',
+        '[a|b]',
+    ], 
+    [
+        "Fichiers contenant les autorités en attente de chargement :",
+        'waiting',
+        'c',
+    ], 
+    [
+        "Fichiers contenant les notices biblio en attente de chargement :",
+        'waiting',
+        '[a|b]',
+    ], 
+    [
+        "Fichiers des autorités en cours de transfert :",
+        'staged',
+        'c',
+    ], 
+    [
+        "Fichiers de notices biblio en cours de transfert :",
+        'staged',
+        '[a|b]',
+    ], 
+];
+
 
 # Moulinette SUDOC
-has sudoc => ( is => 'rw', isa => 'Sudoc', required => 1 );
+has sudoc => (
+    is => 'rw',
+    isa => 'Koha::Contrib::Sudoc',
+    required => 1,
+);
+
+has root => (
+    is => 'rw',
+    isa => 'Str',
+    lazy => 1,
+    builder => '_build_root',
+);
+
+sub _build_root { shift->sudoc->root . '/var/spool'; }
 
 
 sub _sortable_name {
@@ -58,11 +102,7 @@ sub _sortable_name {
 # $files = $spool->file('done', '[a|b]');
 sub files {
     my ($self, $where, $type) = @_;
-    my $subdir =
-        $where =~ /staged/i  ? $staged_dir :
-        $where =~ /waiting/i ? $waiting_dir : $done_dir;
-    my $dir = $self->sudoc->sudoc_root . "/$spool_dir/" .
-              $self->sudoc->iln . "/$subdir";
+    my $dir = $self->root . "/$where";
     opendir(my $hdir, $dir) || die "Impossible d'ouvrir $dir: $!";
     [ sort { _sortable_name($a) cmp _sortable_name($b) }
         grep { /$type\d{3}.raw$/i } readdir($hdir) ];
@@ -93,14 +133,10 @@ sub first_batch_files {
 sub file_path {
     my ($self, $name) = @_;
     
-    my $path = $self->sudoc->sudoc_root . "/$spool_dir/" .
-               $self->sudoc->iln . "/$waiting_dir/$name";
-    return $path if -f $path;
-
-    $path = $self->sudoc->sudoc_root . "/$spool_dir/" .
-            $self->sudoc->iln . "/$done_dir/$name";
-    return $path if -f $path;
-
+    for my $where (qw /waiting done/) {
+        my $path = $self->root . "/$where/$name";
+        return $path if -f $path;
+    }
     return;
 }
 
@@ -108,11 +144,9 @@ sub file_path {
 # Déplace un fichier dans le spool 'done'
 sub move_done {
     my ($self, $name) = @_;
-    my $path = $self->sudoc->sudoc_root . "/$spool_dir/" .
-               $self->sudoc->iln . "/$waiting_dir/$name";
+    my $path = $self->root . "/waiting/$name";
     return unless -f $path;
-    my $target = $self->sudoc->sudoc_root . "/$spool_dir/" .
-                 $self->sudoc->iln . "/$done_dir/$name";
+    my $target = $self->root . "/done/$name";
     move($path, $target);   
 }
 
@@ -121,10 +155,8 @@ sub move_done {
 sub staged_to_waiting {
     my $self = shift;
     
-    my $staged = $self->sudoc->sudoc_root . "/$spool_dir/" .
-                 $self->sudoc->iln . "/$staged_dir";
-    my $target = $self->sudoc->sudoc_root . "/$spool_dir/" .
-                 $self->sudoc->iln . "/$waiting_dir";
+    my $staged = $self->root . "/staged";
+    my $target = $self->root . "/waiting";
     opendir(my $hdir, $staged) || die "Impossible d'ouvrir $staged: $!";
     my @files = sort grep { not /^\./ } readdir($hdir);
     for my $file (@files) {
@@ -133,17 +165,54 @@ sub staged_to_waiting {
 }
 
 
-# Crée les sous-répertoires d'un ILN, s'ils n'existent pas déjà
-sub init_iln {
-    my ($self, $iln) = @_;
+# Liste le contenu des répertoires du spool
+sub list {
+    my $self = shift;
+    for ( @$types ) {
+        my ($msg, $where, $type) = @$_;
+        my $files = $self->sudoc->spool->files($where, $type);
+        next unless @$files;
+        say $msg;
+        my $count = 0;
+        for my $file (@$files) {
+            $count++;
+            print sprintf ("  %3d. ", $count), $file, "\n";
+        }
+    }
 
-    my $dir = $self->sudoc->sudoc_root . "/$spool_dir/$iln";
+}
+
+
+sub command {
+    my $self = shift;
+    if ( @_ ) {
+        for my $file (@_) {
+            my $path = $self->file_path($file);
+            unless ( $path ) {
+                say "Le fichier $path n'existe pas";
+                next;
+            }
+            say "Fichier $path";
+            system( "yaz-marcdump $path | less" );
+        }
+    }
+    else {
+        $self->list();
+    }
+}
+
+
+# Crée les sous-répertoires d'un ILN, s'ils n'existent pas déjà
+sub init {
+    my $self = shift;
+
+    say "Initialisation du spool";
+
+    my $dir = $self->root;
     return if -d $dir;
 
     mkdir $dir;
-    mkdir "$dir/$staged_dir";
-    mkdir "$dir/$waiting_dir";
-    mkdir "$dir/$done_dir";
+    mkdir "$dir/$_" for qw/staged waiting done/;
 }
 
 

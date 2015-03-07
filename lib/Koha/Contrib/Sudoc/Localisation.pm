@@ -15,11 +15,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-package Sudoc::Localisation;
+package Koha::Contrib::Sudoc::Localisation;
 use Moose;
-use Modern::Perl;
-use utf8;
 
+use Modern::Perl;
 use C4::Items;
 use YAML;
 use Encode;
@@ -29,7 +28,7 @@ use List::Util qw/first/;
 with 'MooseX::RW::Writer::File';
 
 # Moulinette SUDOC
-has sudoc => ( is => 'rw', isa => 'Sudoc', required => 1 );
+has sudoc => ( is => 'rw', isa => 'Koha::Contrib::Sudoc', required => 1 );
 
 # Sortie Date-Auteur-Titre plutôt qu'ISBN
 has dat => ( is => 'rw', isa => 'Bool', default => 0 );
@@ -77,7 +76,7 @@ has loc => (
     default => sub {
         my $self = shift;
         my %loc;
-        my $hbranch = $self->sudoc->c->{$self->sudoc->iln}->{branch};
+        my $hbranch = $self->sudoc->c->{branch};
         while ( my ($branch, $rcr) = each %$hbranch ) {
             $loc{$branch} = {
                 branch => $branch,

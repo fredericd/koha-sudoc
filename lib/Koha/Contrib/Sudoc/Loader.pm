@@ -15,25 +15,20 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-package Sudoc::Loader;
+package Koha::Contrib::Sudoc::Loader;
 use Moose;
 
 use Modern::Perl;
-use utf8;
-use FindBin qw( $Bin );
-use lib "$Bin/../lib";
 use MARC::Moose::Reader::File::Iso2709;
-use Sudoc::Converter;
+use Koha::Contrib::Sudoc::Converter;
 use Log::Dispatch;
 use Log::Dispatch::Screen;
 use Log::Dispatch::File;
-use YAML;
 use Try::Tiny;
-use Locale::TextDomain 'fr.tamil.sudoc';
 
 
 # Moulinette SUDOC
-has sudoc => ( is => 'rw', isa => 'Sudoc', required => 1 );
+has sudoc => ( is => 'rw', isa => 'Koha::Contrib::Sudoc', required => 1 );
 
 # Fichier des notices biblios/autorités
 has file => ( is => 'rw', isa => 'Str', required => 1 );
@@ -56,7 +51,7 @@ has count_skipped => ( is => 'rw', isa => 'Int', default => 0 );
 # Converter
 has converter => (
     is      => 'rw',
-    isa     => 'Sudoc::Converter',
+    isa     => 'Koha::Contrib::Sudoc::Converter',
 );
 
 # Le logger
@@ -72,6 +67,7 @@ sub BUILD {
 
     my $id = ref($self);
     ($id) = $id =~ /.*:(.*)$/;
+
     $self->log->add( Log::Dispatch::Screen->new(
         name      => 'screen',
         min_level => 'notice',
@@ -79,24 +75,22 @@ sub BUILD {
     $self->log->add( Log::Dispatch::File->new(
         name      => 'file1',
         min_level => 'debug',
-        filename  => $self->sudoc->sudoc_root . '/var/log/' .
-                     $self->sudoc->iln . "-$id.log",
+        filename  => $self->sudoc->root . "/var/log/$id.log",
         mode      => '>>',
-        binmode   => ':utf8',
+        binmode   => ':encoding(utf8)',
     ) );
 
+
     # Instanciation du converter
-    my $converter = $self->sudoc->c->{$self->sudoc->iln}->{biblio}->{converter};
-    my $class = 'Sudoc::Converter';
+    my $converter = $self->sudoc->c->{biblio}->{converter};
+    my $class = 'Koha::Contrib::Sudoc::Converter';
     $class .= "::$converter" if $converter;
     try {
         Class::MOP::load_class($class);
     } catch {
         $self->log->warning(
-            __x("Warning: converter {converter} isn't defined. " .
-                "Default converter will be used.",
-                converter => $converter) .
-            "\n" );
+            "Attention : le convertisseur $converter est introuvable. " .
+            "Le convertisseur par défaut sera utilisé.\n");
         $class = 'Sudoc::Converter';
     };
     $converter = $class->new( sudoc => $self->sudoc );
@@ -104,6 +98,8 @@ sub BUILD {
 }
 
 
+# C'est cette méthodes qui est surchargée par les sous-classes dédiées au
+# traitement des notices biblio et d'autorités
 sub handle_record {
     my ($self, $record) = @_;
 }
@@ -112,9 +108,8 @@ sub handle_record {
 sub run {
     my $self = shift;
 
-    $self->log->notice(
-        __x("Loading file: {file}", file => $self->file) . "\n");
-    $self->log->notice(__"** Test **" . "\n") unless $self->doit;
+    $self->log->notice("Chargement du fichier " . $self->file . "\n");
+    $self->log->notice("** Test **\n") unless $self->doit;
     my $reader = MARC::Moose::Reader::File::Iso2709->new(
         file => $self->sudoc->spool->file_path( $self->file ) );
     while ( my $record = $reader->read() ) {
@@ -124,30 +119,13 @@ sub run {
     
     $self->sudoc->spool->move_done($self->file)  if $self->doit;
     $self->log->notice(
-        __nx("One record has been handled",
-             "Number of record handled: {count}",
-             $self->count,
-             count => $self->count) .
-        "\n" .
-        __nx("One record has been added",
-             "Number of record added: {count}",
-             $self->count_added,
-             count => $self->count_added) .
-        "\n" .
-        __nx("One record has been merged",
-             "Number of merged records: {count}",
-             $self->count_replaced,
-             count => $self->count_replaced) .
-        "\n" .
-        __nx("One record has been skipped",
-             "Number of skipped records: {count}",
-             $self->count_skipped,
-             count => $self->count_skipped) .
-        "\n" );
-    $self->log->notice(
-        __x("** Test ** File {file} has not been loaded", file => $self->file) . "\n" )
+         "Nombre d'enregistrements traités : " . $self->count . "\n" .
+         "Nombre d'enregistrements ajoutés : " . $self->count_added . "\n" .
+         "Nombre d'enregistrements fusionnés :" . $self->count_replaced . "\n" .
+         "Nombre d'enregistrements ignorées : " . $self->count_skipped . "\n"
+     );
+    $self->log->notice("** Test ** Le fichier " . $self->file . " n'a pas été chargé\n")
         unless $self->doit;
 }
-
 
 1;

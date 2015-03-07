@@ -739,19 +739,30 @@ par l'ABES].
 À partir d'un Catalogue Koha, ce script génère des fichiers d'ISBN ou de
 Date-Auteur-Titre. Ces fichiers sont demandés par l'ABES afin de réaliser soit
 un test de recouvrement soit une localisation automatique. Ces fichiers suivent
-la convention de nommage demandée par l'ABES : commence par la lettre i ou r (pour
-ISBN ou Date-Auteur-Titre), suivi du RCR de la bibliothèque, puis le code de
-PEB (u ou g). Ces noms de fichiers sont suffixés d'un index. Par exemple :
+la convention de nommage demandée par l'ABES : commence par la lettre i (pour
+ISBN) ou r (pour Date-Auteur-Titre), suivi du RCR de la bibliothèque, puis le
+code de PEB (u ou g). Ces noms de fichiers sont suffixés d'un index. Par
+exemple :
 
 -----
 i3641767u.0001
 i3641767g.0002
 -----
 
-Permet d'obtenir la liste des ISBN d'un Catalogue.  Plusieurs fichiers sont
-créés, chacun contenant un maximum de 5000 lignes.  Chaque ligne contient un
-ISBN, suivi d'une cote et du biblionumber de la notice Koha, séparés par un
-point virgule. Un groupe de fichier est généré par RCR.
+Plusieurs fichiers sont créés, chacun contenant un maximum de 1000 lignes.
+Chaque ligne contient une clé de dédoublonnage (ISBN ou date-auteur-tire),
+suivie d'une cote et du biblionumber de la notice Koha, séparés par un point
+virgule. Un groupe de fichier est généré par RCR tel que défini dans
+sudoc.conf.
+
+Pour les notices ayant plusieurs exemplaires dans une même bibliothèque (RCR),
+on retient la cote du premier exemplaire.
+
+Si une même clé de dédoublonnage (ISBN ou Date-Auteur-Titre) pointe sur
+plusieurs ISBN, la clé n'est pas retrenue. Elle est envoyée dans un fichier
+des clés multiples, un fichier par RCR. Par exemple :
+
+ i641767u_clemult.txt
 
 Ces fichiers sont envoyés à l'ABES qui, en retour, soit renvoie un rapport de
 taux de recouvrement soit procède à la localisation automatique des notices de
@@ -776,13 +787,13 @@ localisation. Par défaut, on prend toutes les notices. Exemple :
 
 ==== --lignes ====
 
-Les fichiers d'ISBN contiennent au plus <lignes> lignes, y compris la première
-ligne qui indique ce que contiennent les lignes suivante.. Par défaut 1000
+Les fichiers clés contiennent au plus <lignes> lignes, y compris la première
+ligne qui indique ce que contiennent les lignes suivantes. Par défaut 1000
 lignes.
 
 ==== --test ====
 
-Fichiers d'ISBN uniquement pour un test de recouvrement.
+Fichiers de clés uniquement pour un test de recouvrement.
 
 ==== --coteabes ====
 
@@ -795,10 +806,40 @@ Notices disponibles pour le PEB ? Si non fourni, disponibles pour le PEB. Les
 fichiers générés pour le PEB contiennent "u" dans leur nom. Ceux contenant des
 notices non disponibles pour le PEB ont un nom comprenant un "g".
 
-
 === sudoc-ppnize ===
 
 Cette commande ajoute à un catalogue Koha les PPN SUDOC des notices qui
 y ont été localisées automatiquement.
 
+Usage :
 
+-----
+sudoc-ppnize - PPNize les notices Koha à partir d'un fichier d'équivalences SUDOC
+-----
+
+Synopsis :
+
+-----
+sudoc-ppnize L035-ILN80-abcd.raw
+sudoc-ppnize L035-ILN80-abcd.raw --verbose
+sudoc-ppnize L035-ILN80-abcd.raw --doit
+-----
+
+Après une localisation automatique, l'ABES fournit un fichier d'équivalences
+entre les PPN des notices SUDOC et les biblionumber des notices Koha. Ce script
+modifie les notices Koha en y ajoutant en 009 le PPN du Sudoc.  
+
+Le fichier fourni est consitué d'une ligne par équivalence, chaque ligne ayant
+le format suivant :
+
+-----
+PPN <PPN> : <biblionumber>
+-----
+
+Par exemple :
+
+-----
+PPN 000004405 : 17417
+PPN 000006475 : 11841
+PPN 000007323 : 5810
+-----

@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-package Koha::BiblioReader;
+package Koha::Contrib::Sudoc::BiblioReader;
 use Moose;
 
 use Moose::Util::TypeConstraints;
@@ -26,7 +26,7 @@ use MARC::Moose::Parser::Iso2709;
 with 'MooseX::RW::Reader';
 
 
-has koha => ( is => 'rw', isa => 'Koha', required => 1 );
+has koha => ( is => 'rw', isa => 'Koha::Contrib::Sudoc::Koha', required => 1 );
 
 has select => (
     is      => 'rw',

@@ -3,15 +3,11 @@
 package Main;
 
 use Modern::Perl;
-use utf8;
-use FindBin qw( $Bin );
-use lib "$Bin/../lib";
 use Getopt::Long;
 use Pod::Usage;
-use Koha;
-use Koha::BiblioReader;
-use Sudoc;
-use Sudoc::Localisation;
+use Koha::Contrib::Sudoc::BiblioReader;
+use Koha::Contrib::Sudoc;
+use Koha::Contrib::Sudoc::Localisation;
 use AnyEvent::Processor::Conversion;
 
 my ($help, $select, $lignes, $test, $dat, $coteabes, $peb);
@@ -29,17 +25,15 @@ GetOptions(
     'peb!'       => \$peb,
 );
 
-my $iln = shift @ARGV;
-if ( $help || !$iln ) {
+if ( $help ) {
     pod2usage( -verbose => 2 );
     exit;
 }
 
-my $sudoc  = Sudoc->new;
-$sudoc->iln($iln);
-my $reader = Koha::BiblioReader->new( koha => $sudoc->koha );
+my $sudoc  = Koha::Contrib::Sudoc->new;
+my $reader = Koha::Contrib::Sudoc::BiblioReader->new( koha => $sudoc->koha );
 $reader->select($select) if $select;
-my $writer = Sudoc::Localisation->new(
+my $writer = Koha::Contrib::Sudoc::Localisation->new(
     sudoc    => $sudoc,
     test     => $test,
     lines    => $lignes,
@@ -54,113 +48,3 @@ my $converter = AnyEvent::Processor::Conversion->new(
 $converter->run();       
 $writer->write_to_file();
 
-
-=encoding utf-8
-
-=head1 NOM
-
-sudoc-localisation - Génère des fichiers de localisation SUDOC
-
-=head1 SYNOPSYS
-
- sudoc-localisation 80
- sudoc-localisation 80 --dat
- sudoc-localisation 80 --lignes 5000
- sudoc-localisation 80 --select "SELECT biblionumber FROM biblioitems WHERE itemtype='OUV'"
- sudoc-localisation 80 --test
-
-=head1 DESCRIPTION
-
-A partir d'un Catalogue Koha, ce script génère des fichiers d'ISBN ou de
-Date-Auteur-Titre. Ces fichiers sont demandés par l'ABES afin de réaliser soit
-un test de recouvrement soit une localisation automatique. Ces fichiers suivent
-la convention de nommage demandée par l'ABES : commence par la lettre i ou r (pour
-ISBN ou Date-Auteur-Titre), suivi du RCR de la bibliothèque, puis le code de
-PEB (toujours u). Ces noms de fichiers sont suffixés d'un index. Par exemple :
-
- i3641767u_0001.txt
- i3641767u_0002.txt
-
-Pour les notices ayant plusieurs exemplaires dans une même bibliothèque (RCR),
-on retient la cote du premier exemplaire.
-
-Si une même clé de dédoublonnage (ISBN ou Date-Auteur-Titre) pointe sur
-plusieurs ISBN, la clé n'est pas retrenue. Elle est envoyée dans un fichier des
-clés multiples, un fichier par RCR. Par
-exemple :
-
- i641767u_clemult.txt
-
-=head1 PARAMETRES
-
-=over
-
-=item --help, -h
-
-Affiche cette page d'aide
-
-=item --dat
-
-Produit un fichier de type Auteur-Date-Titre. Sans ce paramètre, c'est un
-fichier d'ISBN qui est généré.
-
-=item --select <CLAUSE SELECT SUR BASE KOHA>
-
-Sélection des biblionumber des notices pour lesquelles générer les fichiers de
-localisation. Par défaut, on prend toutes les notices. Exemple :
-
-  --select "SELECT biblionumber FROM biblioitems WHERE itemtype='OUV'"
-  --select "SELECT biblionumber FROM biblioitems WHERE isbn IS NULL"
-
-=item --lignes <lignes>
-
-Les fichiers d'ISBN contiennent au plus <lignes> lignes. Par défaut 1000
-lignes.
-
-=item --test
-
-Fichiers d'ISBN uniquement pour un test de recouvrement.
-
-=item --coteabes 991\ \$a
-
-Spécifie le champ de la notice ABES où placer la cote Koha. Par exemple, pour
-une rétroconversion, --coteabes 991\ \$a. Par défaut, "930 $a".
-
-=item --peb | --nopeb
-
-Notices disponibles pour le PEB ? Si non fourni, disponibles pour le PEB. Les
-fichiers générés pour le PEB contiennent "u" dans leur nom. Ceux contenant des
-notices non disponibles pour le PEB ont un nom comprenant un "g".
-
-=back
-
-
-=head1 AMELIORATIONS
-
-Le script ne détecte pas les doublons de clés envoyés à l'ABES. Cela peut
-pertuber la localisation automatique. Il faudrait modifier le script pour qu'il
-n'écrive que les clés uniques et qu'il place dans un fichier séparé les clés
-multiples.
-
-Il y a un problème également avec les notices qui ont plusieurs exemplaires
-dans une même bibliothèque. Il faudrait un moyen de choisir quel exemplaire
-envoyer et donc quelle cote apparaîtra dans le SUDOC. Autre option : ne pas
-envoyer du tout les notices à exemplaires multiples.
-
-=head1 COPYRIGHT AND LICENSE
-
-Copyright (C) 2013 Tamil s.a.r.l.
-L<http://www.tamil.fr>
-
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>.

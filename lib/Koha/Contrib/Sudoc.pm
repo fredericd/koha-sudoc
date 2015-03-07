@@ -15,68 +15,58 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-package Sudoc;
+package Koha::Contrib::Sudoc;
 use Moose;
 
-use FindBin qw( $Bin );
-use lib "$Bin/../lib";
+use Modern::Perl;
 use YAML qw( LoadFile Dump );
-use Koha;
-use Sudoc::Spool;
+use Koha::Contrib::Sudoc::Koha;
+use Koha::Contrib::Sudoc::Spool;
 use MARC::Moose::Field::Std;
 use MARC::Moose::Field::Control;
-use Locale::TextDomain 'fr.tamil.sudoc';
 
 
-# L'ILN sélectionnée
-has iln => (
-    is => 'rw',
-    isa => 'Str',
-    trigger => sub {
-        my ($self, $iln) = @_;
-        my $conf = $self->c->{$iln};
-        unless ($conf) {
-            print __x("ILN {iln} is missing in sudoc.conf", iln => $iln), "\n";
-            exit;
-        }
-        my $conf_file = $self->c->{$iln}->{koha_conf};
-        $self->koha( Koha->new( conf_file => $conf_file ) );
-    }
-);
 
 # L'instance de Koha de l'ILN courant
-has koha => ( is => 'rw', isa => 'Koha' );
+has koha => ( is => 'rw', isa => 'Koha::Contrib::Sudoc::Koha', default => sub { Koha::Contrib::Sudoc::Koha->new() } );
+
 
 # La racine de l'environnement d'exécution du chargeur
-has sudoc_root => ( is => 'rw', isa => 'Str' );
+has root => (
+    is => 'rw',
+    isa => 'Str',
+    default => sub {
+        my $self = shift;
+        my $dir = $ENV{SUDOC};
+        unless ($dir) {
+            say "Il manque la variable d'environnement SUDOC.";
+            exit;
+        }
+        $self->root( $dir );
+    },
+);
 
 # Le contenu du fichier de config
 has c => ( is => 'rw', );
 
 # Le Spool
-has spool => ( is => 'rw', isa => 'Sudoc::Spool' );
+has spool => ( is => 'rw', isa => 'Koha::Contrib::Sudoc::Spool' );
 
 
 sub BUILD {
     my $self = shift;
 
-    my $sudoc_root = $Bin;
-    $sudoc_root =~ s/\/bin$//;
-    $self->sudoc_root( $sudoc_root );
-
     # L'object Sudoc::Spool
-    $self->spool( Sudoc::Spool->new( sudoc => $self ) );
+    $self->spool( Koha::Contrib::Sudoc::Spool->new( sudoc => $self ) );
 
     # Lecture du fichier de config et création du hash branchcode => RCR par ILN
-    my $file = "$sudoc_root/etc/sudoc.conf";
+    my $file = $self->root . "/etc/sudoc.conf";
     my $c = LoadFile($file);
-    while ( my ($iln, $conf) = each %$c ) {
-        my %branchcode;
-        while ( my ($rcr, $branch) = each %{$conf->{rcr}} ) {
-            $branchcode{$branch} = $rcr;
-        }
-        $conf->{branch} = \%branchcode;
+    my %branchcode;
+    while ( my ($rcr, $branch) = each %{$c->{rcr}} ) {
+        $branchcode{$branch} = $rcr;
     }
+    $c->{branch} = \%branchcode;
     $self->c($c);
 }
 
