@@ -1,8 +1,7 @@
-#!/usr/bin/perl 
-
 package Koha::Contrib::Sudoc::TransferDaemon;
-use Moose;
+# ABSTRACT: Daemon de transfert de fichiers
 
+use Moose;
 use Modern::Perl;
 use AnyEvent;
 use Mail::Box::Manager;

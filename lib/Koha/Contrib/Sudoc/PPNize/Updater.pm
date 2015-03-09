@@ -1,10 +1,10 @@
 package Koha::Contrib::Sudoc::PPNize::Updater;
-use Moose;
+# ABSTRACT: Mise à jour des PPN dans notices existantes
 
+use Moose;
 use Log::Dispatch;
 use Log::Dispatch::Screen;
 use Log::Dispatch::File;
-use Locale::TextDomain "fr.tamil.sudoc";
 use C4::Biblio;
 
 extends 'AnyEvent::Processor';
@@ -62,9 +62,7 @@ sub process {
     my ($fm, $record) = $self->sudoc->koha->get_biblio( $equival->{biblionumber} );
     unless ($record) {
         # Pas de notice ayant ce biblionumber
-        $self->log->warning(
-            __x ("  No biblio record found with biblionumber {biblionumber}",
-                 biblionumber => $biblionumber) . "\n" );
+        $self->log->warning("  Pas de notice ayant le biblionumber $biblionumber\n");
         return 1;
     }
 
@@ -96,4 +94,3 @@ no Moose;
 __PACKAGE__->meta->make_immutable;
 
 1;
-

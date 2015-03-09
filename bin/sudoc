@@ -1,5 +1,8 @@
 #!/usr/bin/perl 
 
+# PODNAME: sudoc
+# ABSTRACT: Commande de chargement des notices SUDOC
+
 use Modern::Perl;
 use Getopt::Long;
 use Koha::Contrib::Sudoc;
@@ -22,7 +25,7 @@ my $sudoc  = Koha::Contrib::Sudoc->new;
 my $cmd = shift @ARGV;
 
 if ( $cmd =~ /init/i ) {
-    $sudoc->spool->init();
+    $sudoc->init();
 }
 elsif ( $cmd =~ /trans/i ) {
     Koha::Contrib::Sudoc::TransferDaemon->new();

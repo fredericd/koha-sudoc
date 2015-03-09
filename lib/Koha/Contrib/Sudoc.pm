@@ -1,30 +1,15 @@
-# Copyright (C) 2015 Tamil s.a.r.l. - http://www.tamil.fr
-#
-# This file is part of Chargeur SUDOC Koha.
-#
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
 package Koha::Contrib::Sudoc;
-use Moose;
+# ABSTRACT: Chargeur Koha par Tamil
 
+use Moose;
 use Modern::Perl;
 use YAML qw( LoadFile Dump );
 use Koha::Contrib::Sudoc::Koha;
 use Koha::Contrib::Sudoc::Spool;
 use MARC::Moose::Field::Std;
 use MARC::Moose::Field::Control;
-
+use File::Copy;
+use File::ShareDir ':ALL';
 
 
 # L'instance de Koha de l'ILN courant
@@ -40,6 +25,11 @@ has root => (
         my $dir = $ENV{SUDOC};
         unless ($dir) {
             say "Il manque la variable d'environnement SUDOC.";
+            exit;
+        }
+        unless ( -d $dir ) {
+            say "variable d'environnement SUDOC=$dir";
+            say "Ce répertoire n'existe pas. Il faut le créer, puis initialiser le chargeur";
             exit;
         }
         $self->root( $dir );
@@ -61,6 +51,7 @@ sub BUILD {
 
     # Lecture du fichier de config et création du hash branchcode => RCR par ILN
     my $file = $self->root . "/etc/sudoc.conf";
+    return unless -e $file;
     my $c = LoadFile($file);
     my %branchcode;
     while ( my ($rcr, $branch) = each %{$c->{rcr}} ) {
@@ -92,5 +83,35 @@ sub ppn_move {
 
     $record->fields( [ grep { $_->tag ne '001' } @{$record->fields} ] );
 }
+
+
+# Crée les sous-répertoires d'un ILN, s'ils n'existent pas déjà
+sub init {
+    my $self = shift;
+
+    say "La variable d'environnement SUDOC définit le répertoire racine : ", $self->root;
+    say "Initialisation du répertoire des données du Chargeur SUDOC d'un ILN.";
+    chdir($self->root);
+
+    say "Création des répertoire 'etc' et 'var'.";
+    mkdir $_  for qw/ etc var /;
+
+    if ( -f 'etc/sudoc.conf') {
+        say "Le fichier 'etc/sudoc.conf' existe déjà. On ne le remplace pas par le fichier modèle.";
+    }
+    else {
+        say "Création d'un fichier modèle 'etc/sudoc.conf'.";
+        my $conf_path = dist_file('Koha-Contrib-Sudoc', 'etc/sudoc.conf');
+        copy($conf_path, "etc/sudoc.conf");
+    }
+    
+    say "Création des répertoires 'var/log' et 'var/spool'.";
+    chdir('var');
+    mkdir $_ for qw/ log spool /;
+
+    chdir('spool');
+    mkdir $_ for qw/ staged waiting done /;
+}
+
 
 1;

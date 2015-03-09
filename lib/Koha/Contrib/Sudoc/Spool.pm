@@ -1,26 +1,9 @@
-# Copyright (C) 2015 Tamil s.a.r.l. - http://www.tamil.fr
-#
-# This file is part of Chargeur SUDOC Koha.
-#
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
 package Koha::Contrib::Sudoc::Spool;
-use Moose;
+# ABSTRACT: Spool des fichiers de notices
 
+use Moose;
 use Modern::Perl;
 use File::Copy;
-use YAML;
 
 
 # Le spool se trouve dans le sous-répertore var/spool du répertoire racine
@@ -189,7 +172,7 @@ sub command {
         for my $file (@_) {
             my $path = $self->file_path($file);
             unless ( $path ) {
-                say "Le fichier $path n'existe pas";
+                say "Le fichier '$file' n'existe pas";
                 next;
             }
             say "Fichier $path";
@@ -199,20 +182,6 @@ sub command {
     else {
         $self->list();
     }
-}
-
-
-# Crée les sous-répertoires d'un ILN, s'ils n'existent pas déjà
-sub init {
-    my $self = shift;
-
-    say "Initialisation du spool";
-
-    my $dir = $self->root;
-    return if -d $dir;
-
-    mkdir $dir;
-    mkdir "$dir/$_" for qw/staged waiting done/;
 }
 
 

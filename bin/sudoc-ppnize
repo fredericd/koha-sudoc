@@ -1,5 +1,8 @@
 #!/usr/bin/perl 
 
+# PODNAME: sudoc--ppnize
+# ABSTRACT: Ajout de PPN aux notices biblio d'un Catalogue Koha
+
 package Main;
 
 use Modern::Perl;

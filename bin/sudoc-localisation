@@ -1,5 +1,8 @@
 #!/usr/bin/perl 
 
+# PODNAME: sudoc-localisation
+# ABSTRACT: Génération de fichier de localisation automatique dans le Sudoc
+
 package Main;
 
 use Modern::Perl;
