@@ -70,12 +70,10 @@ sub init {
     $self->item($item);
 
     # On supprime de la notice SUDOC les champs à exclure
-    my $conf = $self->sudoc->c->{biblio};
-    my $exclure = $conf->{exclure};
+    my $exclure = $self->sudoc->c->{biblio}->{exclure};
     if ( $exclure && ref($exclure) eq 'ARRAY' ) {
         $record->fields( [ grep { not $_->tag ~~ @$exclure } @{$record->fields} ] );
     }
-
 }
 
 
@@ -228,7 +226,7 @@ sub clean {
 # différent en fonction du type de doc.
 sub framework {
     my ($self, $record) = @_;
-    $self->sudoc->c->{biblio}->{framework};
+    $self->sudoc->c->{biblio}->{framework} || '';
 }
 
 1;

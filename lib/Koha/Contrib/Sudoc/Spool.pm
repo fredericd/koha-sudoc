@@ -4,7 +4,8 @@ package Koha::Contrib::Sudoc::Spool;
 use Moose;
 use Modern::Perl;
 use File::Copy;
-
+use DateTime;
+use Format::Human::Bytes;
 
 # Le spool se trouve dans le sous-répertore var/spool du répertoire racine
 # pointé par la variable d'environnement SUDOC. Les fichiers arrivent de
@@ -12,7 +13,7 @@ use File::Copy;
 # téléchargés, ils sont déplacés en 'waiting'. De là, ils sont chargés un à un
 # dans Koha. Après chargement, ils sont déplacés en 'done'.
 
-my $types = [
+my $dirstatus = [
     [
         "Fichiers contenant les autorités qui ont été chargées :",
         'done',
@@ -151,18 +152,22 @@ sub staged_to_waiting {
 # Liste le contenu des répertoires du spool
 sub list {
     my $self = shift;
-    for ( @$types ) {
+    for ( @$dirstatus ) {
         my ($msg, $where, $type) = @$_;
         my $files = $self->sudoc->spool->files($where, $type);
         next unless @$files;
         say $msg;
+        chdir $self->sudoc->root . "/var/spool/$where";
         my $count = 0;
         for my $file (@$files) {
             $count++;
-            print sprintf ("  %3d. ", $count), $file, "\n";
+            my (undef, undef, undef, undef, undef, undef, undef, $size, $atime,
+                $mtime, $ctime) = stat($file);
+            my $dt = DateTime->from_epoch( epoch => $mtime );
+            say sprintf ("  %3d. ", $count), $file,
+                " - " . $dt->dmy('.') . ', ' . Format::Human::Bytes::base10($size);
         }
     }
-
 }
 
 

@@ -32,6 +32,7 @@ has root => (
             say "Ce répertoire n'existe pas. Il faut le créer, puis initialiser le chargeur";
             exit;
         }
+        unshift @INC, "$dir/lib";
         $self->root( $dir );
     },
 );
@@ -93,8 +94,8 @@ sub init {
     say "Initialisation du répertoire des données du Chargeur SUDOC d'un ILN.";
     chdir($self->root);
 
-    say "Création des répertoire 'etc' et 'var'.";
-    mkdir $_  for qw/ etc var /;
+    say "Création des répertoire 'etc', 'lib' et 'var'.";
+    mkdir $_  for qw/ etc lib var /;
 
     if ( -f 'etc/sudoc.conf') {
         say "Le fichier 'etc/sudoc.conf' existe déjà. On ne le remplace pas par le fichier modèle.";

@@ -9,6 +9,7 @@ use Log::Dispatch;
 use Log::Dispatch::Screen;
 use Log::Dispatch::File;
 use Try::Tiny;
+use DateTime;
 
 
 # Moulinette SUDOC
@@ -66,19 +67,17 @@ sub BUILD {
 
 
     # Instanciation du converter
-    my $converter = $self->sudoc->c->{biblio}->{converter};
-    my $class = 'Koha::Contrib::Sudoc::Converter';
-    $class .= "::$converter" if $converter;
+    my $class = $self->sudoc->c->{biblio}->{converter};
     try {
         Class::MOP::load_class($class);
     } catch {
         $self->log->warning(
-            "Attention : le convertisseur $converter est introuvable. " .
+            "Attention : le convertisseur $class est introuvable dans le répertoire 'lib'. " .
             "Le convertisseur par défaut sera utilisé.\n");
         $class = 'Koha::Contrib::Sudoc::Converter';
     };
-    $converter = $class->new( sudoc => $self->sudoc );
-    $self->converter( $converter );
+    $class = $class->new( sudoc => $self->sudoc );
+    $self->converter( $class );
 }
 
 
@@ -92,6 +91,8 @@ sub handle_record {
 sub run {
     my $self = shift;
 
+    my $dt = DateTime->now;
+    $self->log->debug($dt->dmy . " " . $dt->hms . "\n");
     $self->log->notice("Chargement du fichier " . $self->file . "\n");
     $self->log->notice("** Test **\n") unless $self->doit;
     my $reader = MARC::Moose::Reader::File::Iso2709->new(
@@ -110,6 +111,7 @@ sub run {
      );
     $self->log->notice("** Test ** Le fichier " . $self->file . " n'a pas été chargé\n")
         unless $self->doit;
+    $self->log->debug("\n");
 }
 
 1;

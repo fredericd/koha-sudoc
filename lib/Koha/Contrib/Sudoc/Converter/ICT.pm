@@ -47,7 +47,7 @@ after 'itemize' => sub {
     return if record_is_peri($record);
 
     # On crée les exemplaires à partir de 930, 915 et 999
-    my $myrcr = $self->sudoc->c->{$self->sudoc->iln}->{rcr};
+    my $myrcr = $self->sudoc->c->{rcr};
     my $f999; # Le champ 999 courant
     my $subf;   # Les sous-champs en cours de construction
     my $append = sub { # Ajout à $subf d'un sous-champ de $f999

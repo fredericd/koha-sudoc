@@ -19,7 +19,7 @@ Une version en-ligne de ce document est disponible à l'URL suivante :
 .Résumé
 ===========
 Le *Chargeur SUDOC Koha* est un logiciel sous licence GNU GPL. Il permet
-de déployer un Catalogue http://www.koha-community.org[Koha] dans le SUDOC.
+de déployer un Catalogue http://koha-community.org[Koha] dans le SUDOC.
 Ses principales caractéristiques sont les suivantes :
 
 - Gestion du protocole d'envoi des fichiers par l'ABES à l'établissement
@@ -96,7 +96,7 @@ moins une instance de Koha installée, avec les variables d'environnement
 `KOHA_CONF` et `PERL5LIB` correctement initialisées.
 
 Par exemple, vous créez un répertoire pour le Chargeur `/usr/local/koha/sudoc`,
-puis vous l'inialisez avec tous les sous-répertoires nécessaire, en exécutant
+puis vous l'initialisez avec tous les sous-répertoires nécessaires en exécutant
 la séquence suivante de commandes shell :
 
 [source,sh]
@@ -134,7 +134,7 @@ chose comme ceci :
 Lisez attentivement la suite de ce document pour comprendre le
 fonctionnement du Chargeur SUDOC. Configurer soigneusement le chargeur
 lui-même et la/les instances de Koha avec lesquelles vous l'utiliserez.
-Avant toute utilisation, configurez soigneusement le fichier
+Avant toute utilisation, adaptez à vos besoins le fichier
 `sudoc.conf` Faites des essais sur une instance de test de Koha avant
 d'utiliser le Chargeur sur votre instance de production.
 
@@ -244,8 +244,8 @@ Fichiers des notices biblio en attente de chargement :
   2. ILN186-TEST-933r376A001.raw
 -----
 
-**Visualisation du fichier** -- On peut également voir le contenu d'un fichier
-spécifique avec la commande : `sudoc spool fichier`. 
+**Visualisation de fichiers** -- On peut également voir le contenu d'un fichier
+spécifique avec la commande : `sudoc spool fichier1 fichier2 ...`. 
 
 
 === Chargements des fichiers du SUDOC dans le Catalogue Koha ===
@@ -253,15 +253,15 @@ spécifique avec la commande : `sudoc spool fichier`.
 L'ILN définit avec l'ABES les fichiers qu'il souhaite recevoir
 régulièrement. Les notices bibliographiques des ressources cataloguées
 par l'établissement dans le SUDOC sont toujours transmises. Le chargeur
-SUDOC requiert que les notices envoyées soient encodées en UTF-8. Il est
+SUDOC requiert que les notices envoyées soient encodées en UTF-8/NFC. Il est
 possible de demander à recevoir également les notices liées, les notices
 de collection par exemple. Enfin, l'ABES peut également transmettre des
 fichiers des autorités contenues dans les différentes notices
 bibliographiques.
 
 Le Chargeur SUDOC dispose de deux commandes distinctes de chargement des
-notices : une première pour les notices bibliographiques et un second
-pour les notices d'autorités. 
+notices : une première pour les notices bibliographiques et une seconde
+pour les notices d'autorité. 
 
 [NOTE]
 Si vous n'avez pas utilisé `sudoc trans` pour placer vos fichiers de
@@ -275,25 +275,25 @@ Il faut toujours commencer par charger les autorités afin de permettre
 la création des liens entre notices bibliographiques et notices
 d'autorité.
 
-==== Notices d'autorités ====
+==== Notices d'autorité ====
 
-Le script de chargement des autorités *sudoc autorité* examine le
-répertoire des fichiers en attente de chargement. Il traite un-à-un les
-fichiers d'autorités.
+La commande de chargement des autorités `sudoc autorité` examine le répertoire
+des fichiers en attente de chargement. Les fichiers d'autorités sont traités
+un-à-un.
 
 Pour chaque autorité, on détermine s'il s'agit d'une nouveauté ou de la mise à
-jour d'une autorité existante. Les nouveautés sont ajoutées à Koha.  Les mises
-à jour remplacent les autorités Koha correspondantes.  On interroge les
-autorités Koha pour savoir s'il en existe une ayant l'identifiant de la notice
-entrante (son PPN en 001). Si c'est le cas, il s'agit d'une autorité déjà
-présente dans Koha et qui a été modifiée dans le SUDOC.
+jour d'une autorité existante. **Les nouveautés** sont ajoutées à Koha. **Les
+mises à jour** remplacent les autorités Koha correspondantes.  On interroge
+les autorités Koha pour savoir s'il en existe une ayant l'identifiant de la
+notice entrante (son PPN en 001). Si c'est le cas, il s'agit d'une autorité
+déjà présente dans Koha et qui a été modifiée dans le SUDOC.
 
 Le Chargeur traite également le cas des *Fusions SUDOC*. La zone 035 est
 examinée afin de déterminer si l'autorité est marquée comme étant une fusion
 SUDOC d'autorités.  Dans ce cas, on peut savoir si une autorité Koha existe
 déjà ayant l'identifiant (PPN) de l'autorité obsolète ayant fusionnée avec
 l'autorité entrante. Les notices bibliographiques liées à l'ancienne autorité
-sont retrouvées et elles sont rattachées à la nouvelle autorités.
+sont retrouvées et elles sont rattachées à la nouvelle autorité.
 
 Après chargement, chaque fichier d'autorités est déplacé dans le
 répertoire *done* des fichiers ayant été traités.
@@ -305,7 +305,7 @@ Concernant l'indexation des autorités chargées, il y a plusieurs
 stratégies possibles. Il est nécessaire que toutes les autorités
 chargées soient indexées avant de passer à l'étape de chargement des
 notices bibliographiques, sans quoi le lien biblio -> autorités ne pourra
-être être réalisé.
+pas être réalisé.
 
 Si on est sûr de ne pas avoir des volumes trop importants d'autorités,
 on peut laisser Koha indexer les autorités en tâche de fond. On attend
@@ -320,8 +320,8 @@ l'indexeur.
 
 ==== Notices bibliographiques ====
 
-Le chargement des notices bibliographiques est réalisé par le script 
-*sudoc biblio*. Tout en ayant la même logique de fonctionnement que le chargeur
+Le chargement des notices bibliographiques est réalisé par la commande 
+`sudoc biblio`. Tout en ayant la même logique de fonctionnement que le chargeur
 des autorités, ce script réalise des traitements supplémentaires et
 paramétrables. On peut par exemple avoir pour un établissement donné une
 logique spécifique de création des exemplaires reprenant des données de champs
@@ -444,7 +444,7 @@ email::
   Koha :
   abes;;
     Email de l'ABES à laquelle envoyer les messages. À priori c'est
-    toujours l'adresse `abes*ftp@carmin.sudoc.abes.fr+
+    toujours l'adresse `abes_ftp@carmin.sudoc.abes.fr`
   koha;;
     Email du serveur Koha. C'est la boîte aux lettres de cette adresse
     qui est examinée par le daemon de transfert.
@@ -647,16 +647,16 @@ Cette commande est à utiliser en vue d'une localisation automatique d'un
 Catalogue Koha dans le SUDOC. 
 
 La procédure et les fichiers attendus sont
-http://documentation.abes.fr/sudoc/manuels/echanges/exemplarisation*automatique/explmonogr.html[documentés
+http://documentation.abes.fr/sudoc/manuels/echanges/exemplarisation_automatique/explmonogr.html[documentés
 par l'ABES].
 
-À partir d'un Catalogue Koha, ce script génère des fichiers d'ISBN ou de
-Date-Auteur-Titre. Ces fichiers sont demandés par l'ABES afin de réaliser soit
-un test de recouvrement soit une localisation automatique. Ces fichiers suivent
-la convention de nommage demandée par l'ABES : commence par la lettre i (pour
-ISBN) ou r (pour Date-Auteur-Titre), suivi du RCR de la bibliothèque, puis le
-code de PEB (u ou g). Ces noms de fichiers sont suffixés d'un index. Par
-exemple :
+À partir d'un Catalogue Koha, ce script génère des fichiers d'ISBN ou de Date-
+Auteur-Titre. Ces fichiers sont demandés par l'ABES afin de réaliser soit un
+test de recouvrement soit une localisation automatique. Ces fichiers suivent
+la convention de nommage demandée par l'ABES : commence par la lettre **i**
+(pour ISBN) ou **r** (pour Date-Auteur-Titre), suivi du RCR de la
+bibliothèque, puis le code de PEB (**u** disponible pour le PEB, ou **g** non
+disponible). Ces noms de fichiers sont suffixés d'un index. Par exemple :
 
 -----
 i3641767u.0001
@@ -666,17 +666,19 @@ i3641767g.0002
 Plusieurs fichiers sont créés, chacun contenant un maximum de 1000 lignes.
 Chaque ligne contient une clé de dédoublonnage (ISBN ou date-auteur-tire),
 suivie d'une cote et du biblionumber de la notice Koha, séparés par un point
-virgule. Un groupe de fichier est généré par RCR tel que défini dans
-sudoc.conf.
+virgule. Un groupe de fichiers est généré par RCR tel que défini dans
+`sudoc.conf`.
 
 Pour les notices ayant plusieurs exemplaires dans une même bibliothèque (RCR),
 on retient la cote du premier exemplaire.
 
 Si une même clé de dédoublonnage (ISBN ou Date-Auteur-Titre) pointe sur
-plusieurs ISBN, la clé n'est pas retrenue. Elle est envoyée dans un fichier
-des clés multiples, un fichier par RCR. Par exemple :
+plusieurs ISBN, la clé n'est pas retenue. Elle est envoyée dans un fichier des
+**clés multiples**, un fichier par RCR. Vous pouvez choisir de dédoublonner
+ces notices dans Koha ou bien de les localiser manuellement dans le Sudoc.
+Exemple de fichier de clés multiples:
 
- i641767u*clemult.txt
+ i641767u_clemult.txt
 
 Ces fichiers sont envoyés à l'ABES qui, en retour, soit renvoie un rapport de
 taux de recouvrement soit procède à la localisation automatique des notices de
@@ -689,7 +691,7 @@ Ce script dispose de plusieurs paramètres :
 Produit un fichier de type Auteur-Date-Titre. Sans ce paramètre, c'est un
 fichier d'ISBN qui est généré.
 
-==== --select <CLAUSE SELECT SUR BASE KOHA> ====
+==== --select <clause SELECT sur base KOHA> ====
 
 Sélection des biblionumber des notices pour lesquelles générer les fichiers de
 localisation. Par défaut, on prend toutes les notices. Exemple :
@@ -711,33 +713,19 @@ Fichiers de clés uniquement pour un test de recouvrement.
 
 ==== --coteabes ====
 
-Spécifie le champ de la notoce ABES où placer la cote Koha. Par exemple, pour
-une rétroconversion, --coteabes 991\ \$a. Par défaut, "930 $a".
+Spécifie le champ de la notice ABES où placer la cote Koha. Par exemple, pour
+une rétroconversion : `--coteabes 991\ \$a`. Par défaut, `930 $a`.
 
 ==== --peb | --nopeb ====
 
 Notices disponibles pour le PEB ? Si non fourni, disponibles pour le PEB. Les
-fichiers générés pour le PEB contiennent "u" dans leur nom. Ceux contenant des
-notices non disponibles pour le PEB ont un nom comprenant un "g".
+fichiers générés pour le PEB contiennent **u** dans leur nom. Ceux contenant des
+notices non disponibles pour le PEB ont un nom comprenant un **g**.
 
 === sudoc-ppnize ===
 
 Cette commande ajoute à un catalogue Koha les PPN SUDOC des notices qui
 y ont été localisées automatiquement.
-
-Usage :
-
------
-sudoc-ppnize - PPNize les notices Koha à partir d'un fichier d'équivalences SUDOC
------
-
-Synopsis :
-
------
-sudoc-ppnize L035-ILN80-abcd.raw
-sudoc-ppnize L035-ILN80-abcd.raw --verbose
-sudoc-ppnize L035-ILN80-abcd.raw --doit
------
 
 Après une localisation automatique, l'ABES fournit un fichier d'équivalences
 entre les PPN des notices SUDOC et les biblionumber des notices Koha. Ce script
@@ -757,3 +745,19 @@ PPN 000004405 : 17417
 PPN 000006475 : 11841
 PPN 000007323 : 5810
 -----
+
+Usage :
+
+[source,sh]
+----
+sudoc-ppnize [--doit --verbose]
+----
+
+Synopsis :
+
+[source,sh]
+----
+sudoc-ppnize L035-ILN80-abcd.raw
+sudoc-ppnize L035-ILN80-abcd.raw --verbose
+sudoc-ppnize L035-ILN80-abcd.raw --doit
+----
