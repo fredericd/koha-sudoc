@@ -79,7 +79,7 @@ sub send_gtd {
     my $year = DateTime->now->year;
 
     $self->log->notice(
-        "Réception message 'status 9'. Envoi GTD: ILN $iln, job $jobid, année $year\n" );
+        "Réception 'status 9'. Envoi GTD: ILN $iln, job $jobid, année $year\n" );
 
     my $c = $self->sudoc->c->{trans};
 
@@ -106,7 +106,7 @@ sub send_gtd {
 
 sub move_to_waiting {
     my $self = shift;
-    $self->log->notice("Réception message 'status 0'. Fin transfert. Déplacement de 'done' à 'waiting'\n");
+    $self->log->notice("Réception 'status 0'. Fin transfert: 'staged' déplacé en 'waiting'\n");
     $self->sudoc->spool->staged_to_waiting();
 }
 
