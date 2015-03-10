@@ -22,18 +22,18 @@ has root => (
     isa => 'Str',
     default => sub {
         my $self = shift;
-        my $dir = $ENV{SUDOC};
-        unless ($dir) {
+        my $root = $ENV{SUDOC};
+        unless ($root) {
             say "Il manque la variable d'environnement SUDOC.";
             exit;
         }
-        unless ( -d $dir ) {
-            say "variable d'environnement SUDOC=$dir";
-            say "Ce répertoire n'existe pas. Il faut le créer, puis initialiser le chargeur";
+        unless ( -d $root ) {
+            say "variable d'environnement SUDOC=$root";
+            say "Ce répertoire n'existe pas. Il faut le créer, puis initialiser le chargeur si nécessaire.";
             exit;
         }
-        unshift @INC, "$dir/lib";
-        $self->root( $dir );
+        unshift @INC, "$root/lib";
+        $self->root( $root );
     },
 );
 
@@ -47,9 +47,6 @@ has spool => ( is => 'rw', isa => 'Koha::Contrib::Sudoc::Spool' );
 sub BUILD {
     my $self = shift;
 
-    # L'object Sudoc::Spool
-    $self->spool( Koha::Contrib::Sudoc::Spool->new( sudoc => $self ) );
-
     # Lecture du fichier de config et création du hash branchcode => RCR par ILN
     my $file = $self->root . "/etc/sudoc.conf";
     return unless -e $file;
@@ -60,6 +57,9 @@ sub BUILD {
     }
     $c->{branch} = \%branchcode;
     $self->c($c);
+
+    # L'object Sudoc::Spool
+    $self->spool( Koha::Contrib::Sudoc::Spool->new( sudoc => $self ) );
 }
 
 

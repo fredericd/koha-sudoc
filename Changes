@@ -1,5 +1,9 @@
 Revision history for Perl module Koha::Contrib::Sudoc
 
+2.02 2015-03-10
+
+  - Amélioration du service de transfert
+
 2.02 2015-03-09
 
   - Stabilisé pour un site en prod

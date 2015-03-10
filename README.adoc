@@ -172,17 +172,16 @@ SUDOC::       Les notices de l'ILN sont extraites selon la périodicité
               *status 9*.
 Koha::        Le message *status 9* est reçu par le serveur Koha. Un
               message GTD est envoyé au serveur de l'ABES. Il est
-              demandé que les fichiers soient transférés dans un
-              sous-répertoire dont le
-              nom est le code de l'ILN suivi du sous-répertoire
-              *staged*. Le répertoire accessible sur le serveur Koha par
-              FTP/SFTP est un lien symbolique vers le Spool du chargeur.
+              demandé que les fichiers soient transférés dans le
+              répertoire `var/spool/staged` de l'ILN.
+              Le serveur FRP/SFTP du serveur Koha est configuré pour que
+              sa racine pointe sur `var/spool`.
 SUDOC::       Réception du message GTD de l'ILN. Transfert des fichiers
               par FTP sur le serveur Koha dans le sous-répertoire de
               l'ILN.  Envoi du message *GTD Status 0*. Signifiant que le
               transfert est terminé.
 Koha::        Réception du message *GTD Status 0*. Les fichiers sont
-              déplacés dans le Spool de *staged* en *waiting*.
+              déplacés dans le spool de *staged* en *waiting*.
 
 Les éléments suivants doivent être définis/configurés :
 
@@ -190,8 +189,8 @@ Les éléments suivants doivent être définis/configurés :
 - Email du serveur Koha
 - FTP sur serveur Koha, hôte, login, password
 
-Un serveur FTP/SFTP doit être configuré sur le serveur Koha ainsi qu'un
-serveur SMTP.
+Un serveur FTP/SFTP (racine sur `var/spool`) doit être configuré sur le
+serveur Koha ainsi qu'un serveur SMTP.
 
 La commande `sudoc trans` gère ce protocole de transfert. Le programme
 examine la boîte aux lettres locale MBOX définie dans le fichier de
@@ -431,11 +430,11 @@ du répertoire d'installation du Chargeur SUDOC.
 [[conf-trans]]
 ==== Section *transfert* ====
 
-Une section *trans* détermine le fonctionnement du daemon de
-+sudoc-trans` de transfert des fichiers ABES :
+Une section *trans* détermine le fonctionnement du service de transfert
+`sudoc trans` des fichiers ABES :
 
 timeout::
-  Délai en secondes entre deux réveils du daemon de transfert. Par
+  Délai en secondes entre deux réveils du service de transfert. Par
   exemple, une valeur de `600` signifie que la boîte aux lettres SUDOC
   sera examinée toutes les dix minutes.
 email::
@@ -455,7 +454,7 @@ mbox::
 
 ==== Section *chargement* ====
 
-Les paramètres de chargement sont défini ainsi :
+Les paramètres de chargement sont définis ainsi :
 
 iln::
   Numéro de l'ILN.
