@@ -496,6 +496,13 @@ biblio::
     Généralement laissé vide. Peut contenir le nom d'une sous-classe
     Perl spécifique de conversion des notices. Accessible uniquement à
     un programmeur Perl.
+  exclure;;
+    Contient la liste des champs de la notice SUDOC qu'il faut supprimer.
+  proteger;;
+    Contient la liste des champs de la notice Koha qu'il faut "protéger" en
+    cas de fusion avec une notice SUDOC. Les champs protégés sont conservés de
+    la notices Koha. Tous les autres champs sont remplacés par les champs de
+    la notice SUDOC. Il y a un dédoublonnage des champs protégés.
 
 ==== Exemple ====
 
@@ -527,7 +534,7 @@ biblio:
   itemize: 1
   framework: PROPRE
   converter:
-  exlure:
+  exclure:
     - 680
     - 801
   proteger:

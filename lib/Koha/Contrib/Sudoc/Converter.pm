@@ -7,47 +7,66 @@ use Modern::Perl;
 # Moulinette SUDOC
 has sudoc => ( is => 'rw', isa => 'Koha::Contrib::Sudoc', required => 1 );
 
-# Les exemplaires courants. 
-# ->{rcr}->{id}->{915}
-#              ->{930}
-#              ->{999}
-# 076797597:
-#   915:
-#   917:
-#   930:
-#   999:
-# 243615450:
-#   915:
-#   930:
-#   991:
+
+=attr item
+
+Les exemplaires courants. 
+
+ ->{rcr}->{id}->{915}
+              ->{930}
+              ->{999}
+ 076797597:
+   915:
+   917:
+   930:
+   999:
+ 243615450:
+   915:
+   930:
+   991:
+
+=cut
 has item => ( is => 'rw', isa => 'HashRef' );
 
 
-# Les méthodes de cette classe sont appelées dans un certain ordre par
-# le chargeur des notices biblios, selon qu'il s'agisse d'une nouvelle
-# notice ou d'une notice qui existe déjà dans Koha:
-#
-# Méthode       ajout  modif 
-# skip            O      O
-# init            O      O
-# authoritize     O      O
-# linking         O      O
-# itemize         N      O
-# merge           O      N
-# clean           O      O
-# framework       O      N
+=head1 DESCRIPTION
 
+Les méthodes de cette classe sont appelées dans un certain ordre par
+le chargeur des notices biblios, selon qu'il s'agisse d'une nouvelle
+notice ou d'une notice qui existe déjà dans Koha:
 
-# La notice doit-elle être passée ? Par défaut, on garde toute notice.
+ Méthode       ajout  modif 
+ --------------------------
+ skip            O      O
+ init            O      O
+ authoritize     O      O
+ linking         O      O
+ itemize         N      O
+ merge           O      N
+ clean           O      O
+ framework       O      N
+
+=cut
+
+=method skip
+
+La notice doit-elle être passée ? Par défaut, on garde toute notice.
+
+=cut
 sub skip {
     my ($self, $record) = @_;
     return 0;
 }
 
 
-# Première méthode appelée pour un enregistrement SUDOC entrant, que ce
-# soit un doublon ou une nouvelle notice.
-# Initialisation du hash item
+=method init
+
+Méthode appelée après C<skip> pour un enregistrement SUDOC entrant, que ce
+soit un doublon ou une nouvelle notice. Initialisation du hash item.
+Suppression de la notice entrante des champs définis dans C<sudoc.conf> :
+C<biblio-proteger>
+
+=cut
 sub init {
     my ($self, $record) = @_;
 
@@ -77,7 +96,11 @@ sub init {
 }
 
 
-# On remplit le $9 Koha des champs liés à des autorités
+=method authoritize
+
+On remplit le $9 Koha des champs liés à des autorités
+
+=cut
 sub authoritize {
     my ($self, $record) = @_;
 
@@ -105,7 +128,14 @@ sub authoritize {
 }
 
 
-# Lien des notices biblio entre elles
+=method linking
+
+Lien des notices biblio entre elles. Les liens entre notices se trouvent dans
+les zones 4xx et 5xx, sous-champ $0 qui contient un PPN. A partir du PPN, la
+notice liée est retrouvée dans Koha et son biblionumber est placée en $9, le
+$0 étant conservé.
+
+=cut
 sub linking {
     my ($self, $record) = @_;
 
@@ -133,8 +163,13 @@ sub linking {
 }
 
 
-# Création des exemplaires Koha en 995 en fonction des données locales
-# SUDOC, au moyen de la structure de données $self->item.
+=method itemize
+
+Création des exemplaires Koha en 995 en fonction des données locales SUDOC, au
+moyen de la structure de données $self->item. Les champs bib propriétaire
+($b), bib détentrice ($c), code à barres ($f) et cote ($k) sont remplis.
+
+=cut
 sub itemize {
     my ($self, $record) = @_;
 
@@ -177,7 +212,14 @@ sub _key_dedup {
 }
 
 
-# Fusion d'une notice entrante Sudoc avec une notice Koha
+=method merge
+
+Fusion d'une notice entrante Sudoc avec une notice Koha. Les champs "protégés"
+sont conservés dans la notices Koha. Tout le reste de la notice est remplacé
+par la notice SUDOC. Les champs prorégés sont dédoublonnés entre la notices
+Koha et la notice SUDOC.
+
+=cut
 sub merge {
     my ($self, $record, $krecord) = @_;
 
@@ -214,16 +256,24 @@ sub merge {
 }
 
 
-# On nettoie la notice entrante : suppression de champs, ajout auto de
-# champs, etc.
+=method clean
+
+On nettoie la notice : suppression de champs, ajout auto de champs, etc. Cette
+opération est faite après la fusion (éventuelle) de notices.
+
+=cut
 sub clean {
     my ($self, $record) = @_;
 }
 
 
-# Le framework auquel affecter la notice biblio. Valeur par défaut prise
-# dans sudoc.conf.  Peut-être surchargé pour attribuer un framework
-# différent en fonction du type de doc.
+=method framework
+
+Le framework auquel affecter la notice biblio. Valeur par défaut prise dans
+C<sudoc.conf>.  Peut-être surchargé pour attribuer un framework différent en
+fonction du type de doc ou de tout autre critère.
+
+=cut
 sub framework {
     my ($self, $record) = @_;
     $self->sudoc->c->{biblio}->{framework} || '';

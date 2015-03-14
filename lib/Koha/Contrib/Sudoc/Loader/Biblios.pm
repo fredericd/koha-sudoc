@@ -7,7 +7,8 @@ extends 'Koha::Contrib::Sudoc::Loader';
 
 use Modern::Perl;
 use YAML;
-use Locale::Messages;
+use C4::Biblio;
+use C4::Items;
 
 
 
@@ -41,12 +42,6 @@ sub doublons_sudoc {
 
 sub handle_record {
     my ($self, $record) = @_;
-
-    # FIXME: Ici et pas en-tête parce qu'il faut que l'environnement Shell soit
-    # déjà fixé avant de charger ces modules qui ont besoin de KOHA_CONF et qui
-    # le garde
-    use C4::Biblio;
-    use C4::Items;
 
     # FIXME Reset de la connexion tous les x enregistrements
     $self->sudoc->koha->zconn_reset()  unless $self->count % 10;

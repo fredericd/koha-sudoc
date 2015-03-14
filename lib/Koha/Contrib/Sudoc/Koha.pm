@@ -170,8 +170,12 @@ sub get_biblio_by_ppn {
 }
 
 
-# Retrouve les notices associées à une autorité Koha identifiée par son authid
-# Retourne un tableau de (biblionumner, framework, record)
+=method get_biblios_by_authid
+
+Retrouve les notices associées à une autorité Koha identifiée par son
+C<authid> Retourne un tableau de (biblionumner, framework, record)
+
+=cut
 sub get_biblios_by_authid {
     my ($self, $authid) = @_;
 
@@ -191,7 +195,13 @@ sub get_biblios_by_authid {
     return @records;
 }
 
-# Lecture d'une autorité par son PPN
+
+=method get_auth_by_ppn
+
+Lecture d'une autorité par son PPN. Renvoie un tableau contenant deux entrées:
+l'authid de l'autorité et l'enregistrement de l'autorité trouvée.
+
+=cut
 sub get_auth_by_ppn {
     my ($self, $ppn) = @_;
     my ($rs, $authid, $record);
@@ -208,15 +218,9 @@ sub get_auth_by_ppn {
 }
 
 
-
-
 __PACKAGE__->meta->make_immutable;
 
 1;
-
-=head1 NAME
-
-Koha - Class exposing info about a Koha instance.
 
 =head1 SYNOPSYS
 
@@ -228,11 +232,3 @@ Koha - Class exposing info about a Koha instance.
 
 =head1 DESCRIPTION
 
-=head1 COPYRIGHT AND LICENSE
-
-Copyright 2015 by Tamil, s.a.r.l.
-
-L<http://www.tamil.fr>
-
-This library is free software; you can redistribute it and/or modify
-it under the same terms as Perl itself.

@@ -7,11 +7,16 @@ use File::Copy;
 use DateTime;
 use Format::Human::Bytes;
 
-# Le spool se trouve dans le sous-répertore var/spool du répertoire racine
-# pointé par la variable d'environnement SUDOC. Les fichiers arrivent de
-# l'ABES dans le répertoire 'staged'. Puis quand ils sont entièrement
-# téléchargés, ils sont déplacés en 'waiting'. De là, ils sont chargés un à un
-# dans Koha. Après chargement, ils sont déplacés en 'done'.
+
+=head1 DESCRIPTION
+
+Le spool se trouve dans le sous-répertore C<var/spool> du répertoire racine
+pointé par la variable d'environnement C<SUDOC>. Les fichiers arrivent de
+l'ABES dans le répertoire C<staged>. Puis quand ils sont entièrement
+téléchargés, ils sont déplacés en C<waiting>. De là, ils sont chargés un à un
+dans Koha. Après chargement, ils sont déplacés en C<done>.
+
+=cut
 
 my $dirstatus = [
     [
@@ -80,10 +85,15 @@ sub _sortable_name {
 }
 
 
-# Retourne les fichiers d'une categorie (staged/waiting/done) et d'un
-# type donnée. Par ex: 
-# $files = $spool->file('waiting', 'c');
-# $files = $spool->file('done', '[a|b]');
+=method files
+
+Retourne les fichiers d'une categorie (staged/waiting/done) et d'un
+type donnée. Par ex: 
+
+ $files = $spool->file('waiting', 'c');
+ $files = $spool->file('done', '[a|b]');
+
+=cut
 sub files {
     my ($self, $where, $type) = @_;
     my $dir = $self->root . "/$where";
@@ -93,7 +103,14 @@ sub files {
 }
 
 
-# Retourne le premier lot de fichiers d'une catégorie et d'un type donnée
+=method first_batch_files($where, $type)
+
+Retourne dans un tableau le premier lot de fichiers d'une catégorie et d'un
+type donnée. For example:
+
+ my @files = $spool->first_batch_files('waiting', '[a|b]');
+
+=cut
 sub first_batch_files {
     my ($self, $where, $type) = @_;
 
@@ -111,9 +128,13 @@ sub first_batch_files {
 }
 
 
-# Retourne la pathname d'un fichier qu'on retrouve, dans l'ordre, soit
-# dans le spool 'waiting' soit dans le spool 'done'. Si le fichier
-# n'existe pas, retourne undef.
+=method file_path($name)
+
+Retourne la pathname d'un fichier qu'on retrouve, dans l'ordre, soit
+dans le spool C<waiting> soit dans le spool C<done>. Si le fichier
+n'existe pas, retourne undef.
+
+=cut
 sub file_path {
     my ($self, $name) = @_;
     
@@ -125,7 +146,11 @@ sub file_path {
 }
 
 
-# Déplace un fichier dans le spool 'done'
+=method move_done($name)
+
+Déplace un fichier dans le spool 'done'
+
+=cut
 sub move_done {
     my ($self, $name) = @_;
     my $path = $self->root . "/waiting/$name";
@@ -135,7 +160,11 @@ sub move_done {
 }
 
 
-# Déplace tous les fichiers de l'ILN courant de staged dans waiting
+=method staged_to_waiting
+
+Déplace tous les fichiers de l'ILN courant de staged dans waiting
+
+=cut
 sub staged_to_waiting {
     my $self = shift;
     
@@ -149,7 +178,11 @@ sub staged_to_waiting {
 }
 
 
-# Liste le contenu des répertoires du spool
+=method list
+
+Liste le contenu des répertoires du spool
+
+=cut
 sub list {
     my $self = shift;
     for ( @$dirstatus ) {
@@ -171,6 +204,13 @@ sub list {
 }
 
 
+=method command
+
+Sans paramètre, liste le contenu des répertoires du spool, en appelant
+L<list>. Les paramètres sont des noms de fichiers du spool. Leur contenu est
+affiché.
+
+=cut
 sub command {
     my $self = shift;
     if ( @_ ) {

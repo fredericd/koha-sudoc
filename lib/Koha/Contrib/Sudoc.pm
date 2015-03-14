@@ -116,12 +116,10 @@ sub init {
 
 1;
 
-=pod
-
 =head1 DESCRIPTION
 
-Koha::Contrib::Sudoc est le Chargeur Sudoc pour Koha développé par Tamil.
-Le fonctionnement de cet outil est décrit ici : 
+Koha::Contrib::Sudoc est le Chargeur Sudoc pour Koha développé par Tamil. Le
+fonctionnement de cet outil est décrit ici :
 L<http://www.tamil.fr/sudoc/sudoc.html>.
 
 =cut
