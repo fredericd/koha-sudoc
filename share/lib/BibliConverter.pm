@@ -1,4 +1,4 @@
-package Koha::Contrib::Sudoc::Converter::ICT;
+package BibliConverter;
 # ABSTRACT: Convertisseur spécifique
 
 use Moose;
@@ -41,7 +41,7 @@ after 'itemize' => sub {
 
     # On reprend tout, donc on efface les exemplaires créés avec la
     # logique par défaut
-    $record->fields( [ grep { $_->tag ne '995' } @{$record->fields} ] );
+    $record->delete('995');
 
     # On ne crée pas d'exemplaire pour les périodiques
     return if record_is_peri($record);
@@ -156,8 +156,8 @@ after 'clean' => sub {
 };
 
 
-# Trois frameworks : ICT, ART et PER. Toute notice est associée à ICT
-# sauf les notices de périodique PER et d'article (ART)
+# Trois frameworks : biblio->framework, ART et PER. Toute notice est associée
+# à biblio->framework sauf les notices de périodique PER et d'article (ART)
 override 'framework' => sub {
     my ($self, $record) = @_;
     record_is_peri($record) ? 'PER' : 

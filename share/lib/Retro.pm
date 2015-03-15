@@ -1,5 +1,5 @@
-package Koha::Contrib::Sudoc::Converter::ISHRetro;
-# ABSTRACT: Convertisseur spécifique
+package Retro;
+# ABSTRACT: Convertisseur spécifique pour une rétroconversion
 
 use Moose;
 
@@ -9,6 +9,7 @@ extends 'Koha::Contrib::Sudoc::Converter';
 override 'merge' => sub {
     my ($self, $sudoc, $koha) = @_;
 
+    # On ajoute à la notice Koha les champ 6xx et 995 de la notice Sudoc
     my @tags = ( (map { sprintf("6%02d", $_) } ( 0..99 )), '995');
     for my $tag (@tags) {
         my @fields = $sudoc->field($tag); 
@@ -16,6 +17,9 @@ override 'merge' => sub {
         $koha->append(@fields);
     }
 
+    # On ajoute à la notice Koha les champs de la notice Sudoc qui n'existe
+    # pas déjà dans la notice Koha, exception faite des champs traités plus
+    # haut et du champ 410.
     my @all_tags = map { sprintf("%03d", $_) } ( 1..999 );
     for my $tag (@all_tags) {
         next if $tag ~~ @tags || $tag == '410'; # On passe, déjà traité plus haut
@@ -25,6 +29,7 @@ override 'merge' => sub {
         $koha->append(@fields);
     }
 
+    # On remplace la notice Sudoc par la notice Koha.
     $sudoc->fields( $koha->fields );
 };
 
