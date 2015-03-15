@@ -76,8 +76,8 @@ sub BUILD {
             "Le convertisseur par défaut sera utilisé.\n");
         $class = 'Koha::Contrib::Sudoc::Converter';
     };
-    $class = $class->new( sudoc => $self->sudoc );
-    $self->converter( $class );
+    $class = $class->new(sudoc => $self->sudoc, log => $self->log);
+    $self->converter($class);
 }
 
 
@@ -106,7 +106,7 @@ sub run {
     $self->log->notice(
          "Nombre d'enregistrements traités : " . $self->count . "\n" .
          "Nombre d'enregistrements ajoutés : " . $self->count_added . "\n" .
-         "Nombre d'enregistrements fusionnés :" . $self->count_replaced . "\n" .
+         "Nombre d'enregistrements fusionnés : " . $self->count_replaced . "\n" .
          "Nombre d'enregistrements ignorées : " . $self->count_skipped . "\n"
      );
     $self->log->notice("** Test ** Le fichier " . $self->file . " n'a pas été chargé\n")

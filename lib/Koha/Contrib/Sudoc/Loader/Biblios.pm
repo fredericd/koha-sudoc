@@ -67,7 +67,7 @@ sub handle_record {
     ($biblionumber, $framework, $koha_record) =
         $self->sudoc->koha->get_biblio_by_ppn( $ppn );
     if ($koha_record) {
-        $self->log->debug("  PPN trouvé dans la notice Koha $biblionumber");
+        $self->log->debug("  PPN trouvé dans la notice Koha $biblionumber\n");
     }
     else {
         # On cherche un 035 avec un $5 contenant un RCR de l'ILN, auquel cas $a contient

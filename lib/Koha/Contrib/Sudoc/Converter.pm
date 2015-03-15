@@ -7,6 +7,12 @@ use Modern::Perl;
 # Moulinette SUDOC
 has sudoc => ( is => 'rw', isa => 'Koha::Contrib::Sudoc', required => 1 );
 
+=attr log
+
+Logger L<Log::Dispatch> hérité de la classe parente L<Koha::Contrib::Sudoc::Loader>.
+
+=cut
+has log => ( is => 'rw', isa => 'Log::Dispatch' );
 
 =attr item
 
