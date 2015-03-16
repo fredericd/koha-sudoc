@@ -214,6 +214,17 @@ Le fonctionnement du daemon `sudoc trans` est piloté par la section
 fichier MBOX de la boîte aux lettres contenant les courriels envoyés par
 l'ABES.
 
+[NOTE]
+================================================================================
+Dans certaines circonstances, il peut être nécessaire d'envoyer à l'ABES une
+demande d'envoi de fichiers sans avoir reçu au préalable le message _status 9_.
+Pour ce faire, il est nécessaire de connaître le _jobid_ ABES de son
+établissement : c'est l'identifiant ABES de la tâche automatisée qui extrait du
+SUDOC les notices de l'établissement récemmment mises à jour. Cet identifiant
+se trouve dans les messages envoyés par l'ABES. On lance alors la commande
+suivante : `sudoc trans jobid`.
+================================================================================
+
 
 === Les fichiers SUDOC ===
 

@@ -34,13 +34,11 @@ has log => (
 );
 
 
-# Global
-my $daemon_id = 'sudoc-trans';
-
 
 sub BUILD {
     my $self = shift;
 
+    my $iln = $self->sudoc->c->{iln};
     # On log à la fois à l'écran et dans syslog
     $self->log->add( Log::Dispatch::Screen->new(
         name      => 'screen',
@@ -49,12 +47,16 @@ sub BUILD {
     $self->log->add( Log::Dispatch::Syslog->new(
         name      => 'syslog',
         min_level => 'notice',
-        ident     => $daemon_id . '-' . $self->sudoc->c->{iln}, 
+        ident     => "sudoc-trans-$iln",
         binmode   => ':encoding(utf8)',
     ) );
+}
+
+
+sub start {
+    my $self = shift;
 
     $self->log->notice( "Démarrage du service de transfert ABES\n" );
-
     my $timeout = $self->sudoc->c->{trans}->{timeout};
     my $idle = AnyEvent->timer(
         after    => $timeout,
@@ -62,6 +64,35 @@ sub BUILD {
         cb       => sub { $self->transfert_abes(); }
     );
     AnyEvent->condvar->recv;
+}
+
+
+sub send_gtd_email {
+    my ($self, $jobid) = @_;
+
+    # La date
+    my $year = DateTime->now->year;
+
+    my $c = $self->sudoc->c->{trans};
+
+    my $head = Mail::Message::Head->new;
+    $head->add( From => $c->{email}->{koha} );
+    $head->add( To => $c->{email}->{abes} );
+    $head->add( Subject => 'GET TITLE DATA' );
+
+    my $body = Mail::Message::Body::Lines->new(
+        data =>
+            "GTD_ILN = " . $self->sudoc->c->{iln} . "\n" .
+            "GTD_YEAR = $year\n" .
+            "GTD_FILE_TO = " . $c->{ftp_host} . "\n" .
+            "GTD_ORDER = TR$jobid*\n" .
+            "GTD_REMOTE_DIR = staged\n",
+    );
+
+    my $message = Mail::Message->new(
+        head => $head,
+        body => $body );
+    $message->send;
 }
 
 
@@ -73,34 +104,13 @@ sub send_gtd {
     # construire la réponse
     my $body = $msg->body;
     my ($jobid) = $body =~ /JobId\s*:\s*(\d*)/;
-    my ($iln)   = $body =~ /\/iln(\d*)\//;
 
-    # La date
+    $self->send_gtd_email($jobid);
+
+    my $iln = $self->sudoc->c->{iln};
     my $year = DateTime->now->year;
-
     $self->log->notice(
         "Réception 'status 9'. Envoi GTD: ILN $iln, job $jobid, année $year\n" );
-
-    my $c = $self->sudoc->c->{trans};
-
-    my $head = Mail::Message::Head->new;
-    $head->add( From => $c->{email}->{koha} );
-    $head->add( To => $c->{email}->{abes} );
-    $head->add( Subject => 'GET TITLE DATA' );
-
-    $body = Mail::Message::Body::Lines->new(
-        data =>
-            "GTD_ILN = $iln\n" .
-            "GTD_YEAR = $year\n" .
-            "GTD_FILE_TO = " . $c->{ftp_host} . "\n" .
-            "GTD_ORDER = TR$jobid*\n" .
-            "GTD_REMOTE_DIR = staged\n",
-    );
-
-    my $message = Mail::Message->new(
-        head => $head,
-        body => $body );
-    $message->send;
 }
 
 
