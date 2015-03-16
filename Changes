@@ -1,5 +1,9 @@
 Revision history for Perl module Koha::Contrib::Sudoc
 
+2.05 2015-03-16
+
+  - Envoi d'un GTD dans réception préalable d'un "status 9".
+
 2.05 2015-03-15
 
   - Amélioration doc, y compris CPAN. Logger dans Converter.
