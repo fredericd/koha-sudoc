@@ -570,8 +570,8 @@ loading:
   timeout: 5
   log:
     level: notice
-    from: contact@tamil.fr
-    to: frederic.demians@gmail.com
+    from: contact@bibliotheque.fr
+    to: sudoc@bibliotheque.fr
 auth:
   ppn_move: 009
   typefromtag:
