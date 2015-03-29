@@ -28,7 +28,14 @@ if ( $cmd =~ /init/i ) {
     $sudoc->init();
 }
 elsif ( $cmd =~ /trans/i ) {
-    Koha::Contrib::Sudoc::TransferDaemon->new();
+    my $daemon = Koha::Contrib::Sudoc::TransferDaemon->new();
+    if (@ARGV) {
+        my $jobid = shift @ARGV;
+        $daemon->send_gtd_email($jobid);
+    }
+    else {
+        $daemon->start;
+    }
 }
 elsif ( $cmd =~ /spool/i ) {
     $sudoc->spool->command(@ARGV);

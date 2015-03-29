@@ -34,13 +34,11 @@ has log => (
 );
 
 
-# Global
-my $daemon_id = 'sudoc-trans';
-
 
 sub BUILD {
     my $self = shift;
 
+    my $iln = $self->sudoc->c->{iln};
     # On log à la fois à l'écran et dans syslog
     $self->log->add( Log::Dispatch::Screen->new(
         name      => 'screen',
@@ -49,12 +47,16 @@ sub BUILD {
     $self->log->add( Log::Dispatch::Syslog->new(
         name      => 'syslog',
         min_level => 'notice',
-        ident     => $daemon_id . '-' . $self->sudoc->c->{iln}, 
+        ident     => "sudoc-trans-$iln",
         binmode   => ':encoding(utf8)',
     ) );
+}
+
+
+sub start {
+    my $self = shift;
 
     $self->log->notice( "Démarrage du service de transfert ABES\n" );
-
     my $timeout = $self->sudoc->c->{trans}->{timeout} * 60;
     while (1) {
         $self->check_mbox();
@@ -66,19 +68,10 @@ sub BUILD {
 # Envoi à l'ABES d'un email GTD en réponse à un message 'status 9'. Celui-ci
 # contient le numéro du job
 sub ask_sending {
-    my ($self, $msg) = @_;
-
-    # Récupération dans le courriel de l'ABES des info dont on a besoin pour
-    # construire la réponse
-    my $body = $msg->body;
-    my ($jobid) = $body =~ /JobId\s*:\s*(\d*)/;
-    my ($iln)   = $body =~ /\/iln(\d*)\//;
+    my $self = shift;
 
     # La date
     my $year = DateTime->now->year;
-
-    $self->log->notice(
-        "Réception 'status 9'. Envoi GTD: ILN $iln, job $jobid, année $year\n" );
 
     my $c = $self->sudoc->c->{trans};
 
@@ -87,9 +80,9 @@ sub ask_sending {
     $head->add( To => $c->{email}->{abes} );
     $head->add( Subject => 'GET TITLE DATA' );
 
-    $body = Mail::Message::Body::Lines->new(
+    my $body = Mail::Message::Body::Lines->new(
         data =>
-            "GTD_ILN = $iln\n" .
+            "GTD_ILN = " . $c->{iln} . "\n" .
             "GTD_YEAR = $year\n" .
             "GTD_FILE_TO = " . $c->{ftp_host} . "\n" .
             "GTD_ORDER = TR$jobid*\n" .
@@ -105,7 +98,7 @@ sub ask_sending {
 
 # La transfert est terminé. Les fichiers sont déplacés en waiting. Ils sont
 # chargés si configuré ainsi.
-sub transfer_ended {
+sub move_to_waiting {
     my $self = shift;
     my $sudoc = $self->sudoc;
     my $c = $sudoc->c;
@@ -144,8 +137,8 @@ sub check_mbox {
     my $folder = $self->mgr->open( folder => $mbox, access => 'rw' );
     for my $message ($folder->messages) {
         for ($message->subject()) {
-            if    ( /status is 9/ ) { $self->ask_sending($message);        }
-            elsif ( /status: 0/ )   { $self->transfer_ended(); }
+            if    ( /status is 9/ ) { $self->ask_sending($message); }
+            elsif ( /status: 0/ )   { $self->transfer_ended();      }
         }
         $message->delete;
     }
