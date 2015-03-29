@@ -1,6 +1,6 @@
 = Chargeur SUDOC Koha par Tamil =
 Tamil s.a.r.l. <contact@tamil.fr>
-v2.06, mars 2015
+v2.07, mars 2015
 :linkcss:
 :icons: font
 :toc: right
@@ -216,13 +216,15 @@ l'ABES.
 
 [NOTE]
 ================================================================================
+
 Dans certaines circonstances, il peut être nécessaire d'envoyer à l'ABES une
-demande d'envoi de fichiers sans avoir reçu au préalable le message _status 9_.
-Pour ce faire, il est nécessaire de connaître le _jobid_ ABES de son
-établissement : c'est l'identifiant ABES de la tâche automatisée qui extrait du
-SUDOC les notices de l'établissement récemmment mises à jour. Cet identifiant
-se trouve dans les messages envoyés par l'ABES. On lance alors la commande
-suivante : `sudoc trans jobid`.
+demande d'envoi de fichiers sans avoir reçu au préalable le message _status
+9_. Pour ce faire, il est nécessaire de connaître le _jobid_ ABES de son
+établissement : c'est l'identifiant ABES de la tâche automatisée qui extrait
+du SUDOC les notices de l'établissement récemmment mises à jour. Cet
+identifiant se trouve dans les messages envoyés par l'ABES. On lance alors la
+commande suivante : `sudoc trans jobid`. Cette commande force l'envoi à l'ABED
+d'un message GTD.
 ================================================================================
 
 

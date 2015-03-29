@@ -65,10 +65,8 @@ sub start {
 }
 
 
-# Envoi à l'ABES d'un email GTD en réponse à un message 'status 9'. Celui-ci
-# contient le numéro du job
-sub ask_sending {
-    my $self = shift;
+sub send_gtd_email {
+    my ($self, $jobid) = @_;
 
     # La date
     my $year = DateTime->now->year;
@@ -82,23 +80,40 @@ sub ask_sending {
 
     my $body = Mail::Message::Body::Lines->new(
         data =>
-            "GTD_ILN = " . $c->{iln} . "\n" .
+            "GTD_ILN = " . $self->sudoc->c->{iln} . "\n" .
             "GTD_YEAR = $year\n" .
             "GTD_FILE_TO = " . $c->{ftp_host} . "\n" .
             "GTD_ORDER = TR$jobid*\n" .
             "GTD_REMOTE_DIR = staged\n",
     );
 
-    my $message = Mail::Message->new(
-        head => $head,
-        body => $body );
+    my $message = Mail::Message->new(head => $head, body => $body);
     $message->send;
+}
+
+
+# Envoi à l'ABES d'un email GTD en réponse à un message 'status 9'. Celui-ci
+# contient le numéro du job
+sub ask_sending {
+    my ($self, $msg) = @_;
+
+    # Récupération dans le courriel de l'ABES des info dont on a besoin pour
+    # construire la réponse
+    my $body = $msg->body;
+    my ($jobid) = $body =~ /JobId\s*:\s*(\d*)/;
+
+    my $iln = $self->sudoc->c->{iln};
+    my $year = DateTime->now->year;
+    $self->log->notice(
+        "Réception 'status 9'. Envoi GTD: ILN $iln, job $jobid, année $year\n" );    
+
+    $self->send_gtd_email($jobid);
 }
 
 
 # La transfert est terminé. Les fichiers sont déplacés en waiting. Ils sont
 # chargés si configuré ainsi.
-sub move_to_waiting {
+sub transfer_ended {
     my $self = shift;
     my $sudoc = $self->sudoc;
     my $c = $sudoc->c;
@@ -110,16 +125,15 @@ sub move_to_waiting {
     $self->log->notice("Chargement automatique des fichiers reçus\n");
     $sudoc->load_waiting();
 
-    # Envoi des log
+    # Envoi des log s'il y en a
+    my $logfile = $sudoc->root . "/var/log/email.log";
+    return unless -e $logfile;
     my $head = Mail::Message::Head->new;
     $head->add( From    => $c->{loading}->{log}->{from} );
     $head->add( To      => $c->{loading}->{log}->{to}   );
     $head->add( Subject => 'Chargeur Sudoc Koha Tamil'  );
-    my $body = Mail::Message::Body::Lines->new(
-        data => path($sudoc->root . "/var/log/email.log")->slurp );
-    my $message = Mail::Message->new(
-        head => $head,
-        body => $body );
+    my $body = Mail::Message::Body::Lines->new( data => path($logfile)->slurp );
+    my $message = Mail::Message->new(head => $head, body => $body);
     $message->send;
 }
 

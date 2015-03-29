@@ -151,7 +151,6 @@ sub reset_email_log {
 }
 
 
-
 # Chargement de tous les fichiers qui se trouvent dans 'waiting'
 sub load_waiting {
     my $self = shift;
@@ -177,7 +176,6 @@ sub load_waiting {
         $loader->run();
         sleep($timeout);
     }
-
 }
 
 
