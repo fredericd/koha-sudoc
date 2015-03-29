@@ -157,6 +157,8 @@ du sous-répertoire *staged* dans le sous-répertoire *waiting*.
 utilisé, le chargement des fichiers est lancé. Ce traitement peut être
 programmé ou lancé à la main en période de test. 
 
+image::diag.svg[Diagrammme du Chargeur]
+
 
 === Transferts des fichiers du SUDOC sur le serveur Koha ===
 
@@ -485,7 +487,7 @@ timeout::
   toutes les cinq minutes, un timeout de sept minutes entre les chargements
   est une valeur appropriées.
 log::
-  Un log du chargement est envoyé par email à un démonstrateur de Koha. On peut
+  Un log du chargement est envoyé par email à un administrateur de Koha. On peut
   régler le niveau du log ainsi que son destinataire.
   level;;
     Niveau du log : `notice` ou `debug`. Le mode `debug` remplit le log avec
