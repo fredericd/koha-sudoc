@@ -3,9 +3,9 @@ package Koha::Contrib::Sudoc::TransferDaemon;
 
 use Moose;
 use Modern::Perl;
-use AnyEvent;
 use Mail::Box::Manager;
 use DateTime;
+use Path::Tiny;
 use Log::Dispatch;
 use Log::Dispatch::Screen;
 use Log::Dispatch::Syslog;
@@ -55,18 +55,17 @@ sub BUILD {
 
     $self->log->notice( "Démarrage du service de transfert ABES\n" );
 
-    my $timeout = $self->sudoc->c->{trans}->{timeout};
-    my $idle = AnyEvent->timer(
-        after    => $timeout,
-        interval => $timeout,
-        cb       => sub { $self->transfert_abes(); }
-    );
-    AnyEvent->condvar->recv;
+    my $timeout = $self->sudoc->c->{trans}->{timeout} * 60;
+    while (1) {
+        $self->check_mbox();
+        sleep($timeout);
+    }
 }
 
 
-# Envoi à l'ABES d'un email GTD en réponse à un message 'status 9'. Celui-ci contient le numéro du job
-sub send_gtd {
+# Envoi à l'ABES d'un email GTD en réponse à un message 'status 9'. Celui-ci
+# contient le numéro du job
+sub ask_sending {
     my ($self, $msg) = @_;
 
     # Récupération dans le courriel de l'ABES des info dont on a besoin pour
@@ -104,14 +103,38 @@ sub send_gtd {
 }
 
 
-sub move_to_waiting {
+# La transfert est terminé. Les fichiers sont déplacés en waiting. Ils sont
+# chargés si configuré ainsi.
+sub transfer_ended {
     my $self = shift;
+    my $sudoc = $self->sudoc;
+    my $c = $sudoc->c;
     $self->log->notice("Réception 'status 0'. Fin transfert: 'staged' déplacé en 'waiting'\n");
-    $self->sudoc->spool->staged_to_waiting();
+    $sudoc->spool->staged_to_waiting();
+    return unless $c->{loading}->{auto};
+
+    # Chargement
+    $self->log->notice("Chargement automatique des fichiers reçus\n");
+    $sudoc->load_waiting();
+
+    # Envoi des log
+    my $head = Mail::Message::Head->new;
+    $head->add( From    => $c->{loading}->{log}->{from} );
+    $head->add( To      => $c->{loading}->{log}->{to}   );
+    $head->add( Subject => 'Chargeur Sudoc Koha Tamil'  );
+    my $body = Mail::Message::Body::Lines->new(
+        data => path($sudoc->root . "/var/log/email.log")->slurp );
+    my $message = Mail::Message->new(
+        head => $head,
+        body => $body );
+    $message->send;
 }
 
 
-sub transfert_abes {
+# Contrôle la MBOX contenant les messages envoyés par l'ABES:
+# status 9: Des fichiers sont prêts à être transférés par l'ABES
+# status 0: Fin transfert de fichiers
+sub check_mbox {
     my $self = shift;
 
     # Ne rien faire si la MBOX est vide
@@ -121,8 +144,8 @@ sub transfert_abes {
     my $folder = $self->mgr->open( folder => $mbox, access => 'rw' );
     for my $message ($folder->messages) {
         for ($message->subject()) {
-            if    ( /status is 9/ ) { $self->send_gtd($message);        }
-            elsif ( /status: 0/ )   { $self->move_to_waiting(); }
+            if    ( /status is 9/ ) { $self->ask_sending($message);        }
+            elsif ( /status: 0/ )   { $self->transfer_ended(); }
         }
         $message->delete;
     }

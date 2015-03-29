@@ -64,6 +64,13 @@ sub BUILD {
         mode      => '>>',
         binmode   => ':encoding(utf8)',
     ) );
+    $self->log->add( Log::Dispatch::File->new(
+        name      => 'file2',
+        min_level => $self->sudoc->c->{loading}->{log}->{level},
+        filename  => $self->sudoc->root . "/var/log/email.log",
+        mode      => '>>',
+        #binmode   => ':encoding(utf8)',
+    ) );
 
 
     # Instanciation du converter
@@ -79,6 +86,7 @@ sub BUILD {
     $class = $class->new(sudoc => $self->sudoc, log => $self->log);
     $self->converter($class);
 }
+
 
 
 # C'est cette méthodes qui est surchargée par les sous-classes dédiées au
@@ -111,7 +119,8 @@ sub run {
      );
     $self->log->notice("** Test ** Le fichier " . $self->file . " n'a pas été chargé\n")
         unless $self->doit;
-    $self->log->debug("\n");
+    $self->log->notice("\n");
 }
+
 
 1;

@@ -9,11 +9,16 @@ use Koha::Contrib::Sudoc::Spool;
 use MARC::Moose::Field::Std;
 use MARC::Moose::Field::Control;
 use File::Copy;
+use Path::Tiny;
 use File::ShareDir ':ALL';
 
 
 # L'instance de Koha de l'ILN courant
-has koha => ( is => 'rw', isa => 'Koha::Contrib::Sudoc::Koha', default => sub { Koha::Contrib::Sudoc::Koha->new() } );
+has koha => (
+    is => 'rw',
+    isa => 'Koha::Contrib::Sudoc::Koha',
+    default => sub { Koha::Contrib::Sudoc::Koha->new() }
+);
 
 
 # La racine de l'environnement d'exécution du chargeur
@@ -57,6 +62,31 @@ sub BUILD {
     }
     $c->{branch} = \%branchcode;
     $self->c($c);
+
+    # Contrôle de quelques paramètres
+    my $loading = $c->{loading};
+    unless ($loading) {
+        say "Erreur sudoc.conf: Il manque la section 'loading'";
+        exit;
+    }
+    my $log = $loading->{log};
+    unless ($log) {
+        say "Erreur sudoc.conf: Il manque la section 'loading::log'";
+        exit;
+    }
+    if ( $log->{level} !~ /debug|notice/ ) {
+        say "Erreur sudoc.conf: 'loading::log::level n'est pas égal à debug ou notice.";
+        exit;
+    }
+    my $timeout = $loading->{timeout};
+    unless ($timeout) {
+        say "Erreur sudoc.conf: Il manque le paramètre 'loading::timeout'";
+        exit;
+    }
+    unless ( $timeout =~ /^[0-9]+$/ && $timeout >= 1 && $timeout <= 60) {
+        say "Erreur sudoc.conf: Le paramètre 'loading::timeout' doit  être compris entre 1 et 60.";
+        exit;
+    }
 
     # L'object Sudoc::Spool
     $self->spool( Koha::Contrib::Sudoc::Spool->new( sudoc => $self ) );
@@ -113,6 +143,43 @@ sub init {
     chdir('spool');
     mkdir $_ for qw/ staged waiting done /;
 }
+
+
+sub reset_email_log {
+    my $root = shift->root;
+    unlink "$root/var/log/email.log";
+}
+
+
+
+# Chargement de tous les fichiers qui se trouvent dans 'waiting'
+sub load_waiting {
+    my $self = shift;
+
+    # Temps nécessaire entre deux chargements de fichier pour indexation
+    my $loading = $self->c->{loading};
+    my $timeout = $loading->{timeout} * 60;
+    my $doit = $loading->{doit};
+    $self->reset_email_log();
+
+    # Etape 1 - Chargement de tous les fichiers autorités (type c)
+    for my $file ( @{ $self->spool->files('waiting', 'c') } ) {
+        my $loader = Koha::Contrib::Sudoc::Loader::Authorities->new(
+            sudoc => $self, file => $file, doit => $doit );
+        $loader->run();
+        sleep($timeout);
+    }
+
+    # Etape 2 - Chargement de tous les fichiers biblio (type a et b)
+    for my $file ( @{ $self->spool->files('waiting', '[a|b]') } ) {
+        my $loader = Koha::Contrib::Sudoc::Loader::Biblios->new(
+            sudoc => $self, file => $file, doit => $doit );
+        $loader->run();
+        sleep($timeout);
+    }
+
+}
+
 
 1;
 

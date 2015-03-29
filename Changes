@@ -1,5 +1,9 @@
 Revision history for Perl module Koha::Contrib::Sudoc
 
+2.06 2016-03-29
+
+  - Déclenchement auto du chargement après fin transfert.
+
 2.05 2015-03-15
 
   - Amélioration doc, y compris CPAN. Logger dans Converter.

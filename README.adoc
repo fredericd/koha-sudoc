@@ -1,6 +1,6 @@
 = Chargeur SUDOC Koha par Tamil =
 Tamil s.a.r.l. <contact@tamil.fr>
-v2.05, mars 2015
+v2.06, mars 2015
 :linkcss:
 :icons: font
 :toc: right
@@ -434,8 +434,8 @@ Une section *trans* détermine le fonctionnement du service de transfert
 `sudoc trans` des fichiers ABES :
 
 timeout::
-  Délai en secondes entre deux réveils du service de transfert. Par
-  exemple, une valeur de `600` signifie que la boîte aux lettres SUDOC
+  Délai en minutes entre deux réveils du service de transfert. Par
+  exemple, une valeur de `10` signifie que la boîte aux lettres SUDOC
   sera examinée toutes les dix minutes.
 email::
   Section contenant les adresses de courrier électronique utilisées par
@@ -446,11 +446,42 @@ email::
     toujours l'adresse `abes_ftp@carmin.sudoc.abes.fr`
   koha;;
     Email du serveur Koha. C'est la boîte aux lettres de cette adresse
-    qui est examinée par le daemon de transfert.
+    qui est examinée par le service de transfert.
 mbox::
   Chemin d'accès à la boîte aux lettres
   http://fr.wikipedia.org/wiki/Mbox[MBOX] contenant les messages
   adressés au serveur par l'ABES.
+
+La section *loading* détermine si les notices seront chargées automatiquement
+dans Koha par le service de transfert après que les fichiers ont été
+transférés par FTP/SFTP sur le serveur Koha.
+
+auto::
+  Indique si les fichiers qui se trouvent dans le répertoire `waiting` du
+  spool doivent être chargés dans le Catalogue Koha. 1=oui, 0=non. Le
+  chargement est déclanché par la réception du message _status 0_ envoyé par
+  l'ABES quand le transfert par FTP/SFTP est achevé.
+doit::
+  Indique si le chargement est effectif ou non. Mettre ce paramètre à la
+  valeur 0 (non) permet de tester le fonctionnement du chargement automatique
+  après réception des fichiers.
+timeout::
+  Délai en minutes entre les chargements des fichiers des fichiers du spool
+  `waiting`. Ce paramètre est à régler en fonction des réglages du service
+  d'idexation en continue de Koha. Si par exemple, les notices sont indexées
+  toutes les cinq minutes, un timeout de sept minutes entre les chargements
+  est une valeur appropriées.
+log::
+  Un log du chargement est envoyé par email à un démonstrateur de Koha. On peut
+  régler le niveau du log ainsi que son destinataire.
+  level;;
+    Niveau du log : `notice` ou `debug`. Le mode `debug` remplit le log avec
+    d'avantage d'informations
+  from;;
+    Email de l’émetteur de l'email.
+  to;;
+    Email du destinataire de l'email.
+
 
 ==== Section *chargement* ====
 
@@ -506,12 +537,28 @@ biblio::
 
 ==== Exemple ====
 
+[source,yaml]
 ----------
 ---
 iln: 1234
 rcr:
   692755301: BIB1
   692767892: BIB2
+trans:
+  timeout: 10
+  email:
+    abes: abes_ftp@carmin.sudoc.abes.fr
+    koha: sudoc@bibliotheque.fr
+  mbox: /var/mail/sudoc
+  ftp_host: ftp.bibliotheque.fr
+loading:  
+  auto: 1
+  doit: 1
+  timeout: 5
+  log:
+    level: notice
+    from: contact@tamil.fr
+    to: frederic.demians@gmail.com
 auth:
   ppn_move: 009
   typefromtag:
@@ -539,13 +586,6 @@ biblio:
     - 801
   proteger:
     - 610
-trans:
-  timeout: 600
-  email:
-    abes: abes_ftp@carmin.sudoc.abes.fr
-    koha: sudoc@bibliotheque.fr
-  mbox: /var/mail/sudoc
-  ftp_host: ftp.bibliotheque.fr
 ----------
 
 === Configuration de Koha et Zebra ===
@@ -597,7 +637,9 @@ et en séquence afin de réaliser les opérations de chargement des notices : 1�
 autorités, 2°) notices liées, 3°) notices bibliographiques. De plus, entre
 chaque chargement, l'indexation des nouvelles données doit être réalisée.
 
-Toutes ces tâches peuvent être automatisées au moyen d'un script Shell. Par exemple :
+Toutes ces tâches peuvent être automatisées en activant le paramètre
+`loading:auto`. On peut alternativement lancer les commandes de chargement au
+moyen d'un script Shell. Par exemple :
 
 [source,bash]
 .sudoc-charge.sh
@@ -632,7 +674,7 @@ sudoc biblio $DOIT <7>
 iconv -f utf8 -t latin1 -c $TMP_FILE | \
   mail -a "FROM: $EMAIL_FROM" -s 'Chargement SUDOC' -c $EMAIL_CC $EMAIL_TO <8>
 -----
-<1> Definition de l'environnemen d'exécution du Chargeur SUDOC
+<1> Définition de l’environnement d'exécution du Chargeur SUDOC
 <2> Renvoi dans un fichier temporaire de la sortie standard
 <3> On charge d'abord les autorités
 <4> On laisse le temps à l'indexeur Zebra d'indexer les autorités ajoutées/modifiées
