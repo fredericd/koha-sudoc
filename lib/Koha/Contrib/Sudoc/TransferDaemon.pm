@@ -65,33 +65,6 @@ sub start {
 }
 
 
-sub send_gtd_email {
-    my ($self, $jobid) = @_;
-
-    # La date
-    my $year = DateTime->now->year;
-
-    my $c = $self->sudoc->c->{trans};
-
-    my $head = Mail::Message::Head->new;
-    $head->add( From => $c->{email}->{koha} );
-    $head->add( To => $c->{email}->{abes} );
-    $head->add( Subject => 'GET TITLE DATA' );
-
-    my $body = Mail::Message::Body::Lines->new(
-        data =>
-            "GTD_ILN = " . $self->sudoc->c->{iln} . "\n" .
-            "GTD_YEAR = $year\n" .
-            "GTD_FILE_TO = " . $c->{ftp_host} . "\n" .
-            "GTD_ORDER = TR$jobid*\n" .
-            "GTD_REMOTE_DIR = staged\n",
-    );
-
-    my $message = Mail::Message->new(head => $head, body => $body);
-    $message->send;
-}
-
-
 # Envoi à l'ABES d'un email GTD en réponse à un message 'status 9'. Celui-ci
 # contient le numéro du job
 sub ask_sending {
@@ -107,7 +80,7 @@ sub ask_sending {
     $self->log->notice(
         "Réception 'status 9'. Envoi GTD: ILN $iln, job $jobid, année $year\n" );    
 
-    $self->send_gtd_email($jobid);
+    $self->sudoc->send_gtd_email($jobid);
 }
 
 
@@ -125,16 +98,6 @@ sub transfer_ended {
     $self->log->notice("Chargement automatique des fichiers reçus\n");
     $sudoc->load_waiting();
 
-    # Envoi des log s'il y en a
-    my $logfile = $sudoc->root . "/var/log/email.log";
-    return unless -e $logfile;
-    my $head = Mail::Message::Head->new;
-    $head->add( From    => $c->{loading}->{log}->{from} );
-    $head->add( To      => $c->{loading}->{log}->{to}   );
-    $head->add( Subject => 'Chargeur Sudoc Koha Tamil'  );
-    my $body = Mail::Message::Body::Lines->new( data => path($logfile)->slurp );
-    my $message = Mail::Message->new(head => $head, body => $body);
-    $message->send;
 }
 
 

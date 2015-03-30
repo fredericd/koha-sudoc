@@ -10,6 +10,8 @@ use MARC::Moose::Field::Std;
 use MARC::Moose::Field::Control;
 use File::Copy;
 use Path::Tiny;
+use Mail::Box::Manager;
+use DateTime;
 use File::ShareDir ':ALL';
 
 
@@ -80,12 +82,15 @@ sub BUILD {
     }
     my $timeout = $loading->{timeout};
     unless ($timeout) {
-        say "Erreur sudoc.conf: Il manque le paramètre 'loading::timeout'";
+        say "Erreur sudoc.conf: Il manque la section 'loading::timeout'";
         exit;
     }
-    unless ( $timeout =~ /^[0-9]+$/ && $timeout >= 1 && $timeout <= 60) {
-        say "Erreur sudoc.conf: Le paramètre 'loading::timeout' doit  être compris entre 1 et 60.";
-        exit;
+    for ( qw/ transfer indexing / ) {
+        my $value = $timeout->{$_};
+        unless ( $value && $value =~ /^[0-9]+$/ && $value >= 1 && $value <= 60) {
+            say "Erreur sudoc.conf: Le paramètre 'loading::timeout::$_' doit  être compris entre 1 et 60.";
+            exit;
+        }
     }
 
     # L'object Sudoc::Spool
@@ -151,13 +156,41 @@ sub reset_email_log {
 }
 
 
+# Envoi courriel GTD
+sub send_gtd_email {
+    my ($self, $jobid) = @_;
+
+    # La date
+    my $year = DateTime->now->year;
+
+    my $c = $self->c->{trans};
+
+    my $head = Mail::Message::Head->new;
+    $head->add( From    => $c->{email}->{koha} );
+    $head->add( To      => $c->{email}->{abes} );
+    $head->add( Subject => 'GET TITLE DATA'    );
+    my @data = (
+        "GTD_ILN = " . $self->c->{iln},
+        "GTD_YEAR = $year",
+        "GTD_FILE_TO = " . $c->{ftp_host},
+        "GTD_REMOTE_DIR = staged",
+    );
+    push @data, "GTD_ORDER = TR$jobid*"  if $jobid;
+    my $body = Mail::Message::Body::Lines->new(data => join("\n", @data));
+    my $message = Mail::Message->new(head => $head, body => $body);
+    $message->send;
+}
+
+
 # Chargement de tous les fichiers qui se trouvent dans 'waiting'
 sub load_waiting {
     my $self = shift;
 
+    my $c = $self->c;
+    my $loading = $c->{loading};
+
     # Temps nécessaire entre deux chargements de fichier pour indexation
-    my $loading = $self->c->{loading};
-    my $timeout = $loading->{timeout} * 60;
+    my $timeout = $loading->{timeout}->{indexing} * 60;
     my $doit = $loading->{doit};
     $self->reset_email_log();
 
@@ -176,6 +209,17 @@ sub load_waiting {
         $loader->run();
         sleep($timeout);
     }
+
+    # Envoi des log s'il y en a
+    my $logfile = $self->root . "/var/log/email.log";
+    return unless -e $logfile;
+    my $head = Mail::Message::Head->new;
+    $head->add( From    => $loading->{log}->{from}     );
+    $head->add( To      => $loading->{log}->{to}       );
+    $head->add( Subject => 'Chargeur Sudoc Koha Tamil' );
+    my $body = Mail::Message::Body::Lines->new( data => path($logfile)->slurp );
+    my $message = Mail::Message->new(head => $head, body => $body);
+    $message->send;  
 }
 
 

@@ -481,11 +481,18 @@ doit::
   valeur 0 (non) permet de tester le fonctionnement du chargement automatique
   après réception des fichiers.
 timeout::
-  Délai en minutes entre les chargements des fichiers des fichiers du spool
-  `waiting`. Ce paramètre est à régler en fonction des réglages du service
-  d'idexation en continue de Koha. Si par exemple, les notices sont indexées
-  toutes les cinq minutes, un timeout de sept minutes entre les chargements
-  est une valeur appropriées.
+  Délai en minutes entre les deux étapes du chargement, envoi GTD et chargement
+  proprement dit.
+  transfer;;
+    Délai entre l'envoi à l'ABES de la commande GTD et le début du chargement
+    automatique des fichiers de notices. Ce paramètre n'est utilisé qu'avec
+    l'utilisation de la commande `sudoc chargeauto`.
+  indexing;;
+    Délai entre les chargements des fichiers des fichiers du spool `waiting`.
+    Ce paramètre est à régler en fonction des réglages du service d'idexation
+    en continue de Koha. Si par exemple, les notices sont indexées toutes les
+    cinq minutes, un timeout de sept minutes entre les chargements est une
+    valeur appropriées.
 log::
   Un log du chargement est envoyé par email à un administrateur de Koha. On peut
   régler le niveau du log ainsi que son destinataire.

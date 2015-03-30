@@ -1,6 +1,10 @@
 Revision history for Perl module Koha::Contrib::Sudoc
 
-2.07 2016-03-29
+2.08 2015-03-30
+
+  - Fonctionnement sans service de transfert: envoi GTD-attente-chargement.
+
+2.07 2015-03-29
 
   - Déclenchement auto du chargement après fin transfert.
 
