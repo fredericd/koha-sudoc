@@ -42,6 +42,7 @@ elsif ( $cmd =~ /chargeauto/i ) {
     $sudoc->send_gtd_email($loading->{jobid});
     # Attente raisonnable que l'ABES envoie les fichiers
     sleep($loading->{timeout}->{transfer} * 60);
+    $sudoc->spool->staged_to_waiting();
     $sudoc->load_waiting();
 }
 elsif ( $cmd =~ /spool/i ) {
