@@ -97,7 +97,9 @@ sub init {
     # On supprime de la notice SUDOC les champs à exclure
     my $exclure = $self->sudoc->c->{biblio}->{exclure};
     if ( $exclure && ref($exclure) eq 'ARRAY' ) {
-        $record->fields( [ grep { not $_->tag ~~ @$exclure } @{$record->fields} ] );
+        my %hexclure;
+        $hexclure{$_} = 1 for @$exclure;
+        $record->fields( [ grep { not $hexclure{$_->tag} } @{$record->fields} ] );
     }
 }
 
