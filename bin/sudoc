@@ -28,12 +28,15 @@ if ( $cmd =~ /init/i ) {
     $sudoc->init();
 }
 elsif ( $cmd =~ /trans/i ) {
-    my $daemon = Koha::Contrib::Sudoc::TransferDaemon->new();
     if (@ARGV) {
         my $jobid = shift @ARGV;
-        $daemon->send_gtd_email($jobid);
+        $sudoc->send_gtd_email($loading->{jobid});
+        # Attente raisonnable que l'ABES envoie les fichiers
+        sleep($loading->{timeout}->{transfer} * 60);
+        $sudoc->spool->staged_to_waiting();
     }
     else {
+        my $daemon = Koha::Contrib::Sudoc::TransferDaemon->new();
         $daemon->start;
     }
 }
