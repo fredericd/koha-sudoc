@@ -1,6 +1,6 @@
 Revision history for Perl module Koha::Contrib::Sudoc
 
-2.11 2015-09-07
+2.12 2015-09-08
 
   - Fix "sudoc trans jobid". Déplacement de staged en waiting.
 
