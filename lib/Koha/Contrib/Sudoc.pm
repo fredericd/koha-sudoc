@@ -158,7 +158,8 @@ sub reset_email_log {
 
 # Envoi courriel GTD
 sub send_gtd_email {
-    my ($self, $jobid) = @_;
+    my ($self, $jobid, $dir) = @_;
+    $dir ||= 'staged';
 
     # La date
     my $year = DateTime->now->year;
@@ -173,7 +174,7 @@ sub send_gtd_email {
         "GTD_ILN = " . $self->c->{iln},
         "GTD_YEAR = $year",
         "GTD_FILE_TO = " . $c->{ftp_host},
-        "GTD_REMOTE_DIR = staged",
+        "GTD_REMOTE_DIR = $dir",
     );
     push @data, "GTD_ORDER = TR$jobid*"  if $jobid;
     my $body = Mail::Message::Body::Lines->new(data => join("\n", @data));

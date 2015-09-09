@@ -224,9 +224,17 @@ demande d'envoi de fichiers sans avoir reçu au préalable le message _status
 9_. Pour ce faire, il est nécessaire de connaître le _jobid_ ABES de son
 établissement : c'est l'identifiant ABES de la tâche automatisée qui extrait
 du SUDOC les notices de l'établissement récemmment mises à jour. Cet
-identifiant se trouve dans les messages envoyés par l'ABES. On lance alors la
-commande suivante : `sudoc trans jobid`. Cette commande force l'envoi à l'ABED
-d'un message GTD.
+identifiant se trouve dans les messages envoyés par l'ABES.
+
+On peut alors lancer la commande suivante : `sudoc gtd`. Cette commande force
+l'envoi à l'ABES d'un message GTD. Le jobid demandé se trouve dans le paramètre
+loading > jobid. Le GTD demande à l'ABES de placer les fichiers directement
+dans le sous-répertoire `waiting` du spool.
+
+On peut alternativement utiliser la commande `sudoc chargeauto`. Cette commande
+envoie le GTD à l'ABES attend un certain délai (paramètre loading > timeout >
+transfer) ; déplace les fichiers de `staged` dans `waiting` ; puis, si le
+paramètre loading > auto est à 1, lance directement le chargement des notices.
 ================================================================================
 
 
@@ -488,11 +496,10 @@ timeout::
     automatique des fichiers de notices. Ce paramètre n'est utilisé qu'avec
     l'utilisation de la commande `sudoc chargeauto`.
   indexing;;
-    Délai entre les chargements des fichiers des fichiers du spool `waiting`.
-    Ce paramètre est à régler en fonction des réglages du service d'idexation
-    en continue de Koha. Si par exemple, les notices sont indexées toutes les
-    cinq minutes, un timeout de sept minutes entre les chargements est une
-    valeur appropriées.
+    Délai entre les chargements des fichiers du spool `waiting`.  Ce paramètre
+    est à régler en fonction des réglages du service d'idexation en continue de
+    Koha. Si par exemple, les notices sont indexées toutes les cinq minutes, un
+    timeout de sept minutes entre les chargements est une valeur appropriées.
 log::
   Un log du chargement est envoyé par email à un administrateur de Koha. On peut
   régler le niveau du log ainsi que son destinataire.
