@@ -1,6 +1,6 @@
 Revision history for Perl module Koha::Contrib::Sudoc
 
-2.13 2015-09-09
+2.15 2015-09-10
 
   - Remplace "sudoc trans jobid" par "sudoc gtd".
   - Doc
