@@ -143,7 +143,7 @@ d'utiliser le Chargeur sur votre instance de production.
 Le Chargeur SUDOC distingue le transfert des fichiers de l'ABES de leur
 chargement dans un/des catalogues Koha. Le chargeur peut fonctionner sur
 un serveur partagé disposant de plusieurs instances de Koha
-correspondant à des ILN distincts. 
+correspondent à des ILN distincts. 
 
 Pour chaque ILN, il y a un *spool* de fichiers SUDOC qui sont placés
 dans trois sous-répertoires. Les fichiers passent d'un sous-répertoire à
@@ -306,7 +306,7 @@ un-à-un.
 
 Pour chaque autorité, on détermine s'il s'agit d'une nouveauté ou de la mise à
 jour d'une autorité existante. **Les nouveautés** sont ajoutées à Koha. **Les
-mises à jour** remplacent les autorités Koha correspondantes.  On interroge
+mises à jour** remplacent les autorités Koha correspondentes.  On interroge
 les autorités Koha pour savoir s'il en existe une ayant l'identifiant de la
 notice entrante (son PPN en 001). Si c'est le cas, il s'agit d'une autorité
 déjà présente dans Koha et qui a été modifiée dans le SUDOC.
@@ -358,7 +358,7 @@ paramétrables.
 Pour chaque notice bibliographique, on détermine s'il s'agit d'une
 nouveauté ou de la mise à jour d'une notice existante. Les nouveautés
 sont ajoutées à Koha.  Les mises à jour remplacent les notices Koha
-correspondantes.
+correspondentes.
 
 Il y a trois cas de figure où l'on a affaire à une mise à jour :
 
@@ -371,7 +371,7 @@ Il y a trois cas de figure où l'on a affaire à une mise à jour :
   035 contenant un de ses RCR, soit automatiquement au moment du
   déploiement initial de l'ILN dans le SUDOC. On a alors une zone 035
   avec un sous-champ `$5` contenant un des RCR de l'ILN et en `$a` le
-  numéro (biblionumber) de la notice Koha correspondante.
+  numéro (biblionumber) de la notice Koha correspondente.
 . **Fusion SUDOC** -- La zone 035 est examinée afin de déterminer si la notice
   est marquée comme étant une fusion SUDOC de notices.  On cherche une zone 035
   contenant un `$9 sudoc`. Le `$a` contient le PPN de l'ancienne notice qui a
@@ -380,7 +380,7 @@ Il y a trois cas de figure où l'on a affaire à une mise à jour :
   Chargeur SUDOC ne peut effectuer la fusion de la notice entrante à une notice
   existante dans Koha que si une fusion n'est pas déjà nécessaire pour une des
   raisons précédentes (mise à jour dans le SUDOC ou localisation) et s'il n'y a
-  bien qu'une notice Koha correspondante à une fusion SUDOC. En cas de fusion
+  bien qu'une notice Koha correspondente à une fusion SUDOC. En cas de fusion
   nécessaire mais que le chargeur ne peut pas effectuer, un message d'alerte est
   laissé dans les logs.
 
