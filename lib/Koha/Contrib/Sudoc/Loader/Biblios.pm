@@ -27,7 +27,7 @@ sub doublons_sudoc {
         my ($biblionumber, $framework, $koha_record) =
             $self->sudoc->koha->get_biblio_by_ppn( $ppn );
         if ($koha_record) {
-            $self->log->notice("  Fusion Sudoc du PPN $ppn avec le biblionumber Koha $biblionumber\n");
+            $self->log->notice("  Fusion Sudoc du ppn $ppn avec le biblionumber $biblionumber\n");
             push @doublons, {
                 ppn          => $ppn,
                 record       => $koha_record,
@@ -47,7 +47,7 @@ sub handle_record {
     $self->sudoc->koha->zconn_reset()  unless $self->count % 10;
 
     my $ppn = $record->field('001')->value;
-    $self->log->notice("Notice #" . $self->count . " PPN $ppn\n");
+    $self->log->notice("Notice #" . $self->count . " ppn $ppn\n");
     $self->log->debug( $record->as('Text') );
 
     # On déplace le PPN
@@ -67,7 +67,7 @@ sub handle_record {
     ($biblionumber, $framework, $koha_record) =
         $self->sudoc->koha->get_biblio_by_ppn( $ppn );
     if ($koha_record) {
-        $self->log->debug("  PPN trouvé dans la notice Koha $biblionumber\n");
+        $self->log->debug("  ppn trouvé dans la notice Koha $biblionumber\n");
     }
     else {
         # On cherche un 035 avec un $5 contenant un RCR de l'ILN, auquel cas $a contient

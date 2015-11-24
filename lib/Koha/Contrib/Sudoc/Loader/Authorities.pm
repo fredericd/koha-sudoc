@@ -25,7 +25,7 @@ sub handle_record {
     $self->sudoc->koha->zconn_reset()  unless $self->count % 100;
 
     my $ppn = $record->field('001')->value;
-    $self->log->notice( 'Autorité #' . $self->count . " PPN $ppn\n");
+    $self->log->notice( 'Autorité #' . $self->count . " ppn $ppn\n");
     my $record_text = $record->as('Text');
     $self->log->debug( $record_text );
 
@@ -97,8 +97,8 @@ sub handle_record {
             $self->sudoc->koha->get_auth_by_ppn($obsolete_ppn);
         next unless $auth;
         $self->log->notice(
-          "  Fusison Sudoc avec cette autorité d'une autorité obsolète " .
-          "(PPN $obsolete_ppn, authid $obsolete_authid\n" );
+          "  Fusion Sudoc avec cette autorité d'une autorité obsolète : " .
+          "ppn $obsolete_ppn, authid $obsolete_authid\n" );
         my @modified_biblios;
         for ( $self->sudoc->koha->get_biblios_by_authid($obsolete_authid) ) {
             my ($biblionumber, $framework, $modif) = @$_;
