@@ -1,6 +1,6 @@
 = Chargeur SUDOC Koha par Tamil =
 Tamil s.a.r.l. <contact@tamil.fr>
-v2.14, septembre 2015
+v2.15, janvier 2016
 :linkcss:
 :icons: font
 :toc: right
@@ -742,7 +742,7 @@ i3641767g.0002
 -----
 
 Plusieurs fichiers sont créés, chacun contenant un maximum de 1000 lignes.
-Chaque ligne contient une clé de dédoublonnage (ISBN ou date-auteur-tire),
+Chaque ligne contient une clé de dédoublonnage (ISBN, date-auteur-tire ou PPN),
 suivie d'une cote et du biblionumber de la notice Koha, séparés par un point
 virgule. Un groupe de fichiers est généré par RCR tel que défini dans
 `sudoc.conf`.
@@ -764,10 +764,17 @@ chaque bibliothèque dans le SUDOC.
 
 Ce script dispose de plusieurs paramètres :
 
-==== --dat ====
+==== --type ====
 
-Produit un fichier de type Auteur-Date-Titre. Sans ce paramètre, c'est un
-fichier d'ISBN qui est généré.
+Spécifie le type de clé de dédoublonnage produite. Trois valeurs possibles :
+**isbn** pour des clés extraites de la zone 010 ; **ppn** pour des clés
+extraites par défaut de la zone 001, ou d'une autre zone avec le paramètre
+--ppn ; **dat** pour des clés extraites des champs date-auteur-titre.
+
+==== --ppn ====
+
+Le champ contenant le PPN peut être spécifié explicitemnt : `--ppn 001` ou
+`--ppn 912a`.
 
 ==== --select <clause SELECT sur base KOHA> ====
 

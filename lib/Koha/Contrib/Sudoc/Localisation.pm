@@ -3,20 +3,61 @@ package Koha::Contrib::Sudoc::Localisation;
 
 use Moose;
 
+extends 'AnyEvent::Processor';
+
 use Modern::Perl;
+use utf8;
+use Koha::Contrib::Sudoc;
+use Koha::Contrib::Sudoc::BiblioReader;
 use C4::Items;
 use YAML;
 use Encode;
 use Business::ISBN;
 use List::Util qw/first/;
 
-with 'MooseX::RW::Writer::File';
 
 # Moulinette SUDOC
-has sudoc => ( is => 'rw', isa => 'Koha::Contrib::Sudoc', required => 1 );
+has sudoc => (
+    is => 'rw',
+    isa => 'Koha::Contrib::Sudoc',
+    default => sub { Koha::Contrib::Sudoc->new; },
+);
 
-# Sortie Date-Auteur-Titre plutôt qu'ISBN
-has dat => ( is => 'rw', isa => 'Bool', default => 0 );
+
+has select => ( is => 'rw');
+
+has reader => ( is => 'rw', isa => 'Koha::Contrib::Sudoc::BiblioReader' );
+
+# Type de sortie : isbn, ppn ou dat
+has type => (
+    is => 'rw',
+    isa => 'Str',
+    default => 'isbn',
+    trigger => sub {
+        my ($self, $type) = @_;
+        if ( $type !~ /isbn|dat|ppn/i ) {
+            say "Type inconnu: $type";
+            exit;
+        }
+        return $type;
+    },
+);
+
+# Champ contenant le PPN
+has ppn => (
+    is => 'rw',
+    isa => 'Str',
+    default => '001',
+    trigger => sub {
+        my ($self, $ppn) = @_;
+        if ( $ppn !~ /^[0-9]{3}$/ && $ppn !~ /^[0-9]{3}[a-z]$/ ) {
+            say "Champ PPN invalide: $ppn";
+            exit;
+        }
+        return $ppn;
+    },
+);
+
 
 # Où placer la cote Koha dans la notice ABES, par défaut 930 $a
 has coteabes => (
@@ -311,6 +352,62 @@ which
 );
 
 
+sub BUILD {
+    my $self = shift;
+
+    my $reader = Koha::Contrib::Sudoc::BiblioReader->new(
+        koha => $self->sudoc->koha );
+    $reader->select($self->select) if $self->select;
+    $self->reader($reader);
+
+    my $type = $self->type;
+    __PACKAGE__->meta-> add_method( 'write_keys' =>
+        $type =~ /dat/i ? \&write_dat  :
+        $type =~ /ppn/i  ? \&write_ppn : \&write_isbn
+    );
+}
+
+
+
+sub populate_key {
+    my ($self, $items, $key) = @_;
+
+    return unless @$items;
+    my $biblionumber = $items->[0]->{biblionumber}; 
+    for my $ex ( @$items ) {
+        my $branch = $ex->{homebranch};
+        my $loc = $self->loc->{$branch};
+        next unless $loc;
+        my $keys = $loc->{key};
+        my $cote = $ex->{itemcallnumber} || '';
+        $cote =~ s/;//g;
+        my $bibcote = $keys->{$key} ||= [];
+        # On ne prend pas les doublons pour un même biblionumber
+        next if first { $_->[0] eq $biblionumber; } @$bibcote;
+        push @$bibcote, [$biblionumber, $cote];
+        last;
+    }
+}
+
+
+sub write_ppn {
+    my ($self, $record) = @_;
+
+    my $tag = $self->ppn;
+    my $letter;
+    $letter = $1  if $tag =~ /([a-z])$/;
+
+    my $ppn = $record->field($tag);
+    return unless $ppn;
+    $ppn = $letter ? $ppn->subfield($letter) : $ppn->value;
+    next unless $ppn;
+
+    my $biblionumber = $self->sudoc->koha->get_biblionumber($record);
+    my $items = GetItemsByBiblioitemnumber($biblionumber);
+    $self->populate_key($items, $ppn);
+}
+
+
 sub write_isbn {
     my ($self, $record) = @_;
 
@@ -335,19 +432,7 @@ sub write_isbn {
         # On nettoie les ISBN de la forme 122JX(vol1)
         $isbn = $1 if $isbn =~ /(.*)\(/;
         next unless $isbn;
-        for my $ex ( @$items ) {
-            my $branch = $ex->{homebranch};
-            my $loc = $self->loc->{$branch};
-            next unless $loc;
-            my $key = $loc->{key};
-            my $cote = $ex->{itemcallnumber} || '';
-            $cote =~ s/;//g;
-            my $bibcote = $key->{$isbn} ||= [];
-            # On ne prend pas les doublons d'ISBN pour un même biblionumber
-            next if first { $_->[0] eq $biblionumber; } @$bibcote;
-            push @$bibcote, [$biblionumber, $cote];
-            last;
-        }
+        $self->populate_key($items, $isbn);
     }
 }
 
@@ -425,25 +510,58 @@ sub write_dat {
     my $dat = "$date;$auteur;$titre";
     my $biblionumber = $self->sudoc->koha->get_biblionumber($record);
     my $items = GetItemsByBiblioitemnumber($biblionumber);
-    for my $ex ( @$items ) {
-        my $branch = $ex->{homebranch};
-        my $loc = $self->loc->{$branch};
-        next unless $loc;
-        my $key = $loc->{key};
-        my $cote = $ex->{itemcallnumber} || '';
-        $key->{$dat} ||= [];
-        push @{$key->{$dat}}, [$biblionumber, $cote];
-        last;
-    }
-
+    $self->populate_key($items, $dat);
 }
 
 
-sub write_to_file {
+
+
+sub process {
     my $self = shift;
 
+    my $record = $self->reader->read();
+    return 0 unless $record;
+
+    # Si la notice contient déjà un PPN, inutile de la traiter
+    my $tag = $self->sudoc->c->{biblio}->{ppn_move};
+    my $letter;
+    if ( $tag =~ /(\d{3})([0-9a-z])/ ) { $tag = $1, $letter = $2; }
+    elsif ( $tag =~ /(\d{3})/ ) { $tag = $1 };   
+    my $field = $record->field($tag);
+
+    return 1 if $field && ( ( $letter && $field->subfield($letter) ) ||
+                            $field->value );
+
+    $self->SUPER::process();
+    $self->write_keys($record);
+    return 1;
+}
+
+
+sub start_message {
+    say "Lecture des notices biblio du Catalogue Koha";
+}
+
+
+sub end_message {
+    my $self = shift;
+
+    say "Notices lues :     ", $self->reader->count, "\n",
+        "Notices traitées : ", $self->count;
+}
+
+
+sub end_process {
+    my $self = shift;
+    say "Génération des fichiers ABES de localisation automatique";
+
     my $max_lines = $self->lines;
-    my $prefix = $self->dat ? 'r' : 'i';
+    my $type = $self->type;
+
+    my ($prefix, $header) =
+        $type =~ /dat/i  ? ('r', 'date;auteur;titre') :
+        $type =~ /ppn/i  ? ('p', 'PPN') : ('i', 'ISBN');
+    $header = "$header;" . $self->coteabes . ';L035 $a'; 
     for my $loc ( values %{$self->loc} ) {
         my $fh;
         open my $fh_mult, ">:encoding(utf8)",
@@ -461,41 +579,26 @@ sub write_to_file {
                                sprintf("%04d", $loc->{index}) . '.txt';
                     close($fh) if $fh;
                     open $fh, ">:encoding(utf8)", $name;
-                    print $fh
-                        $self->dat ? 'date;auteur;titre' : 'ISBN',
-                        ';',
-                        $self->coteabes,
-                        ';L035 $a', "\n";
+                    say $fh $header; 
                     $loc->{line} = 1;
                 }
                 if ( $self->test ) {
-                    print $fh "$key\n";
+                    say $fh $key;
                 }
                 else {
                     my ($biblionumber, $cote) = @{$bncote[0]};
-                    print $fh "$key;$cote;$biblionumber\n"
+                    say $fh "$key;$cote;$biblionumber"
                 }
                 $loc->{line}++;
             }
             else {
-                print $fh_mult
+                say $fh_mult
                   "$key\n  ",
-                  join("\n  ", map { $_->[0] . " " . $_->[1] } @bncote), "\n";
+                  join("\n  ", map { $_->[0] . " " . $_->[1] } @bncote);
             }
         }
     }
 }
 
-
-sub write {
-    my ($self, $record) = @_;
-
-    # S'il la notice contient déjà un PPN, inutile de la traiter
-    return if $record->field('009');
-
-    $self->count( $self->count + 1);
-
-    $self->dat ? $self->write_dat($record) : $self->write_isbn($record);
-}
 
 1;

@@ -1,5 +1,10 @@
 Revision history for Perl module Koha::Contrib::Sudoc
 
+2.17 2016-01-23
+
+  - Amélioration de sudoc-localisation afin de produire un fichier de
+    localisation auto à partir de PPN.
+
 2.16 2015-11-24
 
   - Typo logs

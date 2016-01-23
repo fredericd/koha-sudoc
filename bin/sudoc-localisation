@@ -6,48 +6,45 @@
 package Main;
 
 use Modern::Perl;
+use utf8;
 use Getopt::Long;
 use Pod::Usage;
-use Koha::Contrib::Sudoc::BiblioReader;
-use Koha::Contrib::Sudoc;
 use Koha::Contrib::Sudoc::Localisation;
-use AnyEvent::Processor::Conversion;
 
-my ($help, $select, $lignes, $test, $dat, $coteabes, $peb);
-$select = "SELECT biblionumber FROM biblio";
-$lignes = 1000;
-$coteabes = '930 $a';
-$peb = 1;
+
+my ($help, $test);
+my $select   = "SELECT biblionumber FROM biblio";
+my $lignes   = 1000;
+my $type     = 'isbn';
+my $ppn      = '001';
+my $coteabes = '930 $a';
+my $peb      = 1;
 GetOptions(
     'help|h'     => \$help,
     'select=s'   => \$select,
     'lignes=i'   => \$lignes,
     'test'       => \$test,
-    'dat'        => \$dat,
+    'type=s'     => \$type,
+    'ppn=s'      => \$ppn,
     'coteabes=s' => \$coteabes,
     'peb!'       => \$peb,
 );
+
+binmode(STDOUT, ":encoding(utf8)");
 
 if ( $help ) {
     pod2usage( -verbose => 2 );
     exit;
 }
 
-my $sudoc  = Koha::Contrib::Sudoc->new;
-my $reader = Koha::Contrib::Sudoc::BiblioReader->new( koha => $sudoc->koha );
-$reader->select($select) if $select;
-my $writer = Koha::Contrib::Sudoc::Localisation->new(
-    sudoc    => $sudoc,
+my $localiser = Koha::Contrib::Sudoc::Localisation->new(
+    select   => $select,
     test     => $test,
     lines    => $lignes,
-    dat      => $dat,
+    type     => $type,
+    ppn      => $ppn,
     coteabes => $coteabes,
-    peb      => $peb);
-my $converter = AnyEvent::Processor::Conversion->new(
-   reader  => $reader,
-   writer  => $writer,
-   verbose => 1 
+    peb      => $peb,
+    verbose  => 1,
 );
-$converter->run();       
-$writer->write_to_file();
-
+$localiser->run();       
