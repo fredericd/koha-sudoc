@@ -6,6 +6,7 @@ use Moose;
 extends 'Koha::Contrib::Sudoc::Loader';
 
 use Modern::Perl;
+use utf8;
 use YAML;
 use C4::Biblio;
 use C4::Items;
@@ -75,17 +76,18 @@ sub handle_record {
         my $rcr_hash = $self->sudoc->c->{rcr};
         for my $field ( $record->field('035') ) {
             my $rcr = $field->subfield('5');
-            next unless $rcr && $rcr_hash->{$rcr};
+            next unless $rcr;
+            next unless my $branch = $rcr_hash->{$rcr};
             next unless $biblionumber = $field->subfield('a');
             ($framework, $koha_record) =
                 $self->sudoc->koha->get_biblio( $biblionumber );
             if ($koha_record) {
                 $self->log->notice(
                   "  Fusion de la notice Koha $biblionumber trouvée en 035\$a " .
-                  "pour le RCR $rcr\n" );
+                  "pour le RCR $rcr ($branch)\n" );
                 last;
             }
-        } 
+        }
     }
 
     # Les doublons SUDOC. Il n'y a qu'un seul cas où on peut en faire
@@ -150,6 +152,5 @@ sub handle_record {
     }
     $self->log->debug("\n");
 }
-
 
 1;

@@ -3,6 +3,7 @@ package Koha::Contrib::Sudoc::Loader;
 
 use Moose;
 use Modern::Perl;
+use utf8;
 use MARC::Moose::Reader::File::Iso2709;
 use Koha::Contrib::Sudoc::Converter;
 use Log::Dispatch;
@@ -56,22 +57,23 @@ sub BUILD {
     $self->log->add( Log::Dispatch::Screen->new(
         name      => 'screen',
         min_level => 'notice',
+        stderr    => 0,
     ) );
+    binmode(STDOUT, ':encoding(utf8)');
     $self->log->add( Log::Dispatch::File->new(
         name      => 'file1',
         min_level => 'debug',
-        filename  => $self->sudoc->root . "/var/log/$id.log",
+        filename  => $self->sudoc->root . "/var/log/$id.txt",
         mode      => '>>',
         binmode   => ':encoding(utf8)',
     ) );
     $self->log->add( Log::Dispatch::File->new(
         name      => 'file2',
         min_level => $self->sudoc->c->{loading}->{log}->{level},
-        filename  => $self->sudoc->root . "/var/log/email.log",
+        filename  => $self->sudoc->root . "/var/log/email.txt",
         mode      => '>>',
-        #binmode   => ':encoding(utf8)',
+        binmode   => ':encoding(utf8)',
     ) );
-
 
     # Instanciation du converter
     my $class = $self->sudoc->c->{biblio}->{converter};
@@ -111,12 +113,13 @@ sub run {
     }
     
     $self->sudoc->spool->move_done($self->file)  if $self->doit;
+    my $format = '%#' . length($self->count) . "d\n";
     $self->log->notice(
-         "Nombre d'enregistrements traités : " . $self->count . "\n" .
-         "Nombre d'enregistrements ajoutés : " . $self->count_added . "\n" .
-         "Nombre d'enregistrements fusionnés : " . $self->count_replaced . "\n" .
-         "Nombre d'enregistrements ignorées : " . $self->count_skipped . "\n"
-     );
+        "Enregistrements traités :   " . sprintf($format, $self->count) .
+        "Enregistrements ajoutés :   " . sprintf($format, $self->count_added) .
+        "Enregistrements fusionnés : " . sprintf($format, $self->count_replaced ) .
+        "Enregistrements ignorés :   " . sprintf($format, $self->count_skipped)
+    );
     $self->log->notice("** Test ** Le fichier " . $self->file . " n'a pas été chargé\n")
         unless $self->doit;
     $self->log->notice("\n");

@@ -70,7 +70,7 @@ sub skip {
 Méthode appelée après C<skip> pour un enregistrement SUDOC entrant, que ce
 soit un doublon ou une nouvelle notice. Initialisation du hash item.
 Suppression de la notice entrante des champs définis dans C<sudoc.conf> :
-C<biblio-proteger>
+C<biblio-exclure>
 
 =cut
 sub init {
@@ -209,14 +209,7 @@ sub itemize {
 
 
 sub _key_dedup {
-    my $field = shift;
-    my $key;
-    for ( @{$field->subf} ) {
-        my ($letter, $value) = @$_;
-        next unless $letter =~ /[a-z]/;
-        $key .= $value;
-    }
-    return $key;
+    join('', map { lc $_->[1] } grep { $_->[0] =~ /[a-z]/; } @{shift->subf});
 }
 
 
@@ -278,7 +271,7 @@ sub clean {
 =method framework
 
 Le framework auquel affecter la notice biblio. Valeur par défaut prise dans
-C<sudoc.conf>.  Peut-être surchargé pour attribuer un framework différent en
+C<sudoc.conf>.  Peut-être surchargée pour attribuer un framework différent en
 fonction du type de doc ou de tout autre critère.
 
 =cut

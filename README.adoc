@@ -562,8 +562,10 @@ biblio::
   proteger;;
     Contient la liste des champs de la notice Koha qu'il faut "protéger" en
     cas de fusion avec une notice SUDOC. Les champs protégés sont conservés de
-    la notices Koha. Tous les autres champs sont remplacés par les champs de
-    la notice SUDOC. Il y a un dédoublonnage des champs protégés.
+    la notices Koha. Tous les autres champs sont remplacés par les champs de la
+    notice SUDOC. Il y a un dédoublonnage des champs protégés qui s'effectue
+    sur tous les sous-champs mis bout à bout et passés en minuscule, sauf les
+    sous-champs 0 à 9..
 
 ==== Exemple ====
 

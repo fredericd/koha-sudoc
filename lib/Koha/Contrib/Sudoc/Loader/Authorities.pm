@@ -6,6 +6,7 @@ use Moose;
 extends 'Koha::Contrib::Sudoc::Loader';
 
 use Modern::Perl;
+use utf8;
 use C4::AuthoritiesMarc;
 use MARC::Moose::Record;
 

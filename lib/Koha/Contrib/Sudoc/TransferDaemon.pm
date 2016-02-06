@@ -3,6 +3,7 @@ package Koha::Contrib::Sudoc::TransferDaemon;
 
 use Moose;
 use Modern::Perl;
+use utf8;
 use Mail::Box::Manager;
 use DateTime;
 use Path::Tiny;
@@ -43,6 +44,7 @@ sub BUILD {
     $self->log->add( Log::Dispatch::Screen->new(
         name      => 'screen',
         min_level => 'notice',
+        binmode   => ':encoding(utf8)',
     ) );
     $self->log->add( Log::Dispatch::Syslog->new(
         name      => 'syslog',

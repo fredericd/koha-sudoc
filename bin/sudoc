@@ -4,11 +4,13 @@
 # ABSTRACT: Commande de chargement des notices SUDOC
 
 use Modern::Perl;
+use utf8;
 use Getopt::Long;
 use Koha::Contrib::Sudoc;
 use Koha::Contrib::Sudoc::TransferDaemon;
 use Koha::Contrib::Sudoc::Loader::Biblios;
 use Koha::Contrib::Sudoc::Loader::Authorities;
+
 
 
 my ($doit);

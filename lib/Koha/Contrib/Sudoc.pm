@@ -152,7 +152,7 @@ sub init {
 
 sub reset_email_log {
     my $root = shift->root;
-    unlink "$root/var/log/email.log";
+    unlink "$root/var/log/email.txt";
 }
 
 
@@ -212,7 +212,7 @@ sub load_waiting {
     }
 
     # Envoi des log s'il y en a
-    my $logfile = $self->root . "/var/log/email.log";
+    my $logfile = $self->root . "/var/log/email.txt";
     return unless -e $logfile;
     my $head = Mail::Message::Head->new;
     $head->add( From    => $loading->{log}->{from}     );

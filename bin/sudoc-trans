@@ -12,7 +12,7 @@ use YAML::Tiny qw/ LoadFile /;
 
 my $root = $ENV{SUDOC};
 unless ($root) {
-    print "Il manque la variable d'environnement SUDOC.\n";
+    say "Il manque la variable d'environnement SUDOC.";
     exit;
 }
 my $c = LoadFile("$root/etc/sudoc.conf");
