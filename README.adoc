@@ -16,7 +16,7 @@ Une version en-ligne de ce document est disponible à l'URL suivante :
 - *HTML* :
   http://www.tamil.fr/sudoc/sudoc.html[http://www.tamil.fr/sudoc/sudoc.html]
 - *PDF* :
-  http://www.tamil.fr/sudoc/sudoc.html[http://www.tamil.fr/sudoc/sudoc.pdf]
+  http://www.tamil.fr/sudoc/sudoc.pdf[http://www.tamil.fr/sudoc/sudoc.pdf]
 ================================================================================
 
 [IMPORTANT]
