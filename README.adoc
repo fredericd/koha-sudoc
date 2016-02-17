@@ -161,7 +161,8 @@ du sous-répertoire *staged* dans le sous-répertoire *waiting*.
 utilisé, le chargement des fichiers est lancé. Ce traitement peut être
 programmé ou lancé à la main en période de test. 
 
-image::diag.svg[Diagrammme du Chargeur]
+<<<
+image::diag.svg[Diagrammme du Chargeur, width=200]
 
 
 === Transferts Sudoc > Koha ===
@@ -279,7 +280,7 @@ serveur Koha des fichiers vides. C'est spécialement vrai si l'ILN a choisi des
 transferts quotidiens.  Ces fichiers peuvent être tous supprimés avec cette
 commande : `sudoc spool vide`.
 
-=== Chargements des fichiers du Sudoc dans le Catalogue Koha ===
+=== Chargements dans le Catalogue Koha ===
 
 L'ILN définit avec l'ABES les fichiers qu'il souhaite recevoir
 régulièrement. Les notices bibliographiques des ressources cataloguées
@@ -383,14 +384,14 @@ Il y a trois cas de figure où l'on a affaire à une mise à jour :
 . **Fusion Sudoc** -- La zone 035 est examinée afin de déterminer si la notice
   est marquée comme étant une fusion Sudoc de notices.  On cherche une zone 035
   contenant un `$9 sudoc`. Le `$a` contient le PPN de l'ancienne notice qui a
-  été fusionnée. Dans ce cas, on peut savoir si une autorité Koha existe déjà
-  ayant le PPN de l'autorité qui a été fusionnée à l'autorité entrante. Le
+  été fusionnée. Dans ce cas, on peut savoir si une notice Koha existe déjà
+  ayant le PPN de la notice qui a été fusionnée à la notice entrante. Le
   Chargeur Sudoc ne peut effectuer la fusion de la notice entrante à une notice
   existante dans Koha que si une fusion n'est pas déjà nécessaire pour une des
   raisons précédentes (mise à jour dans le Sudoc ou localisation) et s'il n'y a
   bien qu'une notice Koha correspondante à une fusion Sudoc. En cas de fusion
   nécessaire mais que le chargeur ne peut pas effectuer, un message d'alerte est
-  laissé dans les logs.
+  écrit dans les logs.
 
 ===== Exemplarisation =====
 
@@ -455,9 +456,9 @@ souhaitait obtenir.
 Un fichier de configuration `sudoc.conf` contient tous les paramètres
 nécessaires au bon fonctionnement du Chargeur Sudoc. Il y a deux grandes
 sections : une première qui pilote le fonctionnement du transfert de
-fichiers et une seconde qui, pour chaque ILN, pilote le chargement des
-notices. Le fichier `sudoc.conf` se trouve dans le sous-répertoire `etc`
-du répertoire d'installation du Chargeur Sudoc.
+fichiers et une seconde qui pilote le chargement des notices. Le fichier
+`sudoc.conf` se trouve dans le sous-répertoire `etc` du répertoire
+d'installation du Chargeur Sudoc.
 
 [[conf-trans]]
 ==== Section *transfert* ====
@@ -474,7 +475,7 @@ email::
   le protocole de transfert de fichiers entre l'ABES et le serveur
   Koha :
   abes;;
-    Email de l'ABES à laquelle envoyer les messages. À priori c'est
+    Email de l'ABES à laquelle envoyer les messages. A priori c'est
     toujours l'adresse `abes_ftp@carmin.sudoc.abes.fr`
   koha;;
     Email du serveur Koha. C'est la boîte aux lettres de cette adresse
@@ -485,14 +486,17 @@ mbox::
   adressés au serveur par l'ABES.
 
 La section *loading* détermine si les notices seront chargées automatiquement
-dans Koha par le service de transfert après que les fichiers ont été
-transférés par FTP/SFTP sur le serveur Koha.
+dans Koha par le service de transfert après que les fichiers ont été transférés
+par FTP/SFTP sur le serveur Koha. Les info de cette section sont également
+utilisées par la commande `sudoc chargeauto`.
 
 auto::
   Indique si les fichiers qui se trouvent dans le répertoire `waiting` du
   spool doivent être chargés dans le Catalogue Koha. 1=oui, 0=non. Le
   chargement est déclanché par la réception du message _status 0_ envoyé par
-  l'ABES quand le transfert par FTP/SFTP est achevé.
+  l'ABES quand le transfert par FTP/SFTP est achevé. En phase de test, on
+  laisse ce paramètre à 0, et on utilise les commandes de chargement manuel des
+  notices : `sudoc autorité` et `sudoc biblio`.
 doit::
   Indique si le chargement est effectif ou non. Mettre ce paramètre à la
   valeur 0 (non) permet de tester le fonctionnement du chargement automatique
@@ -503,18 +507,20 @@ timeout::
   transfer;;
     Délai entre l'envoi à l'ABES de la commande GTD et le début du chargement
     automatique des fichiers de notices. Ce paramètre est utilisé par les
-    commane `sudoc trans` et `sudoc chargeauto`.
+    commandes `sudoc trans` et `sudoc chargeauto`.
   indexing;;
-    Délai entre les chargements des fichiers du spool `waiting`.  Ce paramètre
-    est à régler en fonction des réglages du service d'idexation en continue de
-    Koha. Si par exemple, les notices sont indexées toutes les cinq minutes, un
-    timeout de sept minutes entre les chargements est une valeur appropriées.
+    Délai entre les chargements des fichiers du spool `waiting`. Les fichiers
+    du spool sont chargées dans l'ordre suivant : par type (autorités, notices
+    liées, notices) et pour chaque type, par date. Ce paramètre est à définir
+    en fonction des réglages du service d'idexation en continue de Koha. Si par
+    exemple, les notices sont indexées toutes les cinq minutes, un timeout de
+    sept minutes entre les chargements est une valeur appropriées.
 log::
   Un log du chargement est envoyé par email à un administrateur de Koha. On peut
   régler le niveau du log ainsi que son destinataire.
   level;;
     Niveau du log : `notice` ou `debug`. Le mode `debug` remplit le log avec
-    d'avantage d'informations
+    d'avantage d'informations.
   from;;
     Email de l’émetteur de l'email.
   to;;
@@ -551,10 +557,12 @@ biblio::
   ppn_move;;
     Tag dans lequel déplacer le PPN de la notice bibliographique avant
     son chargement.  Le PPN est en 001. On le déplace généralement en
-    `009`. On peut également le déplacer en 090$p : ppn*move = 090p
+    `009`. On peut également le déplacer en 090$p : `ppn_move:090p`.
   framework;;
-    Le code Koha du framework auquel affecter toutes les notices
-    entrantes.
+    Le code Koha de la grille de saisie à laquelle affecter toutes les notices
+    entrantes. Un _converter_ spécifique peut permettre d'aller au-delà et de,
+    par exemple, ventiler les notices entrantes dans différentes grilles en
+    fonction du type des notices.
   authoritize;;
     Est-ce qu'on autoritise les notices entrantes ? Oui = 1, Non = 0. Le
     chargement de notices bibliographiques est sensiblement plus rapide en
@@ -573,7 +581,7 @@ biblio::
     la notices Koha. Tous les autres champs sont remplacés par les champs de la
     notice Sudoc. Il y a un dédoublonnage des champs protégés qui s'effectue
     sur tous les sous-champs mis bout à bout et passés en minuscule, sauf les
-    sous-champs 0 à 9..
+    sous-champs 0 à 9.
 
 ==== Exemple ====
 
@@ -605,15 +613,6 @@ auth:
     200: NP
     210: CO
     215: SNG
-    216: TM
-    220: FAM
-    230: TU
-    235: CO_UNI_TI
-    240: SAUTTIT
-    245: NAME_COL
-    250: SNC
-    260: PA
-    280: GENRE/FORM
 biblio:
   ppn_move: 009
   authoritize: 1
@@ -654,12 +653,11 @@ de `sudoc.conf`. Ce déplacement est même indispensable pour les
 autorités parce que l'identifiant interne de Koha est placé en 001. Ce
 n'est pas le cas nécessairement pour les notices bibliographiques.
 
-Afin que le Chargeur Sudoc puisse interroger les PPN, il faut ajouter
-aux fichiers de configuration de Zebra un nouvel index *PPN*. Par
-exemple, si on les déplace en 009, il faudra ajouter la ligne suivante
-aux fichiers `authority-koha-indexdefs.xml` ou
-`biblio-koha-indexdefs.xml` des autorités et des notices
-bibliographiques :
+Afin que le Chargeur Sudoc puisse interroger les PPN, il faut ajouter aux
+fichiers de configuration de Zebra un nouvel index *PPN*. Par exemple, si on
+déplace les PPN en 009, il faudra ajouter la ligne suivante aux fichiers
+`authority-koha-indexdefs.xml` ou `biblio-koha-indexdefs.xml` des autorités et
+des notices bibliographiques :
 
 [source,xml]
 -----
@@ -698,7 +696,7 @@ TMP_FILE="/tmp/sudoc_$CLIENT"
 export LANG='fr_FR.UTF-8'
 export PERL5LIB=/usr/local/koha/lib
 export KOHA_CONF=/usr/local/koha/koha-conf.xml
-expôrt Sudoc=/usr/local/koha/sudoc <1>
+export SUDOC=/usr/local/koha/sudoc <1>
 
 exec 1>$TMP_FILE 2>&1 <2>
 echo "Chargement Sudoc"
@@ -738,11 +736,12 @@ La procédure et les fichiers attendus sont
 http://documentation.abes.fr/sudoc/manuels/echanges/exemplarisation_automatique/explmonogr.html[documentés
 par l'ABES].
 
-À partir d'un Catalogue Koha, ce script génère des fichiers d'ISBN ou de Date-
-Auteur-Titre. Ces fichiers sont demandés par l'ABES afin de réaliser soit un
-test de recouvrement soit une localisation automatique. Ces fichiers suivent
-la convention de nommage demandée par l'ABES : commence par la lettre **i**
-(pour ISBN) ou **r** (pour Date-Auteur-Titre), suivi du RCR de la
+À partir d'un Catalogue Koha, ce script génère des fichiers de clés de
+dédoublonnage qui doivent permettre à l'ABES de repérer dans le Sudoc les
+notices Koha. Ces fichiers sont demandés par l'ABES afin de réaliser soit un
+test de recouvrement soit une localisation automatique. Ces fichiers suivent la
+convention de nommage demandée par l'ABES : commence par une lettre (**p** pour
+des PPN, **i** pour des ISBN, **r** pour Date-Auteur-Titre), suivi du RCR de la
 bibliothèque, puis le code de PEB (**u** disponible pour le PEB, ou **g** non
 disponible). Ces noms de fichiers sont suffixés d'un index. Par exemple :
 
@@ -755,7 +754,12 @@ Plusieurs fichiers sont créés, chacun contenant un maximum de 1000 lignes.
 Chaque ligne contient une clé de dédoublonnage (ISBN, date-auteur-tire ou PPN),
 suivie d'une cote et du biblionumber de la notice Koha, séparés par un point
 virgule. Un groupe de fichiers est généré par RCR tel que défini dans
-`sudoc.conf`.
+`sudoc.conf`. Exemple de fichier :
+
+ ISBN;930 $a;L035 $a
+ 0140222421;GEN ETU KUP 5.1981;263
+ 0195089464;GEN ETU DAD 5.1993;301
+ 031209809X;HIS CONT NASS 5.1984;404
 
 Pour les notices ayant plusieurs exemplaires dans une même bibliothèque (RCR),
 on retient la cote du premier exemplaire.
@@ -764,9 +768,16 @@ Si une même clé de dédoublonnage (ISBN ou Date-Auteur-Titre) pointe sur
 plusieurs ISBN, la clé n'est pas retenue. Elle est envoyée dans un fichier des
 **clés multiples**, un fichier par RCR. Vous pouvez choisir de dédoublonner
 ces notices dans Koha ou bien de les localiser manuellement dans le Sudoc.
-Exemple de fichier de clés multiples:
-
- i641767u_clemult.txt
+Exemple de fichier de clés multiplesi : `i641767u_clemult.txt` :
+ 
+ 2858310009
+   1753 POL IDE 3.1978
+   1754 POL IDE 3.1978
+   1783 POL IDE 3.1978
+   1784 POL IDE 3.1981
+ 2863640046
+   822 LIT NOU AHA ԱՀԱ 3.1978
+   3255 LIT NOU AHA ԱՀԱ 3.1979
 
 Ces fichiers sont envoyés à l'ABES qui, en retour, soit renvoie un rapport de
 taux de recouvrement soit procède à la localisation automatique des notices de

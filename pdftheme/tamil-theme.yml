@@ -47,7 +47,7 @@ base:
   font_size: 9.5
   #line_height_length: 15
   # correct line height for Noto Serif metrics
-  line_height_length: 12
+  line_height_length: 10
   #font_size: 11.25
   #line_height_length: 18
   line_height: $base_line_height_length / $base_font_size
@@ -238,13 +238,10 @@ footer:
   # * {section-title}
   # * {section-or-chapter-title}
   recto_content:
-    #right: '{section-or-chapter-title} | {page-number}'
-    #right: '{document-title} | {page-number}'
     left: '{document-title}'
     right: '{page-number}'
     #center: '{page-number}'
   verso_content:
-    #left: '{page-number} | {chapter-title}'
     left: '{page-number}'
     right: '{document-title}'
     #center: '{page-number}'
