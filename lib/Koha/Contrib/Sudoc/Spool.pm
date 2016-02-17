@@ -204,6 +204,32 @@ sub list {
 }
 
 
+=method vide
+
+Supprime du spool tous les fichiers vides.
+
+=cut
+sub vide {
+    my $self = shift;
+    for ( @$dirstatus ) {
+        my ($msg, $where, $type) = @$_;
+        my @files = @{ $self->sudoc->spool->files($where, $type) };
+        next unless @files;
+        chdir $self->sudoc->root . "/var/spool/$where";
+        @files = grep {
+            my (undef, undef, undef, undef, undef, undef, undef, $size, , ,) =
+                stat($_);
+            $size == 0;
+        } @files;
+        next unless @files;
+        for my $file (@files) {
+            unlink $file;
+            say "$file: supprimé";
+        }
+    }
+}
+
+
 =method command
 
 Sans paramètre, liste le contenu des répertoires du spool, en appelant
@@ -214,6 +240,10 @@ affiché.
 sub command {
     my $self = shift;
     if ( @_ ) {
+        if ($_[0] =~ /vide/i ) {
+            $self->vide();
+            return;
+        }
         for my $file (@_) {
             my $path = $self->file_path($file);
             unless ( $path ) {

@@ -1,5 +1,9 @@
 Revision history for Perl module Koha::Contrib::Sudoc
 
+2.19 2016-02-17
+
+  - Commande de suppression des fichiers vides du spool.
+
 2.18 2016-02-06
 
   - Fix dédoublonne 035$a + $5

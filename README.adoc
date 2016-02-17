@@ -274,6 +274,10 @@ Fichiers des notices biblio en attente de chargement :
 **Visualisation de fichiers** -- On peut également voir le contenu d'un fichier
 spécifique avec la commande : `sudoc spool fichier1 fichier2 ...`. 
 
+**Nettoyage** -- Les chargements réguliers peuvent transférer de l'ABES sur le
+serveur Koha des fichiers vides. C'est spécialement vrai si l'ILN a choisi des
+transferts quotidiens.  Ces fichiers peuvent être tous supprimés avec cette
+commande : `sudoc spool vide`.
 
 === Chargements des fichiers du Sudoc dans le Catalogue Koha ===
 
