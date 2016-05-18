@@ -82,7 +82,7 @@ sub BUILD {
     } catch {
         $self->log->warning(
             "Attention : le convertisseur $class est introuvable dans le répertoire 'lib'. " .
-            "Le convertisseur par défaut sera utilisé.\n");
+            "Le convertisseur par défaut sera utilisé.\n") if $class;
         $class = 'Koha::Contrib::Sudoc::Converter';
     };
     $class = $class->new(sudoc => $self->sudoc, log => $self->log);
