@@ -9,7 +9,7 @@ use Koha::Contrib::Sudoc::Converter;
 use Log::Dispatch;
 use Log::Dispatch::Screen;
 use Log::Dispatch::File;
-use Try::Tiny;
+use Class::Load ':all';
 use DateTime;
 
 
@@ -76,15 +76,18 @@ sub BUILD {
     ) );
 
     # Instanciation du converter
-    my $class = $self->sudoc->c->{biblio}->{converter};
-    try {
-        Class::MOP::load_class($class);
-    } catch {
-        $self->log->warning(
-            "Attention : le convertisseur $class est introuvable dans le répertoire 'lib'. " .
-            "Le convertisseur par défaut sera utilisé.\n") if $class;
-        $class = 'Koha::Contrib::Sudoc::Converter';
-    };
+    my $class = 'Koha::Contrib::Sudoc::Converter';
+    if ( my $local_class = $self->sudoc->c->{biblio}->{converter} ) {
+        if ( try_load_class($local_class) ) {
+            $class = $local_class;
+        }
+        else {
+            $self->log->warning(
+                "Attention : le convertisseur $local_class est introuvable dans le répertoire 'lib'. " .
+                "Le convertisseur par défaut sera utilisé.\n");
+        }
+    }
+    load_class($class);
     $class = $class->new(sudoc => $self->sudoc, log => $self->log);
     $self->converter($class);
 }

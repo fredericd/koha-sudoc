@@ -1,6 +1,6 @@
 Revision history for Perl module Koha::Contrib::Sudoc
 
-2.20 2016-05-18
+2.21 2016-05-18
 
   - Supprime avertissement inutile quand converter vide dans sudoc.conf.
 
