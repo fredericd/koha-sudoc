@@ -10,6 +10,7 @@ use utf8;
 use Koha::Contrib::Sudoc;
 use Koha::Contrib::Sudoc::BiblioReader;
 use C4::Items;
+use C4::Context;
 use YAML;
 use Encode;
 use Business::ISBN;
@@ -74,6 +75,12 @@ has lines => ( is => 'rw', isa => 'Int', default => 1000 );
 
 # Disponibilité pour le PEB ?
 has peb => ( is => 'rw', isa => 'Bool', default => 1 );
+
+has ismarc21 => (
+    is => 'rw',
+    isa => 'Bool',
+    default => sub { C4::Context->preference('marcflavour') =~ /marc21/i; }  
+);
 
 
 #
@@ -411,7 +418,7 @@ sub write_ppn {
 sub write_isbn {
     my ($self, $record) = @_;
 
-    my @isbns = $record->field('010');
+    my @isbns = $record->field($self->ismarc21 ? '020' : '010');
     return unless @isbns;
 
     my $biblionumber = $self->sudoc->koha->get_biblionumber($record);
@@ -475,24 +482,26 @@ sub _clean_string {
 sub write_dat {
     my ($self, $record) = @_;
 
-    my $date = $record->field('210');
+    my ($tag, $letter) = $self->ismarc21 ? ('260', 'c') : ('210', 'd');
+    my $date = $record->field($tag);
     return unless $date;
-    $date = $date->subfield('d') || '';
+    $date = $date->subfield($letter) || '';
     return unless $date =~ /(\d{4})/;
     $date = $1;
 
     my $auteur;
-    for my $tag ( qw( 700 701 702 710 711 712 ) ) {
+    for my $tag ( $self->ismarc21 ? qw( 100 700 110 710 ) : qw( 700 701 702 710 711 712 ) ) {
         $auteur = $record->field($tag);
         next unless $auteur;
         $auteur = $auteur->subfield('a') || '';
+        if ( $auteur =~ /^(.+),/ ) { $auteur = $1; }
         $auteur = _clean_string($auteur);
         last if $auteur;
     }
     $auteur ||= '';
 
     # Traitement du titre
-    my $titre = $record->field('200') || '';
+    my $titre = $record->field($self->ismarc21 ? '245' : '200') || '';
     $titre = $titre->subfield('a') || '' if $titre;
 
     # Suppression des accents, passage en minuscule
@@ -523,7 +532,7 @@ sub process {
     return 0 unless $record;
 
     # Si la notice contient déjà un PPN, inutile de la traiter
-    my $tag = $self->sudoc->c->{biblio}->{ppn_move};
+    my $tag = $self->sudoc->c->{biblio}->{ppn_move} || '001';
     my $letter;
     if ( $tag =~ /(\d{3})([0-9a-z])/ ) { $tag = $1, $letter = $2; }
     elsif ( $tag =~ /(\d{3})/ ) { $tag = $1 };   

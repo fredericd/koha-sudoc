@@ -79,7 +79,8 @@ sub init {
     my $myrcr = $self->sudoc->c->{rcr};
     # On crée la structure de données items
     my $item = {};
-    for my $field ( $record->field('9..') ) {
+    for my $field ( @{$record->fields} ) {
+        next if ref $field eq 'MARC::Moose::Field::Control';
         my $value = $field->subfield('5');
         next unless $value;
         my ($rcr, $id) = $value =~ /(.*):(.*)/;

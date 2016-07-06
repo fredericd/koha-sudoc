@@ -746,8 +746,8 @@ bibliothèque, puis le code de PEB (**u** disponible pour le PEB, ou **g** non
 disponible). Ces noms de fichiers sont suffixés d'un index. Par exemple :
 
 -----
-i3641767u.0001
-i3641767g.0002
+i3641767u_0001.txt
+i3641767g_0002.txt
 -----
 
 Plusieurs fichiers sont créés, chacun contenant un maximum de 1000 lignes.
@@ -768,7 +768,7 @@ Si une même clé de dédoublonnage (ISBN ou Date-Auteur-Titre) pointe sur
 plusieurs ISBN, la clé n'est pas retenue. Elle est envoyée dans un fichier des
 **clés multiples**, un fichier par RCR. Vous pouvez choisir de dédoublonner
 ces notices dans Koha ou bien de les localiser manuellement dans le Sudoc.
-Exemple de fichier de clés multiplesi : `i641767u_clemult.txt` :
+Exemple de fichier de clés multiples : `i641767u_clemult.txt` :
  
  2858310009
    1753 POL IDE 3.1978
@@ -795,7 +795,7 @@ extraites par défaut de la zone 001, ou d'une autre zone avec le paramètre
 ==== --ppn ====
 
 Le champ contenant le PPN peut être spécifié explicitemnt : `--ppn 001` ou
-`--ppn 912a`.
+`--ppn 912a`. Par défaut `001`.
 
 ==== --select <clause SELECT sur base KOHA> ====
 

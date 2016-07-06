@@ -1,5 +1,11 @@
 Revision history for Perl module Koha::Contrib::Sudoc
 
+2.22 2016-07-06
+
+  - Récupération de tous les champs locaux Sudoc en vue conversion en
+    exemplaires Koha. 
+  - sudoc-localisation capable de traiter des notices MARC21
+
 2.21 2016-05-18
 
   - Supprime avertissement inutile quand converter vide dans sudoc.conf.
