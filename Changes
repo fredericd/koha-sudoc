@@ -1,5 +1,9 @@
 Revision history for Perl module Koha::Contrib::Sudoc
 
+2.23 2016-09-21
+
+  - Fix un warning sur $5 en 035 ne contenant pas un RCR
+
 2.22 2016-07-06
 
   - Récupération de tous les champs locaux Sudoc en vue conversion en

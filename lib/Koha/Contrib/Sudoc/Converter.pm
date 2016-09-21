@@ -84,6 +84,7 @@ sub init {
         my $value = $field->subfield('5');
         next unless $value;
         my ($rcr, $id) = $value =~ /(.*):(.*)/;
+        next unless $rcr; # Probablement un champ 035
         unless ( $myrcr->{$rcr} ) {
             # Cas, improbable, d'un RCR qui ne serait pas dans la liste des RCR
             # FIXME On pourrait le logguer quelque part.
