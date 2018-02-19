@@ -43,6 +43,7 @@ notice ou d'une notice qui existe déjà dans Koha:
 
  Méthode       ajout  modif 
  --------------------------
+ build           0      0
  skip            O      O
  init            O      O
  authoritize     O      O
@@ -54,30 +55,16 @@ notice ou d'une notice qui existe déjà dans Koha:
 
 =cut
 
-=method skip
+=method build
 
-La notice doit-elle être passée ? Par défaut, on garde toute notice.
-
-=cut
-sub skip {
-    my ($self, $record) = @_;
-    return 0;
-}
-
-
-=method init
-
-Méthode appelée après C<skip> pour un enregistrement SUDOC entrant, que ce
-soit un doublon ou une nouvelle notice. Initialisation du hash item.
-Suppression de la notice entrante des champs définis dans C<sudoc.conf> :
-C<biblio-exclure>
+Fabrique les structures de données nécessaires
 
 =cut
-sub init {
+sub build {
     my ($self, $record) = @_;
 
-    my $myrcr = $self->sudoc->c->{rcr};
     # On crée la structure de données items
+    my $myrcr = $self->sudoc->c->{rcr};
     my $item = {};
     for my $field ( @{$record->fields} ) {
         next if ref $field eq 'MARC::Moose::Field::Control';
@@ -95,6 +82,28 @@ sub init {
         $item->{$rcr}->{$id}->{$field->tag} = $field;
     }
     $self->item($item);
+}
+
+
+=method skip
+
+La notice doit-elle être passée ? Par défaut, on garde toute notice.
+
+=cut
+sub skip {
+    return 0;
+}
+
+
+=method init
+
+Méthode appelée après C<skip> pour un enregistrement SUDOC entrant, que ce soit
+un doublon ou une nouvelle notice.  Suppression de la notice entrante des
+champs définis dans C<sudoc.conf> : C<biblio-exclure>
+
+=cut
+sub init {
+    my ($self, $record) = @_;
 
     # On supprime de la notice SUDOC les champs à exclure
     my $exclure = $self->sudoc->c->{biblio}->{exclure};

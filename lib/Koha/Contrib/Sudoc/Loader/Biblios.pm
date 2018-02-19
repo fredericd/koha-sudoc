@@ -54,6 +54,8 @@ sub handle_record {
     # On déplace le PPN
     $self->sudoc->ppn_move($record, $self->sudoc->c->{biblio}->{ppn_move});
 
+    $self->converter->build($record);
+
     # Est-ce qu'il faut passer la notice ?
     if ( $self->converter->skip($record) ) {
         $record = undef;
