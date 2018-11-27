@@ -11,7 +11,8 @@ use Koha::Contrib::Sudoc::TransferDaemon;
 use Koha::Contrib::Sudoc::Loader::Biblios;
 use Koha::Contrib::Sudoc::Loader::Authorities;
 
-
+#FIXME: todelete
+use Bulac::SudocConverter;
 
 my ($doit);
 GetOptions(

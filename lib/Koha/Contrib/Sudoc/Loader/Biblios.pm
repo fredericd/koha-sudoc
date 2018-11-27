@@ -112,10 +112,10 @@ sub handle_record {
                 ($d->{biblionumber}, $d->{framework}, $d->{record});
         }
     }
-
     $self->converter->init( $record );
     $self->converter->authoritize( $record );
     $self->converter->linking( $record );
+    $self->converter->itemize( $record, $koha_record );
 
     if ( $koha_record ) {
         # Modification d'une notice
@@ -131,7 +131,6 @@ sub handle_record {
     else {
         # Nouvelle notice
         $self->count_added( $self->count_added + 1 );
-        $self->converter->itemize($record);
         $self->converter->clean($record);
         $self->log->debug(
             "  Notice après traitement :\n" . $record->as('Text') );
