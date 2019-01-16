@@ -122,18 +122,14 @@ sub handle_record {
         $self->count_replaced( $self->count_replaced + 1 );
         $self->converter->merge($record, $koha_record);
         $self->converter->clean($record);
-        $self->log->debug(
-            "  Notice après traitement :\n" . $record->as('Text') );
-        $self->log->notice("  * Remplace $biblionumber\n" );
         ModBiblio($record->as('Legacy'), $biblionumber, $framework)
             if $self->doit;
+        $self->converter->biblio_modify($record, $biblionumber, $framework);
     }
     else {
         # Nouvelle notice
         $self->count_added( $self->count_added + 1 );
         $self->converter->clean($record);
-        $self->log->debug(
-            "  Notice après traitement :\n" . $record->as('Text') );
         $framework = $self->converter->framework($record);
         if ( $self->doit ) {
             my $marc = $record->as('Legacy');
@@ -145,11 +141,8 @@ sub handle_record {
                 if @$errors_ref;
             C4::Biblio::_strip_item_fields($marc, $framework);
             ModBiblioMarc($marc, $biblionumber, $framework);
-            $self->log->notice( "  * Ajout $biblionumber $framework\n" );
         }
-        else {
-            $self->log->notice( "  * Ajout\n" );
-        }
+        $self->converter->biblio_add($record, $biblionumber, $framework);
     }
     $self->log->debug("\n");
 }

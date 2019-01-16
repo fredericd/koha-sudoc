@@ -2,6 +2,7 @@ package Koha::Contrib::Sudoc::Converter;
 # ABSTRACT: Classe de base pour convertir les notices
 
 use Moose;
+use utf8;
 use Modern::Perl;
 
 # Moulinette SUDOC
@@ -52,6 +53,11 @@ notice ou d'une notice qui existe déjà dans Koha:
  merge           N      O
  clean           O      O
  framework       O      N
+ biblio_add      O      N
+ biblio_modif    N      O
+
+Il y a en plus la méthode end() qui est appelée à la fin du traitement de
+toutes les notices du fichier.
 
 =cut
 
@@ -282,5 +288,39 @@ sub framework {
     my ($self, $record) = @_;
     $self->sudoc->c->{biblio}->{framework} || '';
 }
+
+
+=method biblio_modify
+
+=cut
+sub biblio_modify {
+    my ($self, $record, $biblionumber, $framework) = @_;
+    $self->log->debug(
+        "  Notice après traitement :\n" . $record->as('Text') );
+    $self->log->notice("  * Remplace $biblionumber\n" );
+}
+
+
+=method biblio_add
+
+=cut
+sub biblio_add {
+    my ($self, $record, $biblionumber, $framework) = @_;
+
+    $self->log->debug(
+        "  Notice après traitement :\n" . $record->as('Text') );
+    my $plus = '';
+    $plus = " $biblionumber $framework" if $biblionumber;
+    $self->log->notice( "  * Ajout$plus\n" );
+}
+
+
+=method end
+
+Appelé en fin de traitement du fichier Sudoc. Un converter peut générer ici des
+états de synthèse.
+
+=cut
+sub end { }
 
 1;

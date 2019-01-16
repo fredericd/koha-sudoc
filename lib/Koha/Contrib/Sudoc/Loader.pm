@@ -114,6 +114,7 @@ sub run {
         $self->count( $self->count + 1 );
         $self->handle_record($record);
     }
+    $self->converter->end();
     
     $self->sudoc->spool->move_done($self->file)  if $self->doit;
     my $format = '%#' . length($self->count) . "d\n";
