@@ -1,6 +1,6 @@
 Revision history for Perl module Koha::Contrib::Sudoc
 
-2.26 2019-01-16
+2.27 2019-01-16
 
   - Ajout méthodes pour convertisseurs locaux
 
