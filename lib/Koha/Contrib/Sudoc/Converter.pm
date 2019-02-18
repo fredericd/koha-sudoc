@@ -187,6 +187,9 @@ moyen de la structure de données $self->item. Les champs bib propriétaire
 sub itemize {
     my ($self, $record, $koha_record) = @_;
 
+    # Ne rien faire si c'est demandé pour l'ILN
+    return unless $self->sudoc->c->{biblio}->{itemize};
+
     # Pas d'exemplarisation si on modifie une notice Koha
     return if $koha_record;
 
