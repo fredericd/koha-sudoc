@@ -104,7 +104,8 @@ sub handle_record {
 sub run {
     my $self = shift;
 
-    my $dt = DateTime->now;
+    my $tz = DateTime::TimeZone->new( name => 'local' );
+    my $dt = DateTime->now( time_zone => $tz );;
     $self->log->debug($dt->dmy . " " . $dt->hms . "\n");
     $self->log->notice("Chargement du fichier " . $self->file . "\n");
     $self->log->notice("** Test **\n") unless $self->doit;
