@@ -78,13 +78,12 @@ sub BUILD {
     # Instanciation du converter
     my $class = 'Koha::Contrib::Sudoc::Converter';
     if ( my $local_class = $self->sudoc->c->{biblio}->{converter} ) {
-        if ( try_load_class($local_class) ) {
+        my ($retcod, $error ) = try_load_class($local_class);
+        if ( $retcod ) {
             $class = $local_class;
         }
         else {
-            $self->log->warning(
-                "Attention : le convertisseur $local_class est introuvable dans le répertoire 'lib'. " .
-                "Le convertisseur par défaut sera utilisé.\n");
+            die $error ;
         }
     }
     load_class($class);
