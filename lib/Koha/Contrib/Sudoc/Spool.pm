@@ -117,7 +117,7 @@ sub first_batch_files {
     my $files = $self->files($where, $type);
     return $files unless @$files;
 
-    my ($prefix_first) = $files->[0] =~ /^(.*)001.RAW/;
+    my ($prefix_first) = $files->[0] =~ /^(.*)\d{3}.RAW/;
     my @first_files;
     for my $file (@$files) {
         my ($prefix) = $file =~ /^(.*)\d{3}.RAW/;
