@@ -11,6 +11,7 @@ use MARC::Moose::Record;
 use C4::Biblio;
 use Search::Elasticsearch;
 use YAML;
+use MIME::Base64;
 use Try::Tiny;
 
 
@@ -202,8 +203,8 @@ sub get_biblio_by_ppn {
             }
         );
         if ( $res->{hits}->{total} != 0 ) {
-            my $raw = $res->{hits}->{hits}->[0]->{_source}->{record};
-            $record = _record_from_es($raw);
+            my $source = $res->{hits}->{hits}->[0]->{_source};
+            $record = _record_from_es($source);
         }
     }
     else {
@@ -236,48 +237,103 @@ sub get_biblios_by_authid {
     my ($self, $authid) = @_;
 
     my @records;
-    try {
-        my $rs = $self->zbiblio()->search_pqf( "\@attr 1=Koha-Auth-Number $authid" );
-        for ( my $i = 0; $i < $rs->size(); $i++ ) {
-            my $record = $rs->record($i);
-            $record = MARC::Moose::Record::new_from( $record->raw(), 'Iso2709' );
-            next unless $record;
-            my ($biblionumber, $framework) = $self->get_biblionumber_framework($record);
-            push @records, [$biblionumber, $framework, $record];
+    if ( my $es = $self->es ) { # Elasticsearch
+        my $res = $es->search(
+            index => $self->es_index->{biblios},
+            body => {
+                query => {  match => { "Koha-Auth-Number" => $authid }  }
+            }
+        );
+        if ( $res->{hits}->{total} != 0 ) {
+            for my $source ( @{$res->{hits}->{hits}} ) {
+                $source = $source->{_source};
+                my $record = _record_from_es($source);
+                next unless $record;
+                my ($biblionumber, $framework) = $self->get_biblionumber_framework($record);
+                push @records, [$biblionumber, $framework, $record];
+            }
         }
-    } catch {
-        warn "ZOOM error: $_";
-    };
+    }
+    else {
+        try {
+            my $rs = $self->zbiblio()->search_pqf( "\@attr 1=Koha-Auth-Number $authid" );
+            for ( my $i = 0; $i < $rs->size(); $i++ ) {
+                my $record = $rs->record($i);
+                $record = MARC::Moose::Record::new_from( $record->raw(), 'Iso2709' );
+                next unless $record;
+                my ($biblionumber, $framework) = $self->get_biblionumber_framework($record);
+                push @records, [$biblionumber, $framework, $record];
+            }
+        } catch {
+            warn "ZOOM error: $_";
+        };
+    }
     return @records;
 }
 
 
 sub _record_from_es {
-    my $raw = shift;
+    my $source = shift;
 
     my $record = MARC::Moose::Record->new();
-    my @fields;
-    for my $field ( @$raw ) {
-        my $tag = shift @$field;
-        if ( $tag eq 'LDR' ) {
-            $record->_leader($field->[3]);
-        }
-        elsif ( $tag le '009' ) {
-            push @fields, MARC::Moose::Field::Control->new(
-                tag => $tag, value => $field->[3] );
-        }
-        else {
-            my $f = MARC::Moose::Field::Std->new(
-                tag => $tag, ind1 => shift @$field, ind2 => shift @$field );
-            my @subf;
-            while (@$field) {
-                push @subf, [ shift @$field => shift @$field ];
+
+    my $raw;
+    if ( $raw = $source->{record} ) {
+        # FIXME: obsolete now?
+        my @fields;
+        for my $field ( @$raw ) {
+            my $tag = shift @$field;
+            if ( $tag eq 'LDR' ) {
+                $record->_leader($field->[3]);
             }
-            $f->subf( \@subf);
-            push @fields, $f;
+            elsif ( $tag le '009' ) {
+                push @fields, MARC::Moose::Field::Control->new(
+                    tag => $tag, value => $field->[3] );
+            }
+            else {
+                my $f = MARC::Moose::Field::Std->new(
+                    tag => $tag, ind1 => shift @$field, ind2 => shift @$field );
+                my @subf;
+                while (@$field) {
+                    push @subf, [ shift @$field => shift @$field ];
+                }
+                $f->subf( \@subf);
+                push @fields, $f;
+            }
         }
+        $record->fields(\@fields );
     }
-    $record->fields( \@fields );
+    elsif ( $raw = $source->{marc_data_array} ) {
+        my @fields;
+        for my $field ( @{$raw->{fields}} ) {
+            my $tag = [ keys %$field ]->[0];
+            my $value = $field->{$tag};
+            if ( $tag le '009' ) {
+                push @fields, MARC::Moose::Field::Control->new(
+                    tag => $tag, value => $value );
+            }
+            else {
+                my $f = MARC::Moose::Field::Std->new(
+                    tag => $tag, ind1 => $value->{ind1}, ind2 => $value->{ind2} );
+                my @subf;
+                for (@{$value->{subfields}}) {
+                    my $letter = [ keys %$_ ]->[0];
+                    my $val = $_->{$letter};
+                    push @subf, [ $letter, $val ];
+                }
+                $f->subf(\@subf);
+                push @fields, $f;
+            }
+        }
+        $record->fields( \@fields );
+        $record->_leader($raw->{leader});
+    }
+    elsif ($source->{marc_format} eq 'base64ISO2709') {
+        $record = MARC::Moose::Record::new_from(decode_base64($source->{marc_data}),'Iso2709');
+    }
+    elsif ($source->{marc_format} eq 'MARCXML') {
+        $record = MARC::Moose::Record::new_from($source->{marc_data},'Marcxml');
+    }
     return $record;
 }
 
@@ -301,8 +357,8 @@ sub get_auth_by_ppn {
             }
         );
         if ( $res->{hits}->{total} != 0 ) {
-            my $raw = $res->{hits}->{hits}->[0]->{_source}->{record};
-            $record = _record_from_es($raw);
+            my $source = $res->{hits}->{hits}->[0]->{_source};
+            $record = _record_from_es($source);
         }
     }
     else { # Zebra
@@ -311,7 +367,6 @@ sub get_auth_by_ppn {
             if ( $rs->size() >= 1 ) {
                 $record = $rs->record(0);
                 $record = MARC::Moose::Record::new_from( $record->raw(), 'Iso2709' );
-                # FIXME: En dur, le authid Koha en 001, comme dans Koha lui-même
             } 
         };
     }
