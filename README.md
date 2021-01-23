@@ -1,7 +1,5 @@
 # Chargeur Sudoc Koha par Tamil
 
-## Introduction
-
 Le **Chargeur Sudoc Koha** est un logiciel sous licence GNU GPL. Il permet de
 déployer un Catalogue [Koha](https://koha-community.org) dans le Sudoc. Ses
 principales caractéristiques sont les suivantes :
@@ -13,8 +11,9 @@ principales caractéristiques sont les suivantes :
   distinctes de Koha.
 - Dédoublonnage des notices bibliographiques et d'autorités entrantes.
 - Gestion des liens aux autorités.
+- Gestion des liens entre notices bibliographiques.
 - Création des exemplaires en ajout de notice. Pour chaque ILN, il est
-  possible de mettre en oeuvre une logique spécifique
+  possible de mettre en œuvre une logique spécifique
   d'exemplarisation. On peut ainsi créer entièrement ses exemplaires
   dans WinIBW et générer automatiquement des exemplaires Koha.
 - Logique de fusion de notices bibliographiques paramétrable et
@@ -77,7 +76,7 @@ Le Chargeur Sudoc est une collection de scripts Perl qui fonctionnent sous tout
 système d'exploitation Linux/Unix. Le Chargeur est disponible sous la forme
 d'un module CPAN qui s'installe par la commande suivante :
 
-```sh
+```bash
 cpan Koha::Contrib::Sudoc
 ```
 
@@ -95,7 +94,7 @@ Par exemple, vous créez un répertoire pour le Chargeur `/usr/local/koha/sudoc`
 puis vous l'initialisez avec tous les sous-répertoires nécessaires en exécutant
 la séquence suivante de commandes shell :
 
-```sh
+```bash
 cd /usr/local/koha
 mkdir sudoc
 cd sudoc
@@ -636,7 +635,7 @@ Toutes ces tâches peuvent être automatisées en activant le paramètre
 `loading:auto`. On peut alternativement lancer les commandes de chargement au
 moyen d'un script Shell. Par exemple :
 
-```sh
+```bash
 #!/bin/sh
  
 CLIENT='mabibli'
@@ -804,13 +803,13 @@ PPN 000007323 : 5810
 
 Usage :
 
-```sh
+```bash
 sudoc-ppnize [--doit --verbose]
 ```
 
 Synopsis :
 
-```sh
+```bash
 sudoc-ppnize L035-ILN80-abcd.raw
 sudoc-ppnize L035-ILN80-abcd.raw --verbose
 sudoc-ppnize L035-ILN80-abcd.raw --doit
