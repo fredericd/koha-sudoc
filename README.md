@@ -21,6 +21,22 @@ principales caractéristiques sont les suivantes :
   programmable.
 - Outils d'aide au déploiement initial d'un ILN dans le Sudoc.
 
+CONTENU :
+
+- [Principes](#principes)
+- [Installation](#installation)
+- [Chargements réguliers](#chargements-réguliers)
+  - [Transferts Sudoc > Koha](#transferts-sudoc->-koha)
+  - [Les fichiers Sudoc](#les-fichiers-sudoc)
+  - [Chargements dans le Catalogue Koha](#chargements-dans-le-catalogue-koha)
+  - [Fichiers de log](#fichiers-de-log)
+  - [Fichier de configuration sudoc.conf](#fichier-de-configuration-sudoc.conf)
+  - [Configuration de Koha](#configuration-de-koha)
+  - [Automatisation](#automatisation)
+- [Chargement initial](#chargement-initial)
+  - [sudoc-localisation](#sudoc-localisation)
+  - [sudoc-ppnize](#sudoc-ppnize)
+
 ## Principes
 
 Le catalogue du Système Universitaire de Documentation
@@ -364,7 +380,7 @@ sous-champs suivants de la zone 995 sont créés de la façon suivante :
   code est obtenu à partir de la table d'équivalence RCR:code Koha de
   `sudoc.conf`.
 
-- **$c** :idem. On a donc toujours $c = $b.
+- **$c** : idem. On a donc toujours $c = $b.
 
 - **$f** : contient le code à barres de l'exemplaire : 915$b ou, en son absence,
   l'EPN (le n° d'exemplaire Sudoc). Si l'EPN est utilisé, il est préférable de
