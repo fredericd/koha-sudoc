@@ -818,4 +818,4 @@ sudoc-ppnize L035-ILN80-abcd.raw --doit
 ## Version
 
 - Tamil s.a.r.l. <contact@tamil.fr>
-- v2.34, janvier 2021
+- v2.36, janvier 2021
