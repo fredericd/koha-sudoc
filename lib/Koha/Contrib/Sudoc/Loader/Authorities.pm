@@ -40,7 +40,7 @@ sub handle_record {
         }
     }
     unless ( $authtypecode ) {
-        $self->warning("  ERREUR : Autorité sans vedette\n");
+        $self->log->warning("  ERREUR : Autorité sans vedette\n");
         return;
     }
 
