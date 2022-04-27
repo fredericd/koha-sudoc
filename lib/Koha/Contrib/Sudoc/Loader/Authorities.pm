@@ -7,7 +7,7 @@ extends 'Koha::Contrib::Sudoc::Loader';
 
 use Modern::Perl;
 use utf8;
-use C4::AuthoritiesMarc;
+use C4::AuthoritiesMarc qw/ AddAuthority /;
 use MARC::Moose::Record;
 
 
@@ -17,7 +17,7 @@ sub handle_record {
     # FIXME: Ici et pas en-tête parce qu'il faut que l'environnement Shell soit
     # déjà fixé avant de charger ces modules qui ont besoin de KOHA_CONF et qui
     # le garde
-    use C4::Biblio;
+    use C4::Biblio qw/ ModBiblio /;
     use C4::Items;
 
     my $conf = $self->sudoc->c->{auth};
@@ -88,7 +88,7 @@ sub handle_record {
     # On cherche un 035 avec $9 sudoc qui indique une fusion d'autorité Sudoc
     # 035$a contient le PPN de la notice qui a été fusionnée avec la notice en
     # cours de traitement.  On retrouve les notices biblio Koha liées à
-    # l'ancienne autorité et on les modifie pour qu'elle pointent sur la
+    # l'ancienne autorité et on les modifie pour qu'elles pointent sur la
     # nouvelle autorité.
     for my $field ( $record->field('035') ) {
         my $sudoc = $field->subfield('9');

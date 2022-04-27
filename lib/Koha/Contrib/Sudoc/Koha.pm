@@ -8,7 +8,7 @@ use XML::Simple;
 use DBI;
 use ZOOM;
 use MARC::Moose::Record;
-use C4::Biblio;
+use C4::Biblio qw/ GetMarcFromKohaField GetFrameworkCode /;;
 use Search::Elasticsearch;
 use YAML;
 use MIME::Base64;

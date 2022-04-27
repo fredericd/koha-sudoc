@@ -8,8 +8,8 @@ extends 'Koha::Contrib::Sudoc::Loader';
 use Modern::Perl;
 use utf8;
 use YAML;
-use C4::Biblio;
-use C4::Items;
+use C4::Biblio qw/ ModBiblio ModBiblioMarc AddBiblio /;
+use C4::Items qw/ AddItemBatchFromMarc /;
 
 
 
