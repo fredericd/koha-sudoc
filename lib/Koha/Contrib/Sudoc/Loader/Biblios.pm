@@ -140,7 +140,7 @@ sub handle_record {
             $self->log->warning( "erreur pendant l'ajout de l'exemplaire :\n" . Dump($errors_ref) )
                 if @$errors_ref;
             C4::Biblio::_strip_item_fields($marc, $framework);
-            ModBiblioMarc($marc, $biblionumber, $framework);
+            ModBiblioMarc($marc, $biblionumber);
         }
         $self->converter->biblio_add($record, $biblionumber, $framework);
     }
