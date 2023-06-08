@@ -49,7 +49,7 @@ sub handle_record {
 
     my $ppn = $record->field('001')->value;
     $self->log->notice("Notice #" . $self->count . " ppn $ppn\n");
-    $self->log->debug( $record->as('Text') );
+    $self->log->debug( $self->sudoc->record_as_text($record) );
 
     # On déplace le PPN
     $self->sudoc->ppn_move($record, $self->sudoc->c->{biblio}->{ppn_move});

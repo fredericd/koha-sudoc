@@ -224,6 +224,34 @@ sub load_waiting {
 }
 
 
+sub record_as_text {
+    my ($self, $record) = @_;
+
+    my $text = $record->as('Text');
+    my @lines;
+    for my $line (split /\n/, $text) {
+        if (length($line) > 100) {
+            my @words = split / /, $line;
+            $line = '';
+            while (@words) {
+                my $word = shift @words;
+                if (length($word) + length($line) > 100) {
+                    push @lines, $line;
+                    $line = "       $word";
+                }
+                else {
+                    $line = $line ? "$line $word" : $word;
+                }
+            }
+            push @lines, $line;
+        }
+        else {
+            push @lines, $line;
+        }
+    }
+    return join("\n", @lines) . "\n\n";
+}
+
 1;
 
 =head1 DESCRIPTION

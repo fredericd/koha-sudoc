@@ -299,7 +299,7 @@ sub framework {
 sub biblio_modify {
     my ($self, $record, $biblionumber, $framework) = @_;
     $self->log->debug(
-        "  Notice après traitement :\n" . $record->as('Text') );
+        "  Notice après traitement :\n" . $self->sudoc->record_as_text($record) );
     $self->log->notice("  * Remplace $biblionumber\n" );
 }
 
@@ -311,7 +311,7 @@ sub biblio_add {
     my ($self, $record, $biblionumber, $framework) = @_;
 
     $self->log->debug(
-        "  Notice après traitement :\n" . $record->as('Text') );
+        "  Notice après traitement :\n" . $self->sudoc->record_as_text($record) );
     my $plus = '';
     $plus = " $biblionumber $framework" if $biblionumber;
     $self->log->notice( "  * Ajout$plus\n" );

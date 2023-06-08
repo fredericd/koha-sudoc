@@ -27,7 +27,7 @@ sub handle_record {
 
     my $ppn = $record->field('001')->value;
     $self->log->notice( 'Autorité #' . $self->count . " ppn $ppn\n");
-    my $record_text = $record->as('Text');
+    my $record_text = $self->sudoc->record_as_text($record);
     $self->log->debug( $record_text );
 
     # On détermine le type d'autorité
@@ -120,7 +120,7 @@ sub handle_record {
             if ( $found ) {
                 push @modified_biblios, $biblionumber;
                 $modif->delete('995');
-                $self->log->debug( $modif->as('Text') );
+                $self->log->debug( $self->sudoc->record_as_text($modif) );
                 ModBiblio($modif->as('Legacy'), $biblionumber, $framework)
                     if $self->doit;
             }
