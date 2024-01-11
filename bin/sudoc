@@ -30,6 +30,9 @@ if ( $cmd =~ /init/i ) {
 elsif ( $cmd =~ /gtd/i ) {
     $sudoc->send_gtd_email($sudoc->c->{loading}->{jobid}, 'waiting');
 }
+elsif ( $cmd =~ /get/i ) {
+    $sudoc->get();
+}
 elsif ( $cmd =~ /trans/i ) {
     my $daemon = Koha::Contrib::Sudoc::TransferDaemon->new();
     $daemon->start;
@@ -37,8 +40,13 @@ elsif ( $cmd =~ /trans/i ) {
 elsif ( $cmd =~ /chargeauto/i ) {
     my $loading = $sudoc->c->{loading};
     $sudoc->send_gtd_email($loading->{jobid});
+
     # Attente raisonnable que l'ABES envoie les fichiers
     sleep($loading->{timeout}->{transfer} * 60);
+
+    # Si mode GET, on va chercher les fichiers
+    $sudoc->get();
+
     $sudoc->spool->staged_to_waiting();
     $sudoc->load_waiting();
 }
