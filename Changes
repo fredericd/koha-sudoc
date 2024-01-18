@@ -1,5 +1,9 @@
 Revision history for Perl module Koha::Contrib::Sudoc
 
+2.42 2024-01-18
+
+  - Adaptation pour Elasticsearch 7
+
 2.41 2024-01-11
 
   - Méthode GET pour la récupération des fichiers

@@ -356,8 +356,9 @@ sub get_auth_by_ppn {
                 query => {  match => { ppn => $ppn }  }
             }
         );
-        if ( $res->{hits}->{total} != 0 ) {
-            my $source = $res->{hits}->{hits}->[0]->{_source};
+        my $hits = $res->{hits}->{hits};
+        if ( @$hits != 0 ) {
+            my $source = $hits->[0]->{_source};
             $record = _record_from_es($source);
         }
     }
