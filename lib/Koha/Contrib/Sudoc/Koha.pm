@@ -202,8 +202,9 @@ sub get_biblio_by_ppn {
                 query => {  match => { ppn => $ppn }  }
             }
         );
-        if ( $res->{hits}->{total} != 0 ) {
-            my $source = $res->{hits}->{hits}->[0]->{_source};
+        my $hits = $res->{hits}->{hits};
+        if ( @$hits != 0 ) {
+            my $source = $hits->[0]->{_source};
             $record = _record_from_es($source);
         }
     }
@@ -244,8 +245,9 @@ sub get_biblios_by_authid {
                 query => {  match => { "Koha-Auth-Number" => $authid }  }
             }
         );
-        if ( $res->{hits}->{total} != 0 ) {
-            for my $source ( @{$res->{hits}->{hits}} ) {
+        my $hits = $res->{hits}->{hits};
+        if ( @$hits != 0 ) {
+            for my $source ( @$hits ) {
                 $source = $source->{_source};
                 my $record = _record_from_es($source);
                 next unless $record;

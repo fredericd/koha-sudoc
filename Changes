@@ -1,6 +1,6 @@
 Revision history for Perl module Koha::Contrib::Sudoc
 
-2.42 2024-01-18
+2.43 2024-01-18
 
   - Adaptation pour Elasticsearch 7
 
