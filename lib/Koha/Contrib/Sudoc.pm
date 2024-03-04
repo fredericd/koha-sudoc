@@ -211,6 +211,7 @@ sub get {
         die "Login au serveur SFTP impossible : " . $ftp->error if $ftp->error;
         my $files = $ftp->ls('.', names_only => 1);
         for my $file (@$files) {
+            next if $file =~ /^\./;
             $ftp->get($file);
             $ftp->remove($file);
         }
