@@ -305,6 +305,6 @@ sub record_as_text {
 
 Koha::Contrib::Sudoc est le Chargeur Sudoc pour Koha développé par Tamil. Le
 fonctionnement de cet outil est décrit ici :
-L<http://www.tamil.fr/sudoc/sudoc.html>.
+L<https://www.tamil.fr/sudoc/sudoc.html>.
 
 =cut

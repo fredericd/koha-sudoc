@@ -93,7 +93,7 @@ sub BUILD {
 
 
 
-# C'est cette méthodes qui est surchargée par les sous-classes dédiées au
+# C'est cette méthode qui est surchargée par les sous-classes dédiées au
 # traitement des notices biblio et d'autorités
 sub handle_record {
     my ($self, $record) = @_;
