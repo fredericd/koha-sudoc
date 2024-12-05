@@ -183,7 +183,12 @@ sub get_biblionumber {
 sub get_biblionumber_framework {
     my ($self, $record) = @_;
     my $biblionumber = $self->get_biblionumber($record);
-    ( $biblionumber,  GetFrameworkCode($biblionumber) );
+    my $framework = $self->dbh->selectall_arrayref("
+        SELECT frameworkcode FROM biblio WHERE biblionumber=$biblionumber",
+        {}
+    );
+    $framework = $framework->[0]->[0];
+    ($biblionumber,  $framework);
 }
 
 
